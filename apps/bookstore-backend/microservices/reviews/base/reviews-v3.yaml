@@ -3,7 +3,7 @@
 # 共享一个 reviews Service / DestinationRule / VirtualService——子集流量
 # 契约是静态的（dev 100% v1、staging 50/50、prod 80/15/5），因此不带
 # 与 v1 的差异：名字后缀、version 标签、镜像 tag。
-# 走副本数式金丝雀 + 自动分析回滚，流量按新旧 Pod 数量比例自然分流。
+# = 整批上线 + pause 观察期 + 自动分析回滚（无 trafficRouting 时 setCanaryScale/setWeight 步骤不可用）；流量按新旧 Pod 数量比例自然分流。
 # v3 版本行为：调用 ratings 展示红色星级，肉眼可辨的版本差异。
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
@@ -39,9 +39,8 @@ spec:
     canary:
       maxUnavailable: 0                   # 发布全程现有 Pod 不减，服务不中断
       steps:
-        - setCanaryScale:
-            replicas: 1               # 副本数式金丝雀：起 1 个新版 Pod（无 trafficRouting，setWeight 不可用）
-        - pause: {}                       # 暂停：AnalysisRun 达标自动放行，失败自动回滚
+        - pause: {duration: 1m}        # 观察期：新版 Pod 整批与稳定版并存，等背景分析出结论
+        - pause: {}                    # 无限期暂停：AnalysisRun 达标自动放行，失败自动回滚
       analysis:
         templates:
           - templateName: traffic-check   # 金丝雀 Pod 必须有流量，防"无流量假通过"
