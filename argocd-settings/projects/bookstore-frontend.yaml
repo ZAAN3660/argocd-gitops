@@ -2,6 +2,8 @@ apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: bookstore-frontend                                     # project 名 = 应用域；与 bookstore-backend 并列，各管各的应用
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"                         # prune 最后删；竞态根治见 docs/mechanisms.md 第 9 节
   namespace: argocd
 spec:
   description: 前端研发团队

@@ -3,6 +3,10 @@ kind: AppProject
 metadata:
   name: bookstore-backend                                      # project = 应用域/团队名；新增应用域/团队，就新增一个 project 文件
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"                         # 同步波最低档：应用时最先建，prune 时最后删（prune 按 wave 逆序）
+    # 只能约束 bootstrap 同一次同步内部的相对顺序，管不住 appset 控制器异步删应用的竞态；
+    # 删除 project 的根治方案是两阶段提交，见 docs/mechanisms.md 第 9 节
 spec:
   description: 后端研发团队
   sourceRepos:

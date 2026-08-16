@@ -31,3 +31,20 @@ Rollouts 的 istio 控制器定位到权重路由后只原地改写 `route[].rou
 ## 8. 熔断 DR 与 host 模式 canary 的边界（v5）
 
 Rollouts 当前是 host 模式（VS 直连 stable/canary 两个 Service，不写 subset，也不创建/管理任何 DestinationRule），因此团队自建 DR 无冲突；但 DR host 只写稳定短名，`<短名>-canary` 在灰度期间不受熔断保护。若日后切 subset 模式（Rollout 增加 destinationRule 字段），Rollouts 会自管一条 DR，必须先撤掉对应服务的自建 DR，避免同一 host 双 DR 互相覆盖（Istio 对冲突字段按 last-write-wins 合并，会造成配置漂移拉锯）。
+
+## 9. 资源删除顺序：为什么排序拦不住、怎么根治（v7）
+
+**根因**：删除链条横跨两个控制器，没有任何全局排序能管住——bootstrap 同步删 AppProject/旧 ApplicationSet；旧 appset 的 finalizer 让 appset 控制器**异步**清退它生成的 Application（级联每条要数分钟）；两条流并行。当 Application 的级联删除需要解析已不存在的 project 时（`DeletionError: error getting app project`），`resources-finalizer` 永远摘不掉 → 卡 Deleting。
+
+**Argo CD 能提供的排序，只约束单次同步内部**：
+- `argocd.argoproj.io/sync-wave`：应用按波从低到高，prune 按**逆序**（高波先删）；本仓库 project 已标 `-1`（最先建、最后删）；
+- `argocd.argoproj.io/sync-options: PruneLast`：同同步内让该资源最后被 prune；
+- `PrunePropagationPolicy=background/orphan`：改 K8s 删除传播方式，不解决 finalizer 级联问题。
+
+以上都管不住 appset 控制器的异步删除，因此**根治靠两阶段提交**：
+
+1. **阶段 1（本次提交）**：新 project + 新 appset + 新目录一步到位，**旧 project 文件原样保留**（旧 appset 已删，其应用清退时旧 project 仍在 → 级联可正常解析，不会卡）；
+2. **观察收敛**：`kubectl get app -n argocd | grep <旧前缀>` 为空、旧 appset 消失；
+3. **阶段 2（下一次提交）**：删除旧 project 文件（此时已无任何应用引用它）。
+
+**卡死后的自愈**：`bash scripts/fix-stuck-apps.sh [--dry-run]`——先确认旧追踪标签资源为 0，再摘 finalizer。改名不是删除 project 的理由；若名字不再变，这类问题不会再发生。
