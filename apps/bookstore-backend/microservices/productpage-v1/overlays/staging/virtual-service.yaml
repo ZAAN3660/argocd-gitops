@@ -1,0 +1,29 @@
+# v1
+# productpage 服务的东西向 VS（官方 bookinfo 样例的对称结构）。
+# 外部流量走 routing-v1 的网关 VS，这里兜住网格内对 productpage 的调用；
+# productpage 的 Rollout 只改网关 VS 里 productpage-route 的权重。
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: productpage
+spec:
+  hosts:
+    - productpage
+  http:
+    - name: productpage-route
+      timeout: 10s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+      route:
+        - destination:
+            host: productpage
+            port:
+              number: 9080
+          weight: 100
+        - destination:
+            host: productpage-canary
+            port:
+              number: 9080
+          weight: 0

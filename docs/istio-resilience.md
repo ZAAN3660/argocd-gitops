@@ -92,7 +92,7 @@ kubectl exec -n dev deploy/productpage-v1 -c istio-proxy -- \
 
 ## 3. 重试（Retries）与 4. 超时（Timeouts）
 
-写在 routing 层 VirtualService 的四条权重路由上（header/cookie 定向路由不加）：
+写在各服务东西向 VS 与网关 VS 的权重路由上（每条都带 timeout+retries）：
 
 | 路由 | timeout | retries |
 |---|---|---|

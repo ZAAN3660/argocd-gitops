@@ -1,0 +1,27 @@
+# v1
+# 入口网关：把集群外 HTTP/HTTPS 流量接进网格，绑定到 Istio 的
+# ingressgateway。三个环境各自把 VirtualService 挂在这个 Gateway 上，
+# 入口统一但路由规则分环境。
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: bookinfo-gateway
+spec:
+  selector:
+    istio: ingressgateway                   # 选中 istio ingress gateway 这个实际转发代理
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - 'bookinfo.example.com'           # 入口域名：只受理本应用的入口流量，不写 * 避免抢其他入口
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - 'bookinfo.example.com'           # 443 TLS 监听：productpage v1.16+ 会强制跳 HTTPS，必须有
+      tls:
+        mode: SIMPLE                        # 单向 TLS：客户端验证服务端证书
+        credentialName: bookinfo-gateway-certs  # 引用 ingressgateway Pod所在命名空间(istio-system)里的 TLS Secret，学习环境用自签证书（kubectl create secret tls，不入库）

@@ -1,0 +1,29 @@
+# v1
+# ratings 服务的东西向 VS（官方 bookinfo 样例同构：hosts 用短名）。
+# reviews 内部调用 http://ratings:9080 时经它路由；
+# ratings 的 Rollout 发布时只改 ratings-route 的权重（稳定/金丝雀）。
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: ratings
+spec:
+  hosts:
+    - ratings
+  http:
+    - name: ratings-route
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+      route:
+        - destination:
+            host: ratings
+            port:
+              number: 9080
+          weight: 100
+        - destination:
+            host: ratings-canary
+            port:
+              number: 9080
+          weight: 0

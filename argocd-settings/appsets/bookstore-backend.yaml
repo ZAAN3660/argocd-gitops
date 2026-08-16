@@ -43,8 +43,8 @@ spec:
       name: 'bookstore-{{.path.basename}}-{{.environment}}'
                                           # {{.path.basename}} = 目录名，{{.environment}} = 环境名
                                           # 前缀 bookstore- = 团队标识，与 AppProject/ApplicationSet 名对齐
-                                          # 例：目录 bookinfo-productpage × 环境 dev
-                                          # → 应用名 bookstore-bookinfo-productpage-dev
+                                          # 例：目录 productpage-v1 × 环境 dev
+                                          # → 应用名 bookstore-productpage-v1-dev
       namespace: argocd
       finalizers:
         - resources-finalizer.argocd.argoproj.io
@@ -68,8 +68,8 @@ spec:
         targetRevision: init
         path: '{{.path.path}}/overlays/{{.environment}}'
                                           # {{.path.path}} = 扫描到的目录完整路径
-                                          # 例：目录 bookinfo-productpage × 环境 dev
-                                          # → 源路径 = apps/bookstore-backend/microservices/bookinfo-productpage/overlays/dev
+                                          # 例：目录 productpage-v1 × 环境 dev
+                                          # → 源路径 = apps/bookstore-backend/microservices/productpage-v1/overlays/dev
       destination:                        # 这个应用部署到哪里
         server: '{{.server}}'             # 从环境清单带入：当前三个环境都是同一集群
         namespace: '{{.namespace}}'       # 从环境清单带入：dev/staging/prod 各归各的命名空间

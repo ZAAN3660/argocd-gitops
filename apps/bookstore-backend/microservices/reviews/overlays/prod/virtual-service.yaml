@@ -1,0 +1,37 @@
+# v1
+# reviews 共享应用的东西向 VS：subset 分流契约（官方 Traffic Shifting 同构）。
+# prod 以 v1 为主稳定版，v2 灰度 15%，v3 保底 5% 便于故障降级。
+# 升级时只改这三个 weight 值，不动 destination host。
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: reviews
+spec:
+  hosts:
+    - reviews
+  http:
+    - name: reviews-route
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+      route:
+        - destination:
+            host: reviews
+            subset: v1
+            port:
+              number: 9080
+          weight: 80
+        - destination:
+            host: reviews
+            subset: v2
+            port:
+              number: 9080
+          weight: 15
+        - destination:
+            host: reviews
+            subset: v3
+            port:
+              number: 9080
+          weight: 5

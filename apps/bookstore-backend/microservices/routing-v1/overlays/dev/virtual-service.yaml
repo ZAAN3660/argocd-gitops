@@ -1,0 +1,45 @@
+# v6
+# 网关专属 VS：只承接外部域名流量（官方 bookinfo-gateway.yaml 同构）。
+# 用枚举路径代替兜底 match——/productpage、/login、/logout、/static、
+# /api/v1/products 之外的外部路径一律 404，不存在跨 VS 的顺序契约问题。
+# productpage 的 Rollout 只接管这里 productpage-route 的权重（稳定/金丝雀）。
+# v5→v6 变更：删除 header/cookie 定向路由、删除无 match 兜底路由；
+# 各服务东西向流量改由各自目录里的 VS 负责（与官方 VS 拆分方式一致）。
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: bookinfo
+spec:
+  hosts:
+    - bookinfo.example.com
+  gateways:
+    - bookinfo-gateway
+  http:
+    - name: productpage-route
+      match:
+        - uri:
+            exact: /productpage
+        - uri:
+            prefix: /static
+        - uri:
+            exact: /login
+        - uri:
+            exact: /logout
+        - uri:
+            prefix: /api/v1/products
+      timeout: 10s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+      route:
+        - destination:
+            host: productpage
+            port:
+              number: 9080
+          weight: 100
+        - destination:
+            host: productpage-canary
+            port:
+              number: 9080
+          weight: 0

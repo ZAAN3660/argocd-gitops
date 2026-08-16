@@ -94,13 +94,13 @@ routing overlay 的 labels 作用于最终全部资源（含 base 的 Gateway/�
 - `argocd-settings/`：Argo CD 自身配置——project 权限边界、appset 生成规则
 - `apps/<domain>/base/`：应用域公共 workload 骨架，标准 overlay 引用它
 - `apps/<domain>/microservices/<service>/overlays/<env>/`：每个服务、每个环境一个 overlay，ApplicationSet 扫描点
-- reviews：不引用团队 base，自带 base（三版本 Deployment 特例）
-- bookinfo-routing：base 放 Gateway，VirtualService 按环境差异放 overlay
+- reviews：共享应用（Service + DR subset + 东西向 VS），三个版本 Deployment 各自成应用 reviews-v1/2/3
+- routing-v1：base 放 Gateway/分析模板/限流 EnvoyFilter，网关专属 VS 按环境放 overlay（枚举路径，无兜底）
 
 ## 灰度发布约定（Argo Rollouts）
 
-- 路由名 = `<短名>-route`：写在 routing 层 VirtualService 里，Rollout 的 trafficRouting 只引用这一条权重路由
-- header/cookie 定向规则：`<短名>-header-canary` / `<短名>-cookie-canary`，静态不归 Rollout 管
+- 路由名 = `<短名>-route`：写在各服务自己的东西向 VS 里（productpage 的权重路由在网关 VS），
+  Rollout 的 trafficRouting 按 VS 名 + 路由名定位
 - 发布节奏：10 → 25 → 75 → 100，每步 pause 后由 AnalysisRun 自动判断继续或回滚
 - 分析模板三件（traffic-check / success-rate / p99-latency）：每环境一份，放 routing base，各服务 Rollout 共用
 - KEDA 触发器三件：CPU 80% / 内存 75% / QPS（网格指标），扩缩容目标是 Rollout 而非 Deployment
@@ -116,7 +116,7 @@ routing overlay 的 labels 作用于最终全部资源（含 base 的 Gateway/�
   - productpage/details/ratings：团队 base 骨架 + 各 overlay patch 注入 DR 名与 FQDN host
 - **限流**：本地限流 EnvoyFilter（envoy.filters.http.local_ratelimit），放 routing base 随环境渲染，
   只作用于同命名空间 app=productpage 的 sidecar；同样分三档，当前压测豁免档 100000/60s/Pod
-- **重试/超时**：写在 routing 层 VirtualService 四条权重路由上（内部 5s / 入口 10s；
+- **重试/超时**：写在各服务东西向 VS 与网关 VS 的权重路由上（内部 5s / 入口 10s；
   retries 3 次 × perTry 2s，retryOn gateway-error,connect-failure,refused-stream）
 - **共存边界**：Rollouts 只改写 route[].weight，不覆盖同路由的 timeout/retries；
-  header/cookie 定向路由不加韧性字段（保持最小配置）
+  路由拆到各应用后此性质不变（Rollouts 按 VS 名 + 路由名定位）

@@ -1,0 +1,30 @@
+# v1
+# reviews 共享应用的东西向 VS：subset 分流契约（官方 Traffic Shifting 同构）。
+# staging 一半流量切到 v2（带星级评分版本），验证 ratings 链路。
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: reviews
+spec:
+  hosts:
+    - reviews
+  http:
+    - name: reviews-route
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+      route:
+        - destination:
+            host: reviews
+            subset: v1
+            port:
+              number: 9080
+          weight: 50
+        - destination:
+            host: reviews
+            subset: v2
+            port:
+              number: 9080
+          weight: 50

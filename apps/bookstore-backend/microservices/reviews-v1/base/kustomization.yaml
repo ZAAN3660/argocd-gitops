@@ -1,0 +1,13 @@
+# v1
+# reviews-v1 版本应用：只带 v1 的 Deployment，独立发布/回滚/退役。
+# 共享资源（Service reviews / DestinationRule subset / 东西向 VS）
+# 在 reviews 应用里，删掉本版本应用不影响共享入口。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - pairs:
+      app.kubernetes.io/name: reviews            # 官方推荐标签：应用名
+      app.kubernetes.io/part-of: bookinfo        # 官方推荐标签：所属应用
+      app.kubernetes.io/managed-by: argocd       # 官方推荐标签：管理工具
+resources:
+  - reviews-v1.yaml

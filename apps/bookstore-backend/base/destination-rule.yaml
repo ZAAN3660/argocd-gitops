@@ -11,7 +11,7 @@
 # 换成 <短名>.<ns>.svc.cluster.local。
 # 注意：本 DR 只覆盖稳定通道短名；host 模式的金丝雀短名
 # （<短名>-canary）不受熔断保护，需要时复制本文档再改 host。
-apiVersion: networking.istio.io/v1beta1
+apiVersion: networking.istio.io/v1
 kind: DestinationRule
 metadata:
   name: app                                 # 占位名：overlay patch 改成 <短名>-dr
