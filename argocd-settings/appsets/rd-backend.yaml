@@ -40,7 +40,7 @@ spec:
                 #   namespace: prod
   template:                               # 下半场：每个组合套这份模板，产出 1 个 Application
     metadata:
-      name: 'rd-{{.path.basename}}-{{.environment}}'
+      name: '{{.path.basename}}-{{.environment}}'
                                           # {{.path.basename}} = 目录名，{{.environment}} = 环境名
                                           # 例：目录 bookinfo-productpage × 环境 dev
                                           # → 应用名 rd-bookinfo-productpage-dev
