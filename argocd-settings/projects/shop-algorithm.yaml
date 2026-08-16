@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: rd-backend                                      # project = 应用域/团队名；新增应用域/团队，就新增一个 project 文件
+  name: shop-algorithm                                    # project = 应用域/团队名；与 shop-backend 并列，各管各的应用
   namespace: argocd
 spec:
-  description: 后端研发团队
+  description: 算法研发团队
   sourceRepos:
-    - 'https://github.com/ZAAN3660/argocd-gitops.git'   # 后端团队的 Git 仓库列表
+    - 'https://github.com/ZAAN3660/argocd-gitops.git'   # 算法团队的 Git 仓库列表
   destinations:                                         # 粒度是 (server, namespace) 二元组，不在清单里的组合一律拒绝 syncing
     - namespace: dev
       server: https://kubernetes.default.svc
@@ -17,6 +17,5 @@ spec:
   clusterResourceWhitelist:                            # 集群级资源白名单：只放行 Namespace（应用要自建环境命名空间）
     - group: ''
       kind: Namespace
-  # 注意：namespaceResourceWhitelist 这一行必须整个不写（nil = 放行所有命名空间级资源）。
-  # 显式写 [] 会被 Argo CD v3 解释为"拒绝一切命名空间级资源"，与直觉相反（Service/Rollout 等全被拦）
+  # namespaceResourceWhitelist 不写 = 放行所有命名空间级资源；显式 [] 反而拒绝一切（v3 语义）
   sourceNamespaces: []                                  # 空 = 不限制 Application 来源命名空间

@@ -17,7 +17,7 @@
    同一资源类型在三个环境里同名共存是 Kubernetes 惯例（名字唯一性只要求
    namespace 内 kind 内唯一）。名字里塞环境段反而制造噪音。
 2. **环境后缀只出现在共享 namespace**：目前唯一共享 namespace 是 argocd，
-   所以只有 Argo CD Application 名带环境段：`rd-<服务>-<env>`。
+   所以只有 Argo CD Application 名带环境段：`shop-<服务>-<env>`。
    将来若出现 istio-system / monitoring 里的共享资源，也必须带环境前缀。
 3. **类型语义不进名字、进标签**：Kubernetes 官方推荐用 `app.kubernetes.io/component`
    表达组件类型。本仓库的角色后缀（-app/-scaler/-monitor/-dr/-canary）是
@@ -30,9 +30,9 @@
 
 | Kind | 名字 | 环境段 | 说明 |
 |---|---|---|---|
-| Application | `rd-<服务目录名>-<env>` | ✅ 必须有 | 15 条挤在同一个 argocd namespace，靠环境段区分 |
-| ApplicationSet | `rd-backend` | ❌ | 一条规则覆盖所有环境 |
-| AppProject | `rd-<团队>` | ❌ | 团队边界，与环境无关 |
+| Application | `shop-<服务目录名>-<env>` | ✅ 必须有 | 15 条挤在同一个 argocd namespace，靠环境段区分 |
+| ApplicationSet | `shop-backend` | ❌ | 一条规则覆盖所有环境 |
+| AppProject | `shop-<团队>` | ❌ | 团队边界，与环境无关 |
 
 ### 环境 namespace（dev/staging/prod）——名字不带环境段
 
@@ -85,7 +85,7 @@ routing overlay 的 labels 作用于最终全部资源（含 base 的 Gateway/�
 |---|---|---|
 | 集群 | cluster secret + ApplicationSet list | hub 集群自用，`server` 统一为 https://kubernetes.default.svc |
 | 环境 | ApplicationSet list 元素 + `overlays/<env>` 目录 | dev / staging / prod 三环境，staging 与 prod 同集群靠 namespace 区分 |
-| 团队 | `apps/<domain>/` 目录 + 一个 AppProject | rd-backend 域（rd 团队） |
+| 团队 | `apps/<domain>/` 目录 + 一个 AppProject | shop-backend 域（shop 团队） |
 | 应用域 | 团队内的命名空间 | bookinfo 系列 |
 
 ## 目录定义

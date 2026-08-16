@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: rd-frontend                                     # project 名 = 应用域；与 rd-backend 并列，各管各的应用
+  name: shop-frontend                                     # project 名 = 应用域；与 shop-backend 并列，各管各的应用
   namespace: argocd
 spec:
   description: 前端研发团队
