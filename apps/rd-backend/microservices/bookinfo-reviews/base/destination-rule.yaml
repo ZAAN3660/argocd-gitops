@@ -1,13 +1,16 @@
-# v3
+# v4
 # base 里 host 写占位 FQDN，各 overlay 用 patch 换成自己命名空间的真实
 # FQDN：DestinationRule 的 host 是目标服务的全限定名，跨命名空间必须显式。
 # v3 新增 trafficPolicy 熔断：与官方 Circuit Breaking 任务页同构——
 # 官方示例正是给 reviews 的 v1/v2/v3 三个 subset 挂连接池+异常驱逐，
 # 这里照搬其演示值（故意设小，便于压测观察触发），生产按容量上调。
+# v4 改名 bookinfo-reviews-dr：与 productpage/details/ratings 的
+# bookinfo-<服务>-dr 统一（官方 bookinfo 样例用裸短名，本仓库统一带 -dr
+# 角色后缀便于 kubectl 跨类型检索，见 docs/naming.md）。
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
-  name: bookinfo-reviews
+  name: bookinfo-reviews-dr
 spec:
   host: reviews.<namespace>.svc.cluster.local    # 占位：实际值由 overlay patch 注入，这里仅保持字段完整
   trafficPolicy:

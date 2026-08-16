@@ -1,4 +1,4 @@
-# v2
+# v3
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: dev
@@ -7,7 +7,7 @@ resources:
 patches:
   - target:                                 # 目标：base 里的 DestinationRule
       kind: DestinationRule
-      name: bookinfo-reviews
+      name: bookinfo-reviews-dr
     patch: |-                               # 改动：host 的命名空间段改成当前 overlay 的命名空间
       - op: replace
         path: /spec/host

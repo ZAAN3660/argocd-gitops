@@ -118,7 +118,7 @@ kubectl get vs -n dev bookinfo -o yaml | grep -A5 retries
 ## 6. 验证清单（合入后逐项过）
 
 - [ ] `kustomize build` 全部 15 个 overlay 无语法错误
-- [ ] `kubectl get destinationrule -n dev`：bookinfo-productpage/details/ratings-dr + bookinfo-reviews 各一份，host 为 FQDN
+- [ ] `kubectl get destinationrule -n dev`：bookinfo-productpage/details/ratings-dr + bookinfo-reviews-dr 各一份，host 为 FQDN
 - [ ] `kubectl get envoyfilter -n dev`：filter-local-ratelimit-productpage 存在
 - [ ] `kubectl get vs -n dev bookinfo -o yaml`：四条权重路由带 timeout/retries
 - [ ] 连续刷新 productpage 页面可复现 429 + x-local-rate-limit 响应头

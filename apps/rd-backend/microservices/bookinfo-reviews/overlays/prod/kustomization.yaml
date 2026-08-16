@@ -1,4 +1,4 @@
-# v2
+# v3
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: prod
@@ -7,7 +7,7 @@ resources:
 patches:
   - target:
       kind: DestinationRule
-      name: bookinfo-reviews
+      name: bookinfo-reviews-dr
     patch: |-
       - op: replace
         path: /spec/host

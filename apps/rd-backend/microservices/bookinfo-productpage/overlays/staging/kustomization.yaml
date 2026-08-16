@@ -1,6 +1,7 @@
-# v5
+# v6
 # 灰度发布 overlay：base 提供 Rollout/双 Service/ScaledObject/PodMonitor/
-# DestinationRule 骨架，本层用显式 patch 注入服务身份：
+# DestinationRule 骨架，本层用显式 patch 注入服务身份。
+# v6 labels 新增 K8s 官方推荐标签（app.kubernetes.io/*，见 docs/naming.md）。
 # 名字、短名、路由名、扩缩容目标、QPS 查询，全部与服务强相关。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -9,6 +10,12 @@ labels:
   - pairs:
       app: productpage                              # 覆写 base 占位标签值
     includeSelectors: true                   # 必须显式开启：selector 与 Pod 模板标签同步改写，各服务互不串选
+  - pairs:
+      app.kubernetes.io/name: productpage          # 官方推荐标签：应用名
+      app.kubernetes.io/part-of: bookinfo          # 官方推荐标签：所属应用
+      app.kubernetes.io/managed-by: argocd         # 官方推荐标签：管理工具
+    # 此条不加 includeSelectors：只贴元数据，选择器保持 app 单键。
+    # app.kubernetes.io/instance 不写：Argo CD 自 v2.2 起默认占用该键做追踪标签，避免冲突
 resources:
   - ../../../../base
 images:
