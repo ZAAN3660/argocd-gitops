@@ -1,7 +1,7 @@
 # v1
 # reviews 共享应用的东西向 VS：subset 分流契约（官方 Traffic Shifting 同构）。
-# dev 全量 v1（单版本基线）；三个版本的 Deployment 各自成应用
-# （reviews-v1/2/3），这里只声明它们之间的流量分配。
+# dev 全量 v1（单版本基线）；三个版本的 Rollout 与共享资源同在本应用
+# 这里只声明它们之间的流量分配。
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:

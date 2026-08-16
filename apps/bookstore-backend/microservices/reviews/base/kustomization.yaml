@@ -1,9 +1,9 @@
-# v5
-# reviews 共享应用：只托管跨版本共享的资源——Service reviews（三版本
-# 共用一个 DNS 入口，选择器故意不带 version 过滤）+ DestinationRule
-# （subset v1/v2/v3 定义 + 熔断策略）。东西向 VS 在各 overlay 里。
-# 三个版本的 Deployment 各自成应用（reviews-v1/2/3 目录），独立发布；
-# 共享资源必须有唯一所有者（Argo CD 追踪标签），因此单列此应用。
+# v6
+# reviews 单应用多版本工程：Service reviews + DestinationRule（subset
+# v1/v2/v3 + 熔断）+ 三个版本 Rollout 全部同在本应用——共享资源天然单
+# 所有者，不再拆分应用。三个 Rollout 不带 trafficRouting（子集流量契约
+# 是静态的，Rollout 无法表达版本内切流比例），版本内发布 = 副本数金丝雀
+# + 自动分析回滚。东西向 VS 在各 overlay 里。
 # Service 名必须用官方短名 reviews：productpage 镜像硬编码 http://reviews:9080。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -12,8 +12,11 @@ labels:
       app.kubernetes.io/name: reviews            # 官方推荐标签：应用名
       app.kubernetes.io/part-of: bookinfo        # 官方推荐标签：所属应用
       app.kubernetes.io/managed-by: argocd       # 官方推荐标签：管理工具
-    # 不加 includeSelectors：Service/Deployment 选择器维持 app+version 原有逻辑。
+    # 不加 includeSelectors：Service/Rollout 选择器维持 app+version 原有逻辑。
     # app.kubernetes.io/instance 不写：Argo CD 自 v2.2 起默认占用该键做追踪标签，避免冲突
 resources:
   - service.yaml                            # 一个 Service 三版本共用，端口统一 9080
   - destination-rule.yaml                   # Istio DestinationRule：三个版本声明为子集 + 熔断策略
+  - reviews-v1.yaml                         # 版本 Rollout：无 trafficRouting，副本数金丝雀
+  - reviews-v2.yaml                         # 版本 Rollout：同上
+  - reviews-v3.yaml                         # 版本 Rollout：同上

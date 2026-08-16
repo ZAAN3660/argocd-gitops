@@ -45,7 +45,7 @@
 | ScaledObject | `<短名>-scaler` | productpage-scaler | 短名开头，与 Rollout 对应 |
 | PodMonitor | `<短名>-monitor` | productpage-monitor | 同上 |
 | DestinationRule | `<短名>-dr` | productpage-dr / reviews-dr | 同上（官方样例 reviews 裸名，仓库统一短名 + -dr 角色后缀） |
-| Deployment | `reviews-<version>` | reviews-v1 | 官方 bookinfo 命名 |
+| Rollout（reviews） | `reviews-<version>` | reviews-v1 | 官方 bookinfo 命名；无 trafficRouting，副本数金丝雀 |
 | VirtualService | `bookinfo` | 每环境一份 | Istio 官方 bookinfo 样例原名 |
 | Gateway | `bookinfo-gateway` | 每环境一份 | Istio 官方 bookinfo 样例原名 |
 | EnvoyFilter | `filter-<功能>-<目标>` | filter-local-ratelimit-productpage | Istio 官方 Rate Limit 示例模式（filter-local-ratelimit-svc） |
@@ -94,7 +94,7 @@ routing overlay 的 labels 作用于最终全部资源（含 base 的 Gateway/�
 - `argocd-settings/`：Argo CD 自身配置——project 权限边界、appset 生成规则
 - `apps/<domain>/base/`：应用域公共 workload 骨架，标准 overlay 引用它
 - `apps/<domain>/microservices/<service>/overlays/<env>/`：每个服务、每个环境一个 overlay，ApplicationSet 扫描点
-- reviews：共享应用（Service + DR subset + 东西向 VS），三个版本 Deployment 各自成应用 reviews-v1/2/3
+- reviews：单应用多版本工程（Service + DR subset + 东西向 VS + 三个版本 Rollout），共享资源天然单所有者
 - routing-v1：base 放 Gateway/分析模板/限流 EnvoyFilter，网关专属 VS 按环境放 overlay（枚举路径，无兜底）
 
 ## 灰度发布约定（Argo Rollouts）
@@ -105,7 +105,7 @@ routing overlay 的 labels 作用于最终全部资源（含 base 的 Gateway/�
 - 分析模板三件（traffic-check / success-rate / p99-latency）：每环境一份，放 routing base，各服务 Rollout 共用
 - KEDA 触发器三件：CPU 80% / 内存 75% / QPS（网格指标），扩缩容目标是 Rollout 而非 Deployment
 - Argo CD 豁免（appset ignoreDifferences）：Rollout 的 rollouts-pod-template-hash 标签、VS 权重、Service selector 三处由 Rollout 控制器运行时动态改，Argo CD 不得视为漂移回滚
-- reviews 未接入 Rollouts：保留 v1/v2/v3 subset 演示（官方 bookinfo 灰度样例）
+- reviews 三版本已接入 Rollouts：不带 trafficRouting（子集流量契约静态），版本内副本数金丝雀，版本间仍由 VS 子集权重分流（官方 bookinfo 灰度样例）
 - 探针用 tcpSocket：bookinfo 镜像无统一就绪端点；KEDA Utilization 依赖 resources.requests，base 已写死 demo 值
 
 ## 韧性配置约定（熔断/限流/重试/超时）

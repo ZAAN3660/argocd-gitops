@@ -1,0 +1,55 @@
+# v1
+# 版本内渐进发布：Rollout = 带金丝雀策略的 Deployment。三个版本长期并存，
+# 共享一个 reviews Service / DestinationRule / VirtualService——子集流量
+# 契约是静态的（dev 100% v1、staging 50/50、prod 80/15/5），因此不带
+# trafficRouting（Rollout 无法表达"v1 那一份内部的切流比例"）。版本内发布
+# 走副本数式金丝雀 + 自动分析回滚，流量按新旧 Pod 数量比例自然分流。
+# v1 版本行为：不调用 ratings，评论区无星级。
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: reviews-v1
+  labels:
+    app: reviews                    # 服务标识：共享 Service 靠它聚合三个版本
+    version: v1                     # 版本标识：DR subset 与 VS 权重靠它分流
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2           # 保留 2 个历史 ReplicaSet，够一次回滚
+  selector:
+    matchLabels:
+      app: reviews
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: reviews
+        version: v1
+        sidecar.istio.io/inject: "true"    # 必须注入 sidecar：内部调用要过 VS 才参与 subset 路由
+        istio.io/rev: default
+      annotations:
+        sidecar.istio.io/inject: "true"
+        istio.io/rev: default
+    spec:
+      containers:
+        - name: reviews
+          image: docker.io/istio/examples-bookinfo-reviews-v1:1.16.2
+          ports:
+            - containerPort: 9080
+  strategy:
+    canary:
+      maxUnavailable: 0                   # 发布全程现有 Pod 不减，服务不中断
+      steps:
+        - setCanaryScale: 1               # 副本数式金丝雀：起 1 个新版 Pod（无 trafficRouting，setWeight 不可用）
+        - pause: {}                       # 暂停：AnalysisRun 达标自动放行，失败自动回滚
+      analysis:
+        templates:
+          - templateName: traffic-check   # 金丝雀 Pod 必须有流量，防"无流量假通过"
+          - templateName: success-rate    # 金丝雀成功率 >= 90%
+          - templateName: p99-latency     # 金丝雀 P99 <= 500ms
+        args:
+          - name: stable-hash
+            valueFrom:
+              podTemplateHashValue: Stable  # 自动取稳定 ReplicaSet 的 hash
+          - name: canary-hash
+            valueFrom:
+              podTemplateHashValue: Latest  # 自动取金丝雀 ReplicaSet 的 hash
