@@ -1,0 +1,27 @@
+# v1
+# 熔断骨架：connectionPool 限制到上游的连接/请求并发，
+# outlierDetection 在实例连续返回 5xx 时把它驱逐出负载均衡池。
+# 取值照抄官方 Circuit Breaking 任务页演示值（故意设小，便于
+# 用 fortio 压测观察熔断触发），生产环境按容量上调，见 docs/istio-resilience.md。
+# host 写占位 FQDN：与 reviews 自带 DR 同一约定，由 overlay patch
+# 换成 <短名>.<ns>.svc.cluster.local。
+# 注意：本 DR 只覆盖稳定通道短名；host 模式的金丝雀短名
+# （<短名>-canary）不受熔断保护，需要时复制本文档再改 host。
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: app                                 # 占位名：overlay patch 改成 bookinfo-<服务>-dr
+spec:
+  host: app.<namespace>.svc.cluster.local   # 占位：overlay patch 改成 <短名>.<ns>.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1                   # 官方演示值：与上游最多保持 1 条 TCP 连接
+      http:
+        http1MaxPendingRequests: 1          # 官方演示值：HTTP/1.1 排队中的请求最多 1 个
+        maxRequestsPerConnection: 1         # 官方演示值：每条连接只复用 1 个请求，用完即断
+    outlierDetection:
+      consecutive5xxErrors: 1               # 官方演示值：连续 1 次 5xx 就驱逐
+      interval: 1s                          # 每 1s 评估一次错误率
+      baseEjectionTime: 3m                  # 驱逐后 3 分钟再放回来
+      maxEjectionPercent: 100               # 允许把 100% 实例全部驱逐（演示值，生产通常 <50%）

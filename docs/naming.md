@@ -25,6 +25,7 @@
 - Rollout 名 = `bookinfo-<服务>-app`；稳定 Service 名 = 官方短名；金丝雀 Service 名 = `<短名>-canary`
 - **Service 名 = 官方短名**（productpage/details/reviews/ratings）：bookinfo 镜像硬编码了这些 DNS 名，改名会导致服务间调用失败
 - 标签：`app: <短名>`；reviews 额外带 `version: v1/v2/v3` 供 DestinationRule 切分 subset
+- DestinationRule 名 = `bookinfo-<服务>-dr`（reviews 例外：`bookinfo-reviews`，随自带 base 发布）
 - 镜像 tag：1.16.2，官方独立镜像最后版本
 
 ## 灰度发布约定（Argo Rollouts）
@@ -37,3 +38,15 @@
 - Argo CD 豁免（appset ignoreDifferences）：Rollout 的 rollouts-pod-template-hash 标签、VS 权重、Service selector 三处由 Rollout 控制器运行时动态改，Argo CD 不得视为漂移回滚
 - reviews 未接入 Rollouts：保留 v1/v2/v3 subset 演示（官方 bookinfo 灰度样例）
 - 探针用 tcpSocket：bookinfo 镜像无统一就绪端点；KEDA Utilization 依赖 resources.requests，base 已写死 demo 值
+
+## 韧性配置约定（熔断/限流/重试/超时，v5 新增）
+
+- **熔断**：DestinationRule.trafficPolicy（connectionPool + outlierDetection），取值照官方 Circuit Breaking 演示值
+  - reviews：写在自带 base 的 destination-rule.yaml（subset + trafficPolicy，与官方 bookinfo 熔断示例同构）
+  - productpage/details/ratings：团队 base 骨架 + 各 overlay patch 注入 DR 名与 FQDN host
+- **限流**：本地限流 EnvoyFilter（envoy.filters.http.local_ratelimit），放 routing base 随环境渲染，
+  只作用于同命名空间 app=productpage 的 sidecar（每 Pod 4 req/min，官方演示值）
+- **重试/超时**：写在 routing 层 VirtualService 四条权重路由上（内部 5s / 入口 10s；
+  retries 3 次 × perTry 2s，retryOn gateway-error,connect-failure,refused-stream）
+- **共存边界**：Rollouts 只改写 route[].weight，不覆盖同路由的 timeout/retries；
+  header/cookie 定向路由不加韧性字段（保持最小配置）

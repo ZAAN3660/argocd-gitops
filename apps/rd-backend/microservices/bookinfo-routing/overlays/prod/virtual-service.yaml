@@ -1,7 +1,8 @@
-# v4
+# v5
 # 与 dev 同构，唯一差异在 reviews-route 的权重：prod 以 v1 为主
 # 稳定版，v2 灰度 15%，v3 保底 5% 便于故障降级。升级时只改这三个
 # weight 值，不动匹配规则与 destination host。
+# v5 与 dev 同步给四条权重路由加 timeout/retries，取值同官方 HTTPRetry 示例。
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
@@ -91,6 +92,11 @@ spec:
       match:
         - uri:
             prefix: /details
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
             host: details
@@ -106,6 +112,11 @@ spec:
       match:
         - uri:
             prefix: /ratings
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
             host: ratings
@@ -121,6 +132,11 @@ spec:
       match:
         - uri:
             prefix: /reviews
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
             host: reviews
@@ -141,6 +157,11 @@ spec:
               number: 9080
           weight: 5                          # 低流量保底
     - name: productpage-route
+      timeout: 10s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
             host: productpage

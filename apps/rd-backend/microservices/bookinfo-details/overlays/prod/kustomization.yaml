@@ -1,6 +1,6 @@
-# v4
+# v5
 # 灰度发布 overlay：base 提供 Rollout/双 Service/ScaledObject/PodMonitor/
-# AnalysisTemplate 骨架，本层用显式 patch 注入服务身份：
+# DestinationRule 骨架，本层用显式 patch 注入服务身份：
 # 名字、短名、路由名、扩缩容目标、QPS 查询，全部与服务强相关。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -76,3 +76,13 @@ patches:
       - op: replace
         path: /spec/selector/matchLabels/app
         value: details                        # 与 Pod 实际标签一致，stable+canary 一起抓
+  - target:
+      kind: DestinationRule
+      name: app
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: bookinfo-details-dr           # 熔断 DR：名字带服务前缀，命名空间内唯一
+      - op: replace
+        path: /spec/host
+        value: details.prod.svc.cluster.local   # DR host 用 FQDN，与 reviews DR 同一约定

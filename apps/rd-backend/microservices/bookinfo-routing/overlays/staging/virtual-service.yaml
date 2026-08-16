@@ -1,7 +1,8 @@
-# v4
+# v5
 # 与 dev 同构，唯一差异在 reviews-route 的权重：staging 把
 # 50% 流量切到 v2（带星级评分版本），验证 ratings 链路。其余
 # 规则（header/cookie/权重路由）与 dev 完全一致。
+# v5 与 dev 同步给四条权重路由加 timeout/retries，取值同官方 HTTPRetry 示例。
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
@@ -91,6 +92,11 @@ spec:
       match:
         - uri:
             prefix: /details
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
             host: details
@@ -106,6 +112,11 @@ spec:
       match:
         - uri:
             prefix: /ratings
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
             host: ratings
@@ -121,6 +132,11 @@ spec:
       match:
         - uri:
             prefix: /reviews
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
             host: reviews
@@ -135,6 +151,11 @@ spec:
               number: 9080
           weight: 50
     - name: productpage-route
+      timeout: 10s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
             host: productpage
