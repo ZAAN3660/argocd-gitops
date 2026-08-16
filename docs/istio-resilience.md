@@ -14,22 +14,28 @@
 
 ## 1. 熔断（Circuit Breaking）
 
-### 取值（已从官方演示值调为“正常浏览不触发、压测可演示”档，全部服务一致）
+### 取值（当前为“压测豁免档”，准备压测/灰度期间用；三档速查见下）
 
 ```yaml
 trafficPolicy:
   connectionPool:
     tcp:
-      maxConnections: 10           # 与上游最多 10 条 TCP 连接
+      maxConnections: 1024         # 压测豁免：单副本 Python 应用打不穿
     http:
-      http1MaxPendingRequests: 10  # HTTP/1.1 排队请求上限
-      maxRequestsPerConnection: 10 # 每条连接复用 10 个请求
+      http1MaxPendingRequests: 1024
+      maxRequestsPerConnection: 0  # 0 = 连接不限复用次数
   outlierDetection:
-    consecutive5xxErrors: 5        # 连续 5 次 5xx 才驱逐
+    consecutive5xxErrors: 100      # 连续 100 次 5xx 才驱逐（≈不驱逐）
     interval: 10s
-    baseEjectionTime: 30s          # 驱逐 30 秒后放回
+    baseEjectionTime: 30s
     maxEjectionPercent: 100
 ```
+
+| 档位 | 连接池/排队 | 每连接复用 | 驱逐阈值 | 驱逐时长 | 适用场景 |
+|---|---|---|---|---|---|
+| 官方演示档 | 1 / 1 | 1 | 连续 1 次 5xx | 3m | 受控 fortio 演示熔断 |
+| 日常安全档 | 10 / 10 | 10 | 连续 5 次 5xx | 30s | 正常开发/浏览（v2） |
+| **压测豁免档（当前）** | **1024 / 1024** | **0（不限）** | **连续 100 次 5xx** | **30s** | **压测与灰度发布** |
 
 - 官方示例正是给 reviews 的 v1/v2/v3 挂这套策略，本仓库 reviews DR 与其同构；
   productpage/details/ratings 复用同一骨架，由 overlay patch 注入 DR 名与 FQDN host。
@@ -59,10 +65,9 @@ kubectl exec deploy/fortio -c fortio -- fortio curl http://details:9080/details/
 
 ### 方案：本地限流（每 Envoy 实例独立计数）
 
-- 官方 Rate Limit 任务页 "Local rate limiting" 示例落库（官方演示值 4/60s 已调为 60/60s：
-  一个页面加载就要 4~6 个请求，4/分钟连正常浏览都会 429、页面资源加载不全）：
-  在 productpage sidecar 的 SIDECAR_INBOUND 链路上插入
-  `envoy.filters.http.local_ratelimit`，token_bucket = 60 / 60s。
+- 官方 Rate Limit 任务页 "Local rate limiting" 示例落库，当前为压测豁免档
+  token_bucket = 100000 / 60s（≈1666 req/s，单副本应用压测打不穿）；
+  档位速查：官方演示档 4/60s | 日常安全档 60/60s | 压测豁免档 100000/60s。
 - 被限流的请求返回 **HTTP 429**，且响应头带 `x-local-rate-limit: "true"`（官方示例行为）。
 - **每 Pod 计数**：4 req/min 是"每个 productpage Pod"的配额，Pod 扩容后总配额随之放大。
   需要全局精确限流时走官方 Global rate limiting：
@@ -113,13 +118,13 @@ kubectl get vs -n dev bookinfo -o yaml | grep -A5 retries
 
 ## 5. 生产化调整建议
 
-| 项 | 当前值（v2 调优后） | 生产建议 |
+| 项 | 当前值（压测豁免档） | 压测后建议 |
 |---|---|---|
-| maxConnections / http1MaxPendingRequests | 10 | 按压测结果定容量，常见 100~1024 |
-| maxRequestsPerConnection | 10 | 保留复用上限；需防 H1 队头阻塞时可收紧 |
-| consecutive5xxErrors | 5 | 3~5（容忍瞬时抖动） |
-| baseEjectionTime | 30s | 30s~60s + 设置 maxEjectionPercent ≤ 50% |
-| 限流 token_bucket | 60 / 60s / Pod | 按入口容量评估；需要精确全局阈值改全局限流 |
+| maxConnections / http1MaxPendingRequests | 1024 | 切回日常安全档 10（v2 取值） |
+| maxRequestsPerConnection | 0（不限） | 切回 10 |
+| consecutive5xxErrors | 100 | 切回 5 |
+| baseEjectionTime | 30s | 30s~60s + maxEjectionPercent ≤ 50% |
+| 限流 token_bucket | 100000 / 60s / Pod | 切回 60 / 60s / Pod |
 | timeout | 5s / 10s | 按服务 P99 定（内部更紧，入口放宽） |
 | retries | 3 × 2s | 幂等接口 2~3 次；非幂等接口关闭或收敛 retryOn |
 

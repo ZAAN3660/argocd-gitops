@@ -1,11 +1,9 @@
-# v2
+# v3
 # 本地限流（Istio 1.30 官方 Rate Limit 任务页 "Local rate limiting" 示例）：
 # 在 productpage sidecar 的 inbound 链路上插入 envoy.filters.http.local_ratelimit。
-# v2 配额从官方演示值 4 个/分钟 调到 60 个/分钟：一个页面加载就要
-# 4~6 个请求（页面 + 静态资源），4/分钟连正常浏览都扛不住（页面刚
-# 打开就会 429、资源加载不全）；60/分钟正常浏览无感，连点仍可复现
-# 429 与 x-local-rate-limit: "true" 响应头。官方演示值 4/分钟适合
-# 受控演示，复现方法见 docs/istio-resilience.md。
+# v3 切换“压测豁免档”：token_bucket 100000/60s（≈1666 req/s，单副本
+# Python 应用压测打不穿）。档位速查：官方演示档 4/60s | 日常安全档
+# 60/60s | 压测豁免档（当前值）；压测后建议切回日常安全档（v2 取值）。
 #
 # 两个关键边界（详见 docs/istio-resilience.md）：
 # 1. 本地限流按 Envoy 实例独立计数：Pod 数越多总配额越高，不是全局精确限流；
@@ -39,8 +37,8 @@ spec:
             value:
               stat_prefix: http_local_rate_limiter
               token_bucket:
-                max_tokens: 60               # 桶容量 60 个 token（官方演示值 4）
-                tokens_per_fill: 60          # 每 fill_interval 补充 60 个
+                max_tokens: 100000           # 压测豁免：桶容量 100000（≈1666 req/s）
+                tokens_per_fill: 100000      # 每 fill_interval 补充 100000 个
                 fill_interval: 60s
               filter_enabled:
                 runtime_key: local_rate_limit_enabled
