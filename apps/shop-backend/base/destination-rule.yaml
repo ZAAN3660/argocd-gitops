@@ -1,8 +1,12 @@
-# v1
+# v2
 # 熔断骨架：connectionPool 限制到上游的连接/请求并发，
 # outlierDetection 在实例连续返回 5xx 时把它驱逐出负载均衡池。
-# 取值照抄官方 Circuit Breaking 任务页演示值（故意设小，便于
-# 用 fortio 压测观察熔断触发），生产环境按容量上调，见 docs/istio-resilience.md。
+# v2 取值说明：官方 Circuit Breaking 任务页的演示值（连接池/排队=1、
+# 连续 1 次 5xx 驱逐 3 分钟）是为受控压测设计的，实测用在单副本 +
+# 浏览器正常并发（页面 + 静态资源并行 4~6 个请求）时会自 DoS：
+# 连接池溢出 -> 503 -> 驱逐唯一 Pod -> 3 分钟 no healthy upstream。
+# 因此采用“正常浏览不触发、压测可演示”的安全值；
+# 刻意演示熔断时用 fortio 并发压测，或临时调回官方演示值。
 # host 写占位 FQDN：与 reviews 自带 DR 同一约定，由 overlay patch
 # 换成 <短名>.<ns>.svc.cluster.local。
 # 注意：本 DR 只覆盖稳定通道短名；host 模式的金丝雀短名
@@ -16,12 +20,12 @@ spec:
   trafficPolicy:
     connectionPool:
       tcp:
-        maxConnections: 1                   # 官方演示值：与上游最多保持 1 条 TCP 连接
+        maxConnections: 10                  # 与上游最多 10 条 TCP 连接（浏览器并发 4~6 足够）
       http:
-        http1MaxPendingRequests: 1          # 官方演示值：HTTP/1.1 排队中的请求最多 1 个
-        maxRequestsPerConnection: 1         # 官方演示值：每条连接只复用 1 个请求，用完即断
+        http1MaxPendingRequests: 10         # HTTP/1.1 排队中的请求最多 10 个
+        maxRequestsPerConnection: 10        # 每条连接复用 10 个请求（保留限流语义，不再用完即断）
     outlierDetection:
-      consecutive5xxErrors: 1               # 官方演示值：连续 1 次 5xx 就驱逐
-      interval: 1s                          # 每 1s 评估一次错误率
-      baseEjectionTime: 3m                  # 驱逐后 3 分钟再放回来
-      maxEjectionPercent: 100               # 允许把 100% 实例全部驱逐（演示值，生产通常 <50%）
+      consecutive5xxErrors: 5               # 连续 5 次 5xx 才驱逐（官方演示值是 1，单副本必误伤）
+      interval: 10s                         # 每 10s 评估一次
+      baseEjectionTime: 30s                 # 驱逐后 30 秒放回（官方演示值 3m 恢复太慢）
+      maxEjectionPercent: 100               # 允许驱逐全部实例；配合连续 5 次 5xx 阈值已足够安全

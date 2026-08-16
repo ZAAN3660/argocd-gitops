@@ -1,9 +1,12 @@
-# v4
+# v5
 # base 里 host 写占位 FQDN，各 overlay 用 patch 换成自己命名空间的真实
 # FQDN：DestinationRule 的 host 是目标服务的全限定名，跨命名空间必须显式。
 # v3 新增 trafficPolicy 熔断：与官方 Circuit Breaking 任务页同构——
-# 官方示例正是给 reviews 的 v1/v2/v3 三个 subset 挂连接池+异常驱逐，
-# 这里照搬其演示值（故意设小，便于压测观察触发），生产按容量上调。
+# 官方示例正是给 reviews 的 v1/v2/v3 三个 subset 挂连接池+异常驱逐。
+# v5 熔断值调整为“正常浏览不触发、压测可演示”档位：官方演示值
+# （连接池/排队=1、连续 1 次 5xx 驱逐 3 分钟）实测会在单副本场景
+# 自 DoS（连接池溢出 -> 503 -> 驱逐唯一 Pod -> no healthy upstream），
+# 详见 docs/istio-resilience.md 的复盘记录。
 # v4 改名 bookinfo-reviews-dr：与 productpage/details/ratings 的
 # bookinfo-<服务>-dr 统一（官方 bookinfo 样例用裸短名，本仓库统一带 -dr
 # 角色后缀便于 kubectl 跨类型检索，见 docs/naming.md）。
@@ -16,15 +19,15 @@ spec:
   trafficPolicy:
     connectionPool:
       tcp:
-        maxConnections: 1                     # 官方演示值：与上游最多保持 1 条 TCP 连接
+        maxConnections: 10                    # 与上游最多 10 条 TCP 连接
       http:
-        http1MaxPendingRequests: 1            # 官方演示值：HTTP/1.1 排队中的请求最多 1 个
-        maxRequestsPerConnection: 1           # 官方演示值：每条连接只复用 1 个请求
+        http1MaxPendingRequests: 10           # HTTP/1.1 排队中的请求最多 10 个
+        maxRequestsPerConnection: 10          # 每条连接复用 10 个请求
     outlierDetection:
-      consecutive5xxErrors: 1                 # 官方演示值：连续 1 次 5xx 就驱逐
-      interval: 1s
-      baseEjectionTime: 3m                    # 驱逐后 3 分钟再放回负载均衡池
-      maxEjectionPercent: 100                 # 允许驱逐全部实例（演示值，生产通常 <50%）
+      consecutive5xxErrors: 5                 # 连续 5 次 5xx 才驱逐
+      interval: 10s
+      baseEjectionTime: 30s                   # 驱逐后 30 秒放回
+      maxEjectionPercent: 100
   subsets:
     - name: v1                                # subset 名是路由层引用子集时的句柄
       labels:

@@ -14,28 +14,35 @@
 
 ## 1. 熔断（Circuit Breaking）
 
-### 取值（官方 Circuit Breaking 任务页演示值，全部服务一致）
+### 取值（已从官方演示值调为“正常浏览不触发、压测可演示”档，全部服务一致）
 
 ```yaml
 trafficPolicy:
   connectionPool:
     tcp:
-      maxConnections: 1            # 与上游最多 1 条 TCP 连接
+      maxConnections: 10           # 与上游最多 10 条 TCP 连接
     http:
-      http1MaxPendingRequests: 1   # HTTP/1.1 排队请求上限
-      maxRequestsPerConnection: 1  # 每条连接只复用 1 个请求
+      http1MaxPendingRequests: 10  # HTTP/1.1 排队请求上限
+      maxRequestsPerConnection: 10 # 每条连接复用 10 个请求
   outlierDetection:
-    consecutive5xxErrors: 1        # 连续 1 次 5xx 即驱逐
-    interval: 1s
-    baseEjectionTime: 3m           # 驱逐 3 分钟后放回
-    maxEjectionPercent: 100        # 允许驱逐全部实例
+    consecutive5xxErrors: 5        # 连续 5 次 5xx 才驱逐
+    interval: 10s
+    baseEjectionTime: 30s          # 驱逐 30 秒后放回
+    maxEjectionPercent: 100
 ```
 
 - 官方示例正是给 reviews 的 v1/v2/v3 挂这套策略，本仓库 reviews DR 与其同构；
   productpage/details/ratings 复用同一骨架，由 overlay patch 注入 DR 名与 FQDN host。
 - **语义**：connectionPool 在客户端侧限制到上游的连接/请求并发（超限请求直接 503）；
   outlierDetection 把连续失败的实例踢出负载均衡池，起到"熔断不把流量继续往坏实例送"的效果。
-- **官方演示值故意设得很小**，正常并发下也可能触发 503 + 驱逐。生产化调整见第 5 节。
+- **⚠️ 为什么不用官方演示原值（复盘）**：官方演示值（连接池/排队=1、
+  连续 1 次 5xx 驱逐 3 分钟）是为受控压测设计的。实测用在单副本 +
+  真实浏览器访问时造成自我 DoS：页面加载并发 4~6 个请求，连接池只放行 1 个，
+  其余立刻 503 → 503 算 5xx → 唯一 Pod 被驱逐 3 分钟 → 网关对 productpage
+  零健康端点 → 浏览器持续 "no healthy upstream"，3 分钟后恢复、下次加载再触发。
+  已用 6 并发 curl 复现（响应码 503×4 + 200×2）后调整为上表取值。
+- **刻意演示熔断**：临时把值调回官方演示值（或 `maxConnections: 1`）再用 fortio
+  压测；观察驱逐可用 `istioctl proxy-config endpoint <pod> | grep -i unhealthy`。
 
 ### 验证
 
@@ -52,9 +59,10 @@ kubectl exec deploy/fortio -c fortio -- fortio curl http://details:9080/details/
 
 ### 方案：本地限流（每 Envoy 实例独立计数）
 
-- 官方 Rate Limit 任务页 "Local rate limiting" 示例原样落库：
+- 官方 Rate Limit 任务页 "Local rate limiting" 示例落库（官方演示值 4/60s 已调为 60/60s：
+  一个页面加载就要 4~6 个请求，4/分钟连正常浏览都会 429、页面资源加载不全）：
   在 productpage sidecar 的 SIDECAR_INBOUND 链路上插入
-  `envoy.filters.http.local_ratelimit`，token_bucket = 4 / 60s。
+  `envoy.filters.http.local_ratelimit`，token_bucket = 60 / 60s。
 - 被限流的请求返回 **HTTP 429**，且响应头带 `x-local-rate-limit: "true"`（官方示例行为）。
 - **每 Pod 计数**：4 req/min 是"每个 productpage Pod"的配额，Pod 扩容后总配额随之放大。
   需要全局精确限流时走官方 Global rate limiting：
@@ -105,13 +113,13 @@ kubectl get vs -n dev bookinfo -o yaml | grep -A5 retries
 
 ## 5. 生产化调整建议
 
-| 项 | 当前演示值 | 生产建议 |
+| 项 | 当前值（v2 调优后） | 生产建议 |
 |---|---|---|
-| maxConnections / http1MaxPendingRequests | 1 | 按压测结果定容量，常见 100~1024 |
-| maxRequestsPerConnection | 1 | 保持 1 可防 H1 队头阻塞；有连接复用需求时放宽 |
-| consecutive5xxErrors | 1 | 3~5（容忍瞬时抖动） |
-| baseEjectionTime | 3m | 30s~60s + 设置 maxEjectionPercent ≤ 50% |
-| 限流 token_bucket | 4 / 60s / Pod | 按入口容量评估；需要精确全局阈值改全局限流 |
+| maxConnections / http1MaxPendingRequests | 10 | 按压测结果定容量，常见 100~1024 |
+| maxRequestsPerConnection | 10 | 保留复用上限；需防 H1 队头阻塞时可收紧 |
+| consecutive5xxErrors | 5 | 3~5（容忍瞬时抖动） |
+| baseEjectionTime | 30s | 30s~60s + 设置 maxEjectionPercent ≤ 50% |
+| 限流 token_bucket | 60 / 60s / Pod | 按入口容量评估；需要精确全局阈值改全局限流 |
 | timeout | 5s / 10s | 按服务 P99 定（内部更紧，入口放宽） |
 | retries | 3 × 2s | 幂等接口 2~3 次；非幂等接口关闭或收敛 retryOn |
 
