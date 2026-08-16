@@ -32,12 +32,12 @@ spec:
                 - environment: dev        # 环境名：同时用作 overlay 路径段和应用名后缀
                   server: https://kubernetes.default.svc # 该环境所在集群（当前三个环境在同一集群）
                   namespace: dev          # 该环境独占的命名空间（环境之间真正的隔离边界）
-                - environment: staging
-                  server: https://kubernetes.default.svc
-                  namespace: staging
-                - environment: prod
-                  server: https://kubernetes.default.svc
-                  namespace: prod
+                # - environment: staging
+                #   server: https://kubernetes.default.svc
+                #   namespace: staging
+                # - environment: prod
+                #   server: https://kubernetes.default.svc
+                #   namespace: prod
   template:                               # 下半场：每个组合套这份模板，产出 1 个 Application
     metadata:
       name: 'rd-{{.path.basename}}-{{.environment}}'
