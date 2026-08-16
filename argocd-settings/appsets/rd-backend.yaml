@@ -23,7 +23,7 @@ spec:
         generators:
           - git:                          # 维度一：扫描 Git 仓库目录，一个目录产生一个候选
               repoURL: https://github.com/ZAAN3660/argocd-gitops.git
-              revision: main
+              revision: init
               requeueAfterSeconds: 300    # 控制器每 5 分钟重扫一次仓库：新目录自动生成新应用，删目录应用自动消失
               directories:
                 - path: apps/rd-backend/microservices/*   # 扫描范围：该路径下的每个直接子目录
@@ -64,7 +64,7 @@ spec:
             - /spec/selector
       source:                             # 这个应用去仓库的哪个路径拿清单
         repoURL: https://github.com/ZAAN3660/argocd-gitops.git
-        targetRevision: main
+        targetRevision: init
         path: '{{.path.path}}/overlays/{{.environment}}'
                                           # {{.path.path}} = 扫描到的目录完整路径
                                           # 例：目录 bookinfo-productpage × 环境 dev
