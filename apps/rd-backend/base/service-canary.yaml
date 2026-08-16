@@ -1,0 +1,14 @@
+# v4
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-canary                      # 占位名：overlay patch 改成 <短名>-canary
+spec:
+  type: ClusterIP
+  selector:
+    app: app                                # 与稳定 Service 同值：发布时控制器注入 hash 标签，把金丝雀 Pod 单独选出来
+  ports:
+    - name: http
+      port: 9080
+      targetPort: 9080
+      protocol: TCP

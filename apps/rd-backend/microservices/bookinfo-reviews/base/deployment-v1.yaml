@@ -1,0 +1,30 @@
+# v1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookinfo-reviews-v1                  # 名字带版本号：三个 Deployment 并存时的唯一区分手段
+  labels:
+    app: bookinfo-reviews                    # 服务标识，Service 选择器靠它聚合三个版本
+    version: v1                              # 版本标识，DestinationRule 靠它切分 subset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookinfo-reviews
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: bookinfo-reviews
+        version: v1
+        sidecar.istio.io/inject: "true"    # 必须注入 sidecar：productpage→reviews 内部调用要经过 VS 才参与 subset 路由
+        istio.io/rev: default
+      annotations:
+        sidecar.istio.io/inject: "true"
+        istio.io/rev: default
+    spec:
+      containers:
+        - name: reviews
+          image: docker.io/istio/examples-bookinfo-reviews-v1:1.16.2
+          ports:
+            - containerPort: 9080

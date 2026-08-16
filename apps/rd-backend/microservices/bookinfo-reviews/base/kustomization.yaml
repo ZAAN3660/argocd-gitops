@@ -1,0 +1,12 @@
+# v2
+# reviews 不引用团队 base：它有 v1/v2/v3 三个 Deployment 变体，
+# 硬套单 Deployment 模板需先删占位再注入三个变体，可读性低于直接手写。
+# Service 名用官方短名 reviews：productpage 镜像硬编码 http://reviews:9080。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - service.yaml                            # 一个 Service 三版本共用，端口统一 9080
+  - deployment-v1.yaml                      # 三个版本是三个独立 Deployment，靠 version 标签区分
+  - deployment-v2.yaml
+  - deployment-v3.yaml
+  - destination-rule.yaml                   # Istio DestinationRule：把三个版本声明为子集，供路由层引用

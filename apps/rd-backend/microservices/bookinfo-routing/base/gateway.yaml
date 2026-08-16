@@ -1,0 +1,18 @@
+# v1
+# 入口网关：把集群外 HTTP/HTTPS 流量接进网格，绑定到 Istio 的
+# ingressgateway。三个环境各自把 VirtualService 挂在这个 Gateway 上，
+# 入口统一但路由规则分环境。
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: bookinfo-gateway
+spec:
+  selector:
+    istio: ingressgateway                   # 选中 istio ingress gateway 这个实际转发代理
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - 'bookinfo.example.com'           # 入口域名：只受理本应用的入口流量，不写 * 避免抢其他入口

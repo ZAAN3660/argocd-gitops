@@ -1,0 +1,12 @@
+# v4
+# 骨架层只声明资源与占位值，改名由每个 overlay 用显式 patch 完成。
+# 灰度架构五件套：Rollout(灰度发布) + 双 Service(stable/canary 通道) +
+# ScaledObject(KEDA 扩缩容) + PodMonitor(网格指标) + AnalysisTemplate(自动分析)。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - rollout.yaml                            # 灰度发布总指挥，overlay 用 patch 改名、labels 定身份、images 换镜像
+  - service.yaml                            # 稳定通道，overlay 改成官方短名（镜像硬编码）
+  - service-canary.yaml                     # 金丝雀通道，overlay 改成 <短名>-canary
+  - scaledobject.yaml                       # KEDA 自动扩缩容，overlay 注入扩缩容目标名
+  - podmonitor.yaml                         # 网格指标抓取，hash relabel 供分析模板区分新旧

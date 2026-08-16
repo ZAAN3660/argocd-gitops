@@ -1,0 +1,19 @@
+# v2
+# base 里 host 写占位 FQDN，各 overlay 用 patch 换成自己命名空间的真实
+# FQDN：DestinationRule 的 host 是目标服务的全限定名，跨命名空间必须显式。
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: bookinfo-reviews
+spec:
+  host: reviews.<namespace>.svc.cluster.local    # 占位：实际值由 overlay patch 注入，这里仅保持字段完整
+  subsets:
+    - name: v1                                # subset 名是路由层引用子集时的句柄
+      labels:
+        version: v1                           # 按 Pod 的 version 标签切分流量子集
+    - name: v2
+      labels:
+        version: v2
+    - name: v3
+      labels:
+        version: v3

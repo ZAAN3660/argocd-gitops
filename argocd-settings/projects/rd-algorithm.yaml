@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: rd-algorithm                                    # project = 应用域/团队名；与 rd-backend 并列，各管各的应用
+  namespace: argocd
+spec:
+  description: 算法研发团队
+  sourceRepos:
+    - 'https://github.com/ZAAN3660/argocd-gitops.git'   # 算法团队的 Git 仓库列表
+  destinations:                                         # 粒度是 (server, namespace) 二元组，不在清单里的组合一律拒绝 syncing
+    - namespace: dev
+      server: https://kubernetes.default.svc
+    - namespace: staging
+      server: https://kubernetes.default.svc
+    - namespace: prod
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist: []                          # 空 = 禁止一切集群级资源，团队应用不能碰集群对象
+  namespaceResourceWhitelist: []                        # 空 = 不额外限制命名空间级资源
+  sourceNamespaces: []                                  # 空 = 不限制 Application 来源命名空间
