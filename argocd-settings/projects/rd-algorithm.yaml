@@ -14,6 +14,8 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: prod
       server: https://kubernetes.default.svc
-  clusterResourceWhitelist: []                          # 空 = 禁止一切集群级资源，团队应用不能碰集群对象
-  namespaceResourceWhitelist: []                        # 空 = 不额外限制命名空间级资源
+  clusterResourceWhitelist:                            # 集群级资源白名单：只放行 Namespace（应用要自建环境命名空间）
+    - group: ''
+      kind: Namespace
+  # namespaceResourceWhitelist 不写 = 放行所有命名空间级资源；显式 [] 反而拒绝一切（v3 语义）
   sourceNamespaces: []                                  # 空 = 不限制 Application 来源命名空间
