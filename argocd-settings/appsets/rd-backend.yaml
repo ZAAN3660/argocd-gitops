@@ -57,7 +57,7 @@ spec:
         - group: networking.istio.io
           kind: VirtualService
           jqPathExpressions:
-            - .spec.http[*].route[*].weight
+            - .spec.http[].route[].weight
         - group: ""
           kind: Service
           jsonPointers:
