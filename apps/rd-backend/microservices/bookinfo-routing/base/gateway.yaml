@@ -16,3 +16,12 @@ spec:
         protocol: HTTP
       hosts:
         - 'bookinfo.example.com'           # 入口域名：只受理本应用的入口流量，不写 * 避免抢其他入口
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - 'bookinfo.example.com'           # 443 TLS 监听：productpage v1.16+ 会强制跳 HTTPS，必须有
+      tls:
+        mode: SIMPLE                        # 单向 TLS：客户端验证服务端证书
+        credentialName: bookinfo-gateway-certs  # 引用同命名空间(dev)里的 TLS Secret，学习环境用自签证书
