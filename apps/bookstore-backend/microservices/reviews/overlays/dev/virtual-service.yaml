@@ -19,13 +19,19 @@ spec:
       route:
         - destination:
             host: reviews
+            subset: v1
+            port:
+              number: 9080
+          weight: 30
+        - destination:
+            host: reviews
             subset: v2
             port:
               number: 9080
-          weight: 50
+          weight: 35
         - destination:
             host: reviews
             subset: v3
             port:
               number: 9080
-          weight: 50
+          weight: 35
