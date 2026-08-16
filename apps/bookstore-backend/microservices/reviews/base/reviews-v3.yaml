@@ -39,7 +39,8 @@ spec:
     canary:
       maxUnavailable: 0                   # 发布全程现有 Pod 不减，服务不中断
       steps:
-        - setCanaryScale: 1               # 副本数式金丝雀：起 1 个新版 Pod（无 trafficRouting，setWeight 不可用）
+        - setCanaryScale:
+            replicas: 1               # 副本数式金丝雀：起 1 个新版 Pod（无 trafficRouting，setWeight 不可用）
         - pause: {}                       # 暂停：AnalysisRun 达标自动放行，失败自动回滚
       analysis:
         templates:
