@@ -10,7 +10,7 @@ metadata:
   labels:
     app: app                                # 占位标签：overlay labels 覆写为服务短名
 spec:
-  replicas: 2                               # 与 KEDA minReplicaCount 对齐；灰度中 stable+canary 合计不超过它
+  replicas: 1                               # 与 KEDA minReplicaCount 对齐；灰度中 stable+canary 合计不超过它
   revisionHistoryLimit: 2                   # 保留 2 个历史 ReplicaSet，够一次回滚
   selector:
     matchLabels:
