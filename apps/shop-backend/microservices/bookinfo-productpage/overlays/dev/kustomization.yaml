@@ -29,7 +29,7 @@ patches:
     patch: |-
       - op: replace
         path: /metadata/name
-        value: bookinfo-productpage-app           # Rollout 名带服务前缀，命名空间内唯一
+        value: shop-bookinfo-productpage           # Rollout 名带服务前缀，命名空间内唯一
       - op: replace
         path: /spec/strategy/canary/stableService
         value: productpage                          # 稳定通道 = 官方短名（镜像硬编码的 DNS 名）
