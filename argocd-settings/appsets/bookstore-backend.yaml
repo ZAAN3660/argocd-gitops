@@ -1,0 +1,81 @@
+# v4
+# 这个文件不是任何一个应用，而是一份"批量生成应用"的规则。
+# Argo CD 内置的 ApplicationSet 控制器读取它，按规则生成多个
+# Application 对象（Application 才是 Argo CD 真正去部署的单元）。
+# 当前规则生成 5 个服务目录 × 3 个环境 = 15 个 Application。
+#
+# 三层分工（谁来部署什么）：
+# bootstrap 根应用（手动 apply 一次）→ 部署出本文件与 AppProject；
+# 本文件 → 生成 15 个 Application；
+# 15 个 Application → 各自部署一个服务在一个环境里的清单。
+#
+# 日常加服务 = 在 apps/bookstore-backend/microservices/ 下新建一个目录，
+# 其余全部自动发生，不需要手写任何 Application。
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: bookstore-backend                     # 本规则的名字；它生成的 Application 是另一批独立对象
+  namespace: argocd
+spec:
+  goTemplate: true                        # 允许下面的字符串用 {{变量}} 占位，生成时替换成真实值
+  generators:                             # 上半场：决定生成哪些组合（每个组合 = 一个 Application）
+    - matrix:                             # matrix = 把两个维度逐项配对（笛卡尔积）：目录维度 × 环境维度
+        generators:
+          - git:                          # 维度一：扫描 Git 仓库目录，一个目录产生一个候选
+              repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+              revision: init
+              requeueAfterSeconds: 300    # 控制器每 5 分钟重扫一次仓库：新目录自动生成新应用，删目录应用自动消失
+              directories:
+                - path: apps/bookstore-backend/microservices/*  # 扫描范围：该路径下的每个直接子目录
+          - list:                         # 维度二：手工列出的环境清单，一条记录 = 一个环境
+              elements:
+                - environment: dev        # 环境名：同时用作 overlay 路径段和应用名后缀
+                  server: https://kubernetes.default.svc # 该环境所在集群（当前三个环境在同一集群）
+                  namespace: dev          # 该环境独占的命名空间（环境之间真正的隔离边界）
+                # - environment: staging
+                #   server: https://kubernetes.default.svc
+                #   namespace: staging
+                # - environment: prod
+                #   server: https://kubernetes.default.svc
+                #   namespace: prod
+  template:                               # 下半场：每个组合套这份模板，产出 1 个 Application
+    metadata:
+      name: 'bookstore-{{.path.basename}}-{{.environment}}'
+                                          # {{.path.basename}} = 目录名，{{.environment}} = 环境名
+                                          # 前缀 bookstore- = 团队标识，与 AppProject/ApplicationSet 名对齐
+                                          # 例：目录 bookinfo-productpage × 环境 dev
+                                          # → 应用名 bookstore-bookinfo-productpage-dev
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: bookstore-backend              # 挂到同名 AppProject 下，部署目标受其 destinations 白名单约束
+      ignoreDifferences:                  # 预置豁免清单：灰度发布时 Rollout 控制器会动态改写下述字段，
+        - group: argoproj.io              # Argo CD 检测漂移时跳过它们，不把这些运行时改动当漂移回滚
+          kind: Rollout
+          jsonPointers:
+            - /spec/template/metadata/labels/rollouts-pod-template-hash
+        - group: networking.istio.io
+          kind: VirtualService
+          jqPathExpressions:
+            - .spec.http[].route[].weight
+        - group: ""
+          kind: Service
+          jsonPointers:
+            - /spec/selector
+      source:                             # 这个应用去仓库的哪个路径拿清单
+        repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+        targetRevision: init
+        path: '{{.path.path}}/overlays/{{.environment}}'
+                                          # {{.path.path}} = 扫描到的目录完整路径
+                                          # 例：目录 bookinfo-productpage × 环境 dev
+                                          # → 源路径 = apps/bookstore-backend/microservices/bookinfo-productpage/overlays/dev
+      destination:                        # 这个应用部署到哪里
+        server: '{{.server}}'             # 从环境清单带入：当前三个环境都是同一集群
+        namespace: '{{.namespace}}'       # 从环境清单带入：dev/staging/prod 各归各的命名空间
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

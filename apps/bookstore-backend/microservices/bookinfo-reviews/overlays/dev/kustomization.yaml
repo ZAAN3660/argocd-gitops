@@ -1,0 +1,14 @@
+# v4
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: dev
+resources:
+  - ../../base                              # reviews 的资源全在 base，overlay 只做命名空间与 host 修订
+patches:
+  - target:                                 # 目标：base 里的 DestinationRule
+      kind: DestinationRule
+      name: reviews-dr
+    patch: |-                               # 改动：host 的命名空间段改成当前 overlay 的命名空间
+      - op: replace
+        path: /spec/host
+        value: reviews.dev.svc.cluster.local

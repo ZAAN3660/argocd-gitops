@@ -86,7 +86,7 @@ for i in $(seq 1 8); do
     -H "Host: bookinfo.example.com" http://<ingress-gateway-ip>/productpage | head -c 120; echo
 done
 # 确认过滤器已注入 sidecar
-kubectl exec -n dev deploy/bookinfo-productpage-app -c istio-proxy -- \
+kubectl exec -n dev deploy/productpage-v1 -c istio-proxy -- \
   pilot-agent request GET config_dump | grep -c local_ratelimit
 ```
 
@@ -131,7 +131,7 @@ kubectl get vs -n dev bookinfo -o yaml | grep -A5 retries
 ## 6. 验证清单（合入后逐项过）
 
 - [ ] `kustomize build` 全部 15 个 overlay 无语法错误
-- [ ] `kubectl get destinationrule -n dev`：bookinfo-productpage/details/ratings-dr + bookinfo-reviews-dr 各一份，host 为 FQDN
+- [ ] `kubectl get destinationrule -n dev`：productpage/details/ratings-dr + reviews-dr 各一份，host 为 FQDN
 - [ ] `kubectl get envoyfilter -n dev`：filter-local-ratelimit-productpage 存在
 - [ ] `kubectl get vs -n dev bookinfo -o yaml`：四条权重路由带 timeout/retries
 - [ ] 连续刷新 productpage 页面可复现 429 + x-local-rate-limit 响应头

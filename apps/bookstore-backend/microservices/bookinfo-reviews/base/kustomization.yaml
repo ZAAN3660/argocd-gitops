@@ -1,0 +1,20 @@
+# v4
+# reviews 不引用团队 base：它有 v1/v2/v3 三个 Deployment 变体，
+# 硬套单 Deployment 模板需先删占位再注入三个变体，可读性低于直接手写。
+# Service 名用官方短名 reviews：productpage 镜像硬编码 http://reviews:9080。
+# v3 新增 K8s 官方推荐标签（app.kubernetes.io/*，只贴元数据，不动选择器）。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - pairs:
+      app.kubernetes.io/name: reviews            # 官方推荐标签：应用名
+      app.kubernetes.io/part-of: bookinfo        # 官方推荐标签：所属应用
+      app.kubernetes.io/managed-by: argocd       # 官方推荐标签：管理工具
+    # 不加 includeSelectors：Service/Deployment 选择器维持 app+version 原有逻辑。
+    # app.kubernetes.io/instance 不写：Argo CD 自 v2.2 起默认占用该键做追踪标签，避免冲突
+resources:
+  - service.yaml                            # 一个 Service 三版本共用，端口统一 9080
+  - reviews-v1.yaml                      # 三个版本是三个独立 Deployment，靠 version 标签区分
+  - reviews-v2.yaml
+  - reviews-v3.yaml
+  - destination-rule.yaml                   # Istio DestinationRule：三个版本声明为子集 + 熔断策略

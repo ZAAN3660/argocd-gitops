@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: bookstore-frontend                                     # project 名 = 应用域；与 bookstore-backend 并列，各管各的应用
+  namespace: argocd
+spec:
+  description: 前端研发团队
+  sourceRepos:
+    - 'https://github.com/ZAAN3660/argocd-gitops.git'   # 前端团队的 Git 仓库列表
+  destinations:                                         # 粒度是 (server, namespace) 二元组，不在清单里的组合一律拒绝 syncing
+    - namespace: dev
+      server: https://kubernetes.default.svc
+    - namespace: staging
+      server: https://kubernetes.default.svc
+    - namespace: prod
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:                            # 集群级资源白名单：只放行 Namespace（应用要自建环境命名空间）
+    - group: ''
+      kind: Namespace
+  # namespaceResourceWhitelist 不写 = 放行所有命名空间级资源；显式 [] 反而拒绝一切（v3 语义）
+  sourceNamespaces: []                                  # 空 = 不限制 Application 来源命名空间

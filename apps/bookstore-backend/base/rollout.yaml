@@ -1,0 +1,82 @@
+# v4
+# 灰度发布总指挥：Rollout = 带 canary 策略的 Deployment，发布时由
+# Argo Rollouts 控制器动态改 VirtualService 路由权重完成切流。
+# stableService/canaryService 两个名字由 overlay patch 注入
+# （稳定通道 = 官方短名，镜像硬编码的 DNS 名不能变）。
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: app                                 # 占位名：overlay patch 改成官方名 <短名>-v1
+  labels:
+    app: app                                # 占位标签：overlay labels 覆写为服务短名
+spec:
+  replicas: 1                               # 与 KEDA minReplicaCount 对齐；灰度中 stable+canary 合计不超过它
+  revisionHistoryLimit: 2                   # 保留 2 个历史 ReplicaSet，够一次回滚
+  selector:
+    matchLabels:
+      app: app                              # 占位：与 Pod 模板标签同步覆写，只认自己的 Pod
+  template:
+    metadata:
+      labels:
+        app: app
+        version: "1.16.2"                   # 网格指标 destination_version 的数据源；升级镜像时同步改
+        sidecar.istio.io/inject: "true"     # 显式声明注入（label + annotation 双保险）
+        istio.io/rev: default
+      annotations:
+        sidecar.istio.io/inject: "true"
+        istio.io/rev: default
+    spec:
+      containers:
+        - name: app
+          image: app:latest                 # 占位镜像：overlay images 字段按名字精确替换
+          ports:
+            - name: http                    # 端口名：Service targetPort、PodMonitor 的 port 引用都靠它
+              containerPort: 9080           # bookinfo 统一端口
+          resources:
+            requests:                       # KEDA CPU/内存触发器的"使用率"分母，缺了触发器不生效
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:                   # 就绪探针：Pod 就绪才收流量，灰度切流的前提
+            tcpSocket:                      # bookinfo 镜像无统一就绪端点，TCP 探活与镜像解耦
+              port: 9080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 9080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+  strategy:
+    canary:                                 # 发布策略：灰度
+      stableService: service                # 占位：overlay patch 改成官方短名
+      canaryService: service-canary         # 占位：overlay patch 改成 <短名>-canary
+      maxUnavailable: 0                     # 发布全程现有 Pod 不减，服务不中断
+      trafficRouting:                       # 流量切分交给 Istio（与 nginx 方案二选一，不能同时配）
+        istio:
+          virtualService:
+            name: bookinfo                  # 本环境命名空间里 routing 层维护的 VS
+            routes:
+              - app-route                   # 占位：只列"权重"那条 route，header/cookie 静态规则 Rollout 不碰
+      steps:                                # 发布节奏：逐步放量，每步 pause 等分析通过
+        - setWeight: 10                     # 金丝雀 10%
+        - pause: {}                         # 无限期暂停：AnalysisRun 达标自动进下一步，失败自动回滚
+        - setWeight: 25
+        - pause: {}
+        - setWeight: 75
+        - pause: {}
+        - setWeight: 100                    # 全量
+      analysis:                             # 灰度自动分析：三个模板"且"关系，都过才算过
+        templates:
+          - templateName: traffic-check     # 先确认金丝雀有流量，防"无流量假通过"
+          - templateName: success-rate      # 金丝雀成功率 >= 90%
+          - templateName: p99-latency       # 金丝雀 P99 <= 500ms
+        args:
+          - name: stable-hash
+            valueFrom:
+              podTemplateHashValue: Stable  # 自动取稳定 ReplicaSet 的 hash
+          - name: canary-hash
+            valueFrom:
+              podTemplateHashValue: Latest  # 自动取金丝雀 ReplicaSet 的 hash

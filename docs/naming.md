@@ -17,7 +17,7 @@
    同一资源类型在三个环境里同名共存是 Kubernetes 惯例（名字唯一性只要求
    namespace 内 kind 内唯一）。名字里塞环境段反而制造噪音。
 2. **环境后缀只出现在共享 namespace**：目前唯一共享 namespace 是 argocd，
-   所以只有 Argo CD Application 名带环境段：`shop-<服务>-<env>`。
+   所以只有 Argo CD Application 名带环境段：`bookstore-<服务>-<env>`。
    将来若出现 istio-system / monitoring 里的共享资源，也必须带环境前缀。
 3. **类型语义不进名字、进标签**：Kubernetes 官方推荐用 `app.kubernetes.io/component`
    表达组件类型。本仓库的角色后缀（-app/-scaler/-monitor/-dr/-canary）是
@@ -30,9 +30,9 @@
 
 | Kind | 名字 | 环境段 | 说明 |
 |---|---|---|---|
-| Application | `shop-<服务目录名>-<env>` | ✅ 必须有 | 15 条挤在同一个 argocd namespace，靠环境段区分 |
-| ApplicationSet | `shop-backend` | ❌ | 一条规则覆盖所有环境 |
-| AppProject | `shop-<团队>` | ❌ | 团队边界，与环境无关 |
+| Application | `bookstore-<服务目录名>-<env>` | ✅ 必须有 | 15 条挤在同一个 argocd namespace，靠环境段区分 |
+| ApplicationSet | `bookstore-backend` | ❌ | 一条规则覆盖所有环境 |
+| AppProject | `bookstore-<团队>` | ❌ | 团队边界，与环境无关 |
 
 ### 环境 namespace（dev/staging/prod）——名字不带环境段
 
@@ -41,11 +41,11 @@
 | Namespace | `<env>` | dev | 本身就是环境 |
 | Service（稳定通道） | `<短名>` | productpage | bookinfo 镜像硬编码，不可改 |
 | Service（金丝雀通道） | `<短名>-canary` | productpage-canary | Argo Rollouts 官方约定 |
-| Rollout | `bookinfo-<服务>-app` | bookinfo-productpage-app | 仓库统一角色后缀 |
-| ScaledObject | `bookinfo-<服务>-scaler` | bookinfo-productpage-scaler | 同上 |
-| PodMonitor | `bookinfo-<服务>-monitor` | bookinfo-productpage-monitor | 同上 |
-| DestinationRule | `bookinfo-<服务>-dr` | bookinfo-productpage-dr / bookinfo-reviews-dr | 同上（官方样例用裸短名，仓库统一带 -dr 便于跨类型检索） |
-| Deployment | `bookinfo-reviews-<version>` | bookinfo-reviews-v1 | 三版本并存靠版本段区分 |
+| Rollout | `<短名>-v1` | productpage-v1 | 官方 bookinfo Deployment 命名（Pod 名与官方一致） |
+| ScaledObject | `<短名>-scaler` | productpage-scaler | 短名开头，与 Rollout 对应 |
+| PodMonitor | `<短名>-monitor` | productpage-monitor | 同上 |
+| DestinationRule | `<短名>-dr` | productpage-dr / reviews-dr | 同上（官方样例 reviews 裸名，仓库统一短名 + -dr 角色后缀） |
+| Deployment | `reviews-<version>` | reviews-v1 | 官方 bookinfo 命名 |
 | VirtualService | `bookinfo` | 每环境一份 | Istio 官方 bookinfo 样例原名 |
 | Gateway | `bookinfo-gateway` | 每环境一份 | Istio 官方 bookinfo 样例原名 |
 | EnvoyFilter | `filter-<功能>-<目标>` | filter-local-ratelimit-productpage | Istio 官方 Rate Limit 示例模式（filter-local-ratelimit-svc） |
@@ -67,7 +67,7 @@
 
 | 标签键 | 值 | 承担功能 | 是否进选择器 |
 |---|---|---|---|
-| `app` | `<短名>`（reviews 例外沿用 `bookinfo-reviews`，历史遗留值） | 选择器/灰度身份/PodMonitor 匹配（功能标签，历史沿用） | ✅ 进 |
+| `app` | `<短名>`（v7 起 reviews 也与官方对齐为 `reviews`） | 选择器/灰度身份/PodMonitor 匹配（功能标签，官方 bookinfo 同名标签） | ✅ 进 |
 | `version` | v1/v2/v3（仅 reviews） | DestinationRule subset 切分（功能标签） | ✅ 进 |
 | `rollouts-pod-template-hash` | 运行时生成 | 灰度 hash 分析（Rollouts 注入） | ✅ 进 |
 | `app.kubernetes.io/name` | `<短名>` / bookinfo | 官方推荐：应用名 | ❌ 只贴元数据 |
@@ -85,7 +85,7 @@ routing overlay 的 labels 作用于最终全部资源（含 base 的 Gateway/�
 |---|---|---|
 | 集群 | cluster secret + ApplicationSet list | hub 集群自用，`server` 统一为 https://kubernetes.default.svc |
 | 环境 | ApplicationSet list 元素 + `overlays/<env>` 目录 | dev / staging / prod 三环境，staging 与 prod 同集群靠 namespace 区分 |
-| 团队 | `apps/<domain>/` 目录 + 一个 AppProject | shop-backend 域（shop 团队） |
+| 团队 | `apps/<domain>/` 目录 + 一个 AppProject | bookstore-backend 域（bookstore 团队） |
 | 应用域 | 团队内的命名空间 | bookinfo 系列 |
 
 ## 目录定义
@@ -110,11 +110,12 @@ routing overlay 的 labels 作用于最终全部资源（含 base 的 Gateway/�
 
 ## 韧性配置约定（熔断/限流/重试/超时）
 
-- **熔断**：DestinationRule.trafficPolicy（connectionPool + outlierDetection），取值照官方 Circuit Breaking 演示值
+- **熔断**：DestinationRule.trafficPolicy（connectionPool + outlierDetection），结构照官方 Circuit Breaking 任务页，
+  取值分三档（详见 docs/istio-resilience.md 速查表）：官方演示档（1/1/1、5xx×1、3m）| 日常安全档 | 压测豁免档（当前）
   - reviews：写在自带 base 的 destination-rule.yaml（subset + trafficPolicy，与官方 bookinfo 熔断示例同构）
   - productpage/details/ratings：团队 base 骨架 + 各 overlay patch 注入 DR 名与 FQDN host
 - **限流**：本地限流 EnvoyFilter（envoy.filters.http.local_ratelimit），放 routing base 随环境渲染，
-  只作用于同命名空间 app=productpage 的 sidecar（每 Pod 4 req/min，官方演示值）
+  只作用于同命名空间 app=productpage 的 sidecar；同样分三档，当前压测豁免档 100000/60s/Pod
 - **重试/超时**：写在 routing 层 VirtualService 四条权重路由上（内部 5s / 入口 10s；
   retries 3 次 × perTry 2s，retryOn gateway-error,connect-failure,refused-stream）
 - **共存边界**：Rollouts 只改写 route[].weight，不覆盖同路由的 timeout/retries；

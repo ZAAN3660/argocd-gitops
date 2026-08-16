@@ -1,0 +1,32 @@
+# v2
+# 与 v1 的差异只有三处：名字后缀、version 标签、镜像 tag。
+# v2 版本行为：调用 ratings 展示星级评分，与 v1 的纯文字评论不同。
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reviews-v2
+  labels:
+    app: reviews
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reviews
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: reviews
+        version: v2
+        sidecar.istio.io/inject: "true"    # 必须注入 sidecar：reviews→ratings 内部调用要经过 VS 才参与灰度
+        istio.io/rev: default
+      annotations:
+        sidecar.istio.io/inject: "true"
+        istio.io/rev: default
+    spec:
+      containers:
+        - name: reviews
+          image: docker.io/istio/examples-bookinfo-reviews-v2:1.16.2
+          ports:
+            - containerPort: 9080
