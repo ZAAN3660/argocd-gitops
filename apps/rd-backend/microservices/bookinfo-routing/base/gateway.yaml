@@ -24,4 +24,4 @@ spec:
         - 'bookinfo.example.com'           # 443 TLS 监听：productpage v1.16+ 会强制跳 HTTPS，必须有
       tls:
         mode: SIMPLE                        # 单向 TLS：客户端验证服务端证书
-        credentialName: bookinfo-gateway-certs  # 引用同命名空间(dev)里的 TLS Secret，学习环境用自签证书
+        credentialName: bookinfo-gateway-certs  # 引用 ingressgateway Pod所在命名空间(istio-system)里的 TLS Secret，学习环境用自签证书（kubectl create secret tls，不入库）
