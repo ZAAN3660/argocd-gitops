@@ -30,14 +30,14 @@ spec:
               value: 20                     # 一次最多缩 20%
               periodSeconds: 60
   triggers:
-    - type: cpu                             # 触发器 1：CPU 使用率超 80%（依赖 resources.requests.cpu）
-      metricType: Utilization
-      metadata:
-        value: "80"
-    - type: memory                          # 触发器 2：内存使用率超 75%（依赖 resources.requests.memory）
-      metricType: Utilization
-      metadata:
-        value: "75"
+    # - type: cpu                             # 触发器 1：CPU 使用率超 80%（依赖 resources.requests.cpu）
+    #   metricType: Utilization
+    #   metadata:
+    #     value: "80"
+    # - type: memory                          # 触发器 2：内存使用率超 75%（依赖 resources.requests.memory）
+    #   metricType: Utilization
+    #   metadata:
+    #     value: "75"
     - type: prometheus                      # 触发器 3：QPS 超阈值（网格指标，stable+canary 合计）
       metadata:
         serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
