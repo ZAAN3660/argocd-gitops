@@ -1,0 +1,57 @@
+# ============================================================
+# 故障注入（Fault Injection）练手示例 —— 未启用，教学保留
+# ============================================================
+# 同熔断示例：完整合法 YAML，【未加入 kustomization.yaml】，不渲染进集群。
+# 启用方式：加进 kustomization resources（三环境）或 kubectl apply -f 手动跑。
+#
+# 【心智骨架】
+# fault 挂在 VS 的 http route 上，两个注入原语：
+#   1. delay —— 模拟"服务变慢"：按百分比给匹配流量加固定延迟
+#   2. abort —— 模拟"服务故障"：按百分比直接返回指定 HTTP 状态码
+# 混沌工程最轻量的工具：不真的搞坏服务，只对流量做手脚。
+#
+# 【运行时因果链】（本示例生效链：productpage 调 reviews）
+# productpage 调 reviews → sidecar 匹配 reviews 的 VS
+#   → 命中本 route：50% 请求延迟 5s、10% 请求直接 503（两者独立计算）
+#   → 观察调用方：productpage 超时？重试？UI 卡顿还是报错？
+#   → 进阶：配合调用方的 timeout/retry 配置（见 VS route.timeout / route.retries），
+#     看注入故障下系统的韧性表现。
+#
+# 【练手步骤】
+#   1. kubectl apply -f 本文件（-n dev）。
+#   2. 浏览器刷 productpage 若干次：约一半页面明显变慢（5s 延迟），
+#      约十分之一直接报错（503）。
+#   3. 把 percentage 调到 100、abort.httpStatus 换成 500，感受"全站故障"。
+#   4. 练完 kubectl delete -f 本文件，确认正式分流恢复。
+#
+# 【陷阱】
+#   1. 同 host 多 VS 会【合并路由】：本示例 host 与正式 reviews A/B VS 相同，
+#      手动 apply 后和正式分流规则叠加生效——练手限 dev、用完即删；
+#      想更安全可把 match header 规则复制进来，限定注入只作用于测试流量。
+#   2. percentage 是"匹配到这条 route 的流量"的比例，不是全站比例。
+#   3. delay 要配合调用方 timeout 才有演示价值：productpage 默认无 timeout，
+#      5s 延迟表现为"页面慢"而非报错；想看超时报错需先配 route.timeout。
+#   4. abort 与 retry 叠加时：调用方的 retry 会把 503 "吃掉"一部分，
+#      观察时看到的报错次数会少于注入比例。
+#   5. delay + abort 可同时配（本例即如此）：delay 50% 与 abort 10% 独立判定。
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: reviews-fault-example               # 独立示例名，不与正式 reviews VS 同名
+spec:
+  hosts:
+    - reviews
+  http:
+    - fault:
+        delay:
+          percentage:
+            value: 50                       # 50% 的匹配请求
+          fixedDelay: 5s                    # 延迟 5 秒（模拟慢服务）
+        abort:
+          percentage:
+            value: 10                       # 10% 的匹配请求
+          httpStatus: 503                   # 直接返回 503（模拟故障）
+      route:
+        - destination:
+            host: reviews
+            subset: v3                      # 注入只落在 v3（A/B 实验版），不污染 v1/v2
