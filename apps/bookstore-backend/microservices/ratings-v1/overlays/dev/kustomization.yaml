@@ -22,7 +22,7 @@ resources:
 images:
   - name: app                                # 匹配 base 里名为 app 的容器镜像字段
     newName: docker.io/istio/examples-bookinfo-ratings-v1
-    newTag: 1.16.2
+    newTag: 1.20.3
 patches:
   - target:                                  # 目标：Rollout，用改名前占位名定位
       kind: Rollout
