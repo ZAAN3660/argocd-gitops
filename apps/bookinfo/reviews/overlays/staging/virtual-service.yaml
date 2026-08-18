@@ -1,6 +1,8 @@
-# v1
-# reviews 共享应用的东西向 VS：subset 分流契约（官方 Traffic Shifting 同构）。
-# staging 一半流量切到 v2（带星级评分版本），验证 ratings 链路。
+# v2（A/B 测试化：header 固定用户分流 + 权重分流）
+# reviews A/B 测试的流量契约（Istio 自上而下匹配，header 规则必须在前）：
+# 1. header 路由：end-user: tester 固定打到 v3——测试用户永远看实验版本。
+# 2. 权重路由：其余用户按三版本权重分流（staging 50/50）。
+# 版本之间的"发布"= 调权重（本文件）；版本内部更新 = Rollout 默认滚动。
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
@@ -9,7 +11,22 @@ spec:
   hosts:
     - reviews
   http:
-    - name: reviews-route
+    - name: reviews-ab-route         # A/B 固定用户路由：必须排在权重路由之前
+      match:
+        - headers:
+            end-user:
+              exact: tester          # 测试用户标识：永远看实验版本 v3
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+      route:
+        - destination:
+            host: reviews
+            subset: v3
+          weight: 100
+    - name: reviews-route            # 权重兜底路由
       timeout: 5s
       retries:
         attempts: 3
@@ -19,12 +36,8 @@ spec:
         - destination:
             host: reviews
             subset: v1
-            port:
-              number: 9080
           weight: 50
         - destination:
             host: reviews
             subset: v2
-            port:
-              number: 9080
           weight: 50

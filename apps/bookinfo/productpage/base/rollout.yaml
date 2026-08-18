@@ -1,6 +1,10 @@
-# v5（写实化：资源名与应用名一致，不再用占位名+overlay patch 改名）
-# 灰度发布总指挥：Rollout = 带 canary 策略的 Deployment，发布时由
-# Argo Rollouts 控制器动态改 VirtualService 路由权重完成切流。
+# v6（发布策略切换：金丝雀 canary → 蓝绿 blueGreen）
+# 蓝绿发布总指挥：新版本以 preview（绿）整批部署，验证通过后一步 promote 切流。
+# 与金丝雀的本质差异：
+#   金丝雀：新旧并存、按比例渐变，Rollout 改 VS 权重；
+#   蓝绿：新旧整批切换，Rollout 改 Service selector，VS 全程静态指向 active Service。
+# 因此本文件不再有 steps/trafficRouting（蓝绿策略的 API 里没有这些字段，
+# 它们都是 canary 专属——蓝绿的切流根本不经过 Istio，selector 一换即全局生效）。
 # Service 名保持不变（官方短名 productpage，镜像硬编码的 DNS 名不能变）。
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
@@ -9,7 +13,7 @@ metadata:
   labels:
     app: productpage
 spec:
-  replicas: 1                               # 与 KEDA minReplicaCount 对齐；灰度中 stable+canary 合计不超过它
+  replicas: 1                               # 与 KEDA minReplicaCount 对齐；蓝绿切换窗口内 蓝+绿 合计会短暂翻倍
   revisionHistoryLimit: 2                   # 保留 2 个历史 ReplicaSet，够一次回滚
   selector:
     matchLabels:
@@ -35,10 +39,7 @@ spec:
             requests:                       # KEDA CPU/内存触发器的"使用率"分母，缺了触发器不生效
               cpu: 100m
               memory: 128Mi
-            # limits:
-            #   cpu: 500m
-            #   memory: 256Mi
-          readinessProbe:                   # 就绪探针：Pod 就绪才收流量，灰度切流的前提
+          readinessProbe:                   # 就绪探针：Pod 就绪才收流量，promote 切流的前提
             tcpSocket:                      # bookinfo 镜像无统一就绪端点，TCP 探活与镜像解耦
               port: 9080
             initialDelaySeconds: 5
@@ -49,33 +50,15 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
   strategy:
-    canary:                                 # 发布策略：灰度
-      stableService: productpage            # 稳定通道 = 官方短名
-      canaryService: productpage-canary     # 金丝雀通道
-      maxUnavailable: 0                     # 发布全程现有 Pod 不减，服务不中断
-      trafficRouting:                       # 流量切分交给 Istio（与 nginx 方案二选一，不能同时配）
-        istio:
-          virtualService:
-            name: productpage               # 合并后的 VS（与产品服务同名）：同时管南北+东西流量，Rollout 接管其权重
-            routes:
-              - productpage-route           # 只列"权重"那条 route，静态规则 Rollout 不碰
-      steps:                                # 发布节奏：逐步放量，每步 pause 等分析通过
-        - setWeight: 10                     # 金丝雀 10%
-        - pause: {}                         # 无限期暂停：AnalysisRun 达标自动进下一步，失败自动回滚
-        - setWeight: 25
-        - pause: {}
-        - setWeight: 75
-        - pause: {}
-        - setWeight: 100                    # 全量
-      # analysis:                             # 灰度自动分析：三个模板"且"关系，都过才算过
+    blueGreen:                              # 发布策略：蓝绿
+      activeService: productpage            # 蓝：对外流量入口（官方短名），promote 时控制器切它的 selector
+      previewService: productpage-preview   # 绿：新版预发布，promote 前集群内直连验证
+      autoPromotionEnabled: false           # 手动 promote：kubectl argo rollouts promote productpage
+      scaleDownDelaySeconds: 30             # promote 后旧版保留 30s 再缩，留快速回退窗口
+      # prePromotionAnalysis:               # 可选：promote 前自动分析（模板在 routing 应用）
       #   templates:
-      #     - templateName: traffic-check     # 先确认金丝雀有流量，防"无流量假通过"
-      #     - templateName: success-rate      # 金丝雀成功率 >= 90%
-      #     - templateName: p99-latency       # 金丝雀 P99 <= 500ms
+      #     - templateName: success-rate    # 绿 Pod 成功率 >= 90%
       #   args:
-      #     - name: stable-hash
+      #     - name: preview-hash
       #       valueFrom:
-      #         podTemplateHashValue: Stable  # 自动取稳定 ReplicaSet 的 hash
-      #     - name: canary-hash
-      #       valueFrom:
-      #         podTemplateHashValue: Latest  # 自动取金丝雀 ReplicaSet 的 hash
+      #         podTemplateHashValue: Latest

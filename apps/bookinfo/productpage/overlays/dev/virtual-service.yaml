@@ -1,11 +1,14 @@
-# v4（三环境域名独立：dev 环境 hosts 换成 dev.bookinfo.com）
+# v5（蓝绿化：canary destination 退役，VS 静态指向 active Service）
 # 一个 VS 同时管两路流量：
 # 南北向：hosts=dev.bookinfo.com + gateways=productpage（外部入口）
 # 东西向：hosts=productpage + gateways=mesh（网格内短名调用）
 # 注意：gateways 里 mesh 必须保留——列表里没有 mesh 时，VS 只对列出的
-# Gateway 生效，网格内调用将绕过 VS 直连 Service（灰度期间会打到金丝雀 Pod）。
-# Rollout.trafficRouting 引用本 VS 的 productpage-route 权重。
-# 历史：v1 东西向 VS（productpage-v1）与 v6 网关 VS（routing-v1）→ v2 合并 → v3 改名统一
+# Gateway 生效，网格内调用将绕过 VS 直连 Service。
+# 蓝绿模式下本 VS 是静态的：流量始终指向 productpage（active Service），
+# promote 的切换发生在 Service selector 层，Rollout 不再改 VS 权重
+# （蓝绿策略没有 trafficRouting 字段，VS 上也没东西可改）。
+# 绿色版本验证：promote 前集群内直连 productpage-preview:9080（网格内短名）。
+# 历史：v1 东西向 VS → v2 合并 → v3 改名统一 → v4 域名分环境 → v5 蓝绿化
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
@@ -26,12 +29,7 @@ spec:
         retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
-            host: productpage
+            host: productpage              # 只指 active Service：蓝绿切换对 VS 完全透明
             port:
               number: 9080
           weight: 100
-        - destination:
-            host: productpage-canary
-            port:
-              number: 9080
-          weight: 0
