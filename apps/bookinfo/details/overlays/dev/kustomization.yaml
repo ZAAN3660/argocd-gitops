@@ -11,6 +11,14 @@ images:
     newTag: 1.20.1
 patches:
   - target:
+      kind: ScaledObject
+      name: details
+    patch: |-
+      - op: replace
+        path: /spec/triggers/0/metadata/query
+        value: |
+          sum(rate(istio_requests_total{destination_service=~"details.*", destination_service_namespace="dev", response_code=~"2..|3.."}[2m]))
+  - target:
       kind: DestinationRule
       name: details
     patch: |-
