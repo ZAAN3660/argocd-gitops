@@ -10,6 +10,27 @@ spec:
   hosts:
     - ratings
   http:
+    # ============ 练手模板：故障注入（注释保留，不生效） ============
+    # 启用：取消下面注释（保持本块位于 ratings-route 之前——带 match 的
+    # route 必须排在无 match route 前面，否则永远匹配不到）。
+    # 只有带 x-fault-injection: on 的请求被注入（reviews 调 ratings 链）。
+    # 故障沿调用链传播：ratings 的 503 会让 reviews 拿不到评级数据，
+    # productpage 星级区显示"无评级"——但页面本身不报 503，这是故障
+    # 注入与"服务真挂"在观察上的差异。
+    # - name: ratings-fault-route
+    #   match:
+    #     - headers:
+    #         x-fault-injection:
+    #           exact: "on"
+    #   fault:
+    #     delay:
+    #       percentage: { value: 50 }
+    #       fixedDelay: 5s
+    #     abort:
+    #       percentage: { value: 10 }
+    #       httpStatus: 503
+    #   route:
+    #     - destination: { host: ratings, port: { number: 9080 } }
     - name: ratings-route
       timeout: 5s
       retries:

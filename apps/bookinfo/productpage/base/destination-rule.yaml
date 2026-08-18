@@ -27,3 +27,11 @@ spec:
       interval: 10s
       baseEjectionTime: 30s
       maxEjectionPercent: 100
+
+# ============ 练手模板：官方演示档（注释保留，不生效） ============
+# 【反例教学】productpage 是入口服务：外部流量经 Gateway 进入，网格内
+# 没有服务调 productpage，因此本 DR 没有调用方 sidecar 会读它——熔断
+# 无处生效，上方取值无论怎么改都观察不到拒连/驱逐。这是刻意保留的反例：
+# 熔断必须配在"有网格内调用方的目标"上才有意义（练手请用 details/
+# ratings/reviews 的 DR）。入口防护 = envoyfilter-ratelimit.yaml 的限流，
+# 不是熔断。演示档取值留作对比：1/1/1、5xx×1、驱逐 3m。

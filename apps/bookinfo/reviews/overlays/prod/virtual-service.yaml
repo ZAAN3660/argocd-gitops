@@ -11,6 +11,29 @@ spec:
   hosts:
     - reviews
   http:
+    # ============ 练手模板：故障注入（注释保留，不生效） ============
+    # 启用：取消下面注释（保持本块位于 reviews-ab-route 之前——本块与
+    # ab-route 都带 match，但不同 header 条件互不遮蔽；必须保持在任何
+    # 无 match route 之前，否则被 reviews-route 吃掉）。
+    # 只有带 x-fault-injection: on 的请求被注入，注入目的地限定 v3（A/B
+    # 实验版），v1/v2 不受影响。
+    # delay 5s > 本文件 perTryTimeout 2s：注入会触发 productpage 侧
+    # 重试（attempts: 3）——观察"注入 → 超时 → 重试 → 二次超时"连锁。
+    # abort 503 会被 retries 吃掉一部分：实际报错次数 < 注入比例。
+    # - name: reviews-fault-route
+    #   match:
+    #     - headers:
+    #         x-fault-injection:
+    #           exact: "on"
+    #   fault:
+    #     delay:
+    #       percentage: { value: 50 }
+    #       fixedDelay: 5s
+    #     abort:
+    #       percentage: { value: 10 }
+    #       httpStatus: 503
+    #   route:
+    #     - destination: { host: reviews, subset: v3 }
     - name: reviews-ab-route         # A/B 固定用户路由：必须排在权重路由之前
       match:
         - headers:

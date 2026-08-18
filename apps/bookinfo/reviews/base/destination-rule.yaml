@@ -35,3 +35,16 @@ spec:
     - name: v3
       labels:
         version: v3
+
+# ============ 练手模板：官方演示档（注释保留，不生效） ============
+# 上方 trafficPolicy 是正式取值（压测豁免档：1024 连接/100 次 5xx，实际打不穿）。
+# 练手时把正式取值逐项换成演示档（一打就穿），提交走 GitOps，练完切回（git 历史可查）：
+#   maxConnections:          1024 → 1      # 并发连接超过 1 → 新连接被拒
+#   http1MaxPendingRequests: 1024 → 1      # 排队上限 1
+#   consecutive5xxErrors:    100  → 1      # 连续 1 次 5xx → 驱逐出负载均衡池
+#   baseEjectionTime:        30s  → 3m     # 熔断窗口：驱逐 3 分钟
+#   interval: 10s（不变）
+# 生效链：productpage 调 reviews 时，productpage 的 sidecar 读本 DR。
+# 陷阱：1) DR 是客户端侧配置，改的是调用方行为；2) 熔断 + 重试互相放大
+#   （正式 VS retries: 3 + perTryTimeout 2s，驱逐后重试可能打爆其他实例）；
+#   3) subset 级 trafficPolicy 优先级高于顶层，本 DR 无 subset 级策略，不受影响。

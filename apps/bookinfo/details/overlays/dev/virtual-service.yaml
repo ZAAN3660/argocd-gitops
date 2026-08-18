@@ -10,6 +10,26 @@ spec:
   hosts:
     - details
   http:
+    # ============ 练手模板：故障注入（注释保留，不生效） ============
+    # 启用：取消下面注释（保持本块位于 details-route 之前——带 match 的
+    # route 必须排在无 match route 前面，否则永远匹配不到）。
+    # 只有带 x-fault-injection: on 的请求被注入（productpage 调 details 链）。
+    # delay 5s > perTryTimeout 2s：触发 productpage 侧重试连锁；
+    # abort 503 会被 retries 吃掉一部分。
+    # - name: details-fault-route
+    #   match:
+    #     - headers:
+    #         x-fault-injection:
+    #           exact: "on"
+    #   fault:
+    #     delay:
+    #       percentage: { value: 50 }
+    #       fixedDelay: 5s
+    #     abort:
+    #       percentage: { value: 10 }
+    #       httpStatus: 503
+    #   route:
+    #     - destination: { host: details, port: { number: 9080 } }
     - name: details-route
       timeout: 5s
       retries:

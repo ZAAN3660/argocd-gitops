@@ -20,6 +20,27 @@ spec:
     - productpage                         # 外部入口 Gateway（南北向）
     - mesh                                # 网格内 sidecar（东西向），必须保留
   http:
+    # ============ 练手模板：入口故障注入（注释保留，不生效） ============
+    # 启用：取消下面注释（保持本块位于 productpage-route 之前——带 match
+    # 的 route 必须排在无 match route 前面，否则永远匹配不到）。
+    # 只有带 x-fault-injection: on 的入口请求被注入：50% 延迟 5s、10% 直接 503。
+    # 这是四个应用里唯一挂在【入口】的注入（官方故障注入任务标准位置）：
+    # 故障在最上游注入，所有下游都会感受到，reviews 侧重试（attempts: 3）会放大。
+    # 练手：取消注释 → 提交 sync → 带 header 访问本环境域名（prod.bookinfo.com）观察。
+    # - name: productpage-fault-route
+    #   match:
+    #     - headers:
+    #         x-fault-injection:
+    #           exact: "on"
+    #   fault:
+    #     delay:
+    #       percentage: { value: 50 }
+    #       fixedDelay: 5s        # 5s > 调用方 perTryTimeout 2s：触发重试连锁
+    #     abort:
+    #       percentage: { value: 10 }
+    #       httpStatus: 503
+    #   route:
+    #     - destination: { host: productpage, port: { number: 9080 } }
     - name: productpage-route
       timeout: 10s
       retries:
