@@ -10,4 +10,3 @@ labels:
     # app.kubernetes.io/instance 不写：Argo CD 自 v2.2 起默认占用该键做追踪标签，避免冲突
 resources:
   - ../../base
-  - virtual-service.yaml                    # overlay 自带 VS：权重与 hosts 按环境落地
