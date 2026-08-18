@@ -19,6 +19,7 @@ labels:
 resources:
   - ../../../../base
   - virtual-service.yaml
+  - gateway.yaml                            # 南北流量的统一入口
 images:
   - name: app                                # 匹配 base 里名为 app 的容器镜像字段
     newName: docker.io/istio/examples-bookinfo-productpage-v1
