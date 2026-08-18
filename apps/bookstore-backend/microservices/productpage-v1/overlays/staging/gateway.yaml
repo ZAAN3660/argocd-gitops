@@ -1,11 +1,12 @@
-# v1.1（自 routing-v1/base/gateway.yaml 迁入，内容不变）
+# v1.2（三环境统一：Gateway 与 VS 同名 productpage）
 # 入口网关：把集群外 HTTP/HTTPS 流量接进网格，绑定到 Istio 的
-# ingressgateway。本环境的 VirtualService 挂在同一个 Gateway 上，
+# ingressgateway。本环境的 VirtualService 挂在同名 Gateway 上，
 # 入口统一但路由规则分环境。
+# 历史：v1 bookinfo-gateway（routing-v1/base）→ v1.1 迁入本 overlay → v1.2 改名 productpage
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
-  name: bookinfo-gateway
+  name: productpage
 spec:
   selector:
     istio: ingressgateway                   # 选中 istio ingress gateway 这个实际转发代理

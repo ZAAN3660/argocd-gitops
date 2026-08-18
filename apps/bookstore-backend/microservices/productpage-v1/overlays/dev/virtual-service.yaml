@@ -1,10 +1,11 @@
-# v2（合并原 bookinfo 网关 VS，原 v6 的 match 路径枚举不再保留）
+# v3（合并原 bookinfo 网关 VS + Gateway 改名后统一三环境）
 # 一个 VS 同时管两路流量：
-#   南北向：hosts=bookinfo.example.com + gateways=bookinfo-gateway（外部入口）
+#   南北向：hosts=bookinfo.example.com + gateways=productpage（外部入口）
 #   东西向：hosts=productpage + gateways=mesh（网格内短名调用）
-# 注意：gateways 必须同时写 gateway 和 mesh——只写 gateway 会切断网格内路由，
-# 网格内调用将绕过 VS 直连 Service（灰度期间会打到金丝雀 Pod）。
+# 注意：gateways 里 mesh 必须保留——列表里没有 mesh 时，VS 只对列出的
+# Gateway 生效，网格内调用将绕过 VS 直连 Service（灰度期间会打到金丝雀 Pod）。
 # Rollout.trafficRouting 引用本 VS 的 productpage-route 权重。
+# 历史：v1 东西向 VS（productpage-v1）与 v6 网关 VS（routing-v1）→ v2 合并 → v3 改名统一
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
@@ -14,8 +15,8 @@ spec:
     - bookinfo.example.com  # 外部入口域名
     - productpage           # 网格内短名
   gateways:
-    - productpage           # 绑入口网关（南北向），一旦写了 gateway，网格内（东西向）就不再生效
-    - mesh                  # 
+    - productpage           # 外部入口 Gateway（南北向）
+    - mesh                  # 网格内 sidecar（东西向），必须保留
   http:
     - name: productpage-route
       timeout: 10s
