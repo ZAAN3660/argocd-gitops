@@ -1,9 +1,9 @@
-# v2
-# routing 按环境差异拆成 base + overlays：Gateway 三环境共用，
-# VirtualService 因 reviews 权重策略不同而逐环境覆盖。
+# v3
+# routing 层职责收窄：网关层（Gateway + 网关 VS）已迁至 productpage-v1 各环境
+# overlay（入口唯一消费方就近管理，Rollout.trafficRouting 直接引用同目录 VS），
+# 本目录只保留每环境一份的分析模板（灰度分析）与本地限流 EnvoyFilter。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - analysistemplates.yaml                  # 灰度分析模板：每环境一份，各服务 Rollout 共用
   - envoyfilter-ratelimit.yaml              # 本地限流（v2 新增）：每环境一份，限 productpage 入口速率
-  # virtual-service.yaml 不放 base：各环境路由权重不同，放在 overlay 侧由环境决定

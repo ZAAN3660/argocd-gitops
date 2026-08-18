@@ -1,6 +1,8 @@
-# v6
+# v7（自 routing-v1/overlays/staging/virtual-service.yaml 迁移，内容不变）
 # 网关专属 VS：与 dev 完全一致（外部入口的路由结构不随环境变化）。
 # 枚举路径、无兜底；productpage 的 Rollout 只改 productpage-route 权重。
+# v7：随 Gateway 一起迁入 productpage-v1（入口层唯一消费方），
+#     Rollout.trafficRouting 引用 name=bookinfo 不变。
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
