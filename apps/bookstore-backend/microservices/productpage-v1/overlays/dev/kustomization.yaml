@@ -71,7 +71,7 @@ patches:
         path: /spec/scaleTargetRef/name
         value: productpage-v1           # 与 Rollout 最终名一致
       - op: replace
-        path: /spec/triggers/2/metadata/query
+        path: /spec/triggers/0/metadata/query
         value: |
           sum(rate(istio_requests_total{destination_service=~"productpage.*", response_code=~"2..|3.."}[2m]))
   - target:
