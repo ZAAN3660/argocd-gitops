@@ -1,0 +1,56 @@
+# v4（routing 应用拆分：限流随应用就近管理，每个服务自持一份）
+# 本地限流（Istio 1.30 官方 Rate Limit 任务页 "Local rate limiting" 示例）：
+# 在 productpage sidecar 的 inbound 链路上插入 envoy.filters.http.local_ratelimit。
+# 档位：日常安全档 60/60s（单实例 1 req/s）。档位速查：
+# 4/60s 官方演示 | 60/60s 日常安全 | 100000/60s 压测豁免；压测时临时调高
+# token_bucket 的 max_tokens 与 tokens_per_fill 即可。
+#
+# 两个关键边界（详见 docs/istio-resilience.md）：
+# 1. 本地限流按 Envoy 实例独立计数：Pod 数越多总配额越高，不是全局精确限流；
+#    全局限流需部署官方 ratelimit 服务（ConfigMap 描述符 + EnvoyFilter 联动）。
+# 2. EnvoyFilter 只作用于同命名空间的 workload：本文件随应用 overlay 渲染进
+#    dev/staging/prod，各环境配额互相独立（官方 EF 参考：root namespace 才全域生效）。
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: filter-local-ratelimit-productpage
+spec:
+  workloadSelector:
+    labels:
+      app: productpage                      # 只注入 productpage 的 sidecar（各环境一份）
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.local_ratelimit
+          typed_config:
+            "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+            value:
+              stat_prefix: http_local_rate_limiter
+              token_bucket:
+                max_tokens: 60              # 日常安全档：桶容量 60（≈1 req/s）
+                tokens_per_fill: 60         # 每 fill_interval 补充 60 个
+                fill_interval: 60s
+              filter_enabled:
+                runtime_key: local_rate_limit_enabled
+                default_value:
+                  numerator: 100
+                  denominator: HUNDRED
+              filter_enforced:
+                runtime_key: local_rate_limit_enforced
+                default_value:
+                  numerator: 100
+                  denominator: HUNDRED
+              response_headers_to_add:
+                - append: false
+                  header:
+                    key: x-local-rate-limit
+                    value: "true"            # 被限流的响应带上此头，便于识别与测试

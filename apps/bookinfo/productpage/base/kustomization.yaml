@@ -17,3 +17,5 @@ resources:
   - scaledobject.yaml                           # KEDA 自动扩缩容
   - podmonitor.yaml                             # 网格指标抓取
   - destination-rule.yaml                       # 熔断保护
+  - envoyfilter-ratelimit.yaml                  # 本地限流（v4：随应用就近管理）
+  - analysistemplates.yaml                      # 灰度分析模板（v5：随应用就近管理）
