@@ -1,8 +1,8 @@
-# v2（发布策略切换：版本内渐进发布 → A/B 测试）
+# v3（修复 InvalidSpec：补回最小 canary 策略）
 # A/B 测试：三个版本（v1/v2/v3）长期并存，流量分配由共享 VirtualService 的
 # 权重 + header 规则决定（见 overlays 下的 virtual-service.yaml）。
-# 版本之间的"发布"= 调 VS 权重，不是 Rollout 的职责，因此本 Rollout
-# 不再带 strategy：版本内镜像更新走默认滚动替换，canary 机制整体退役。
+# 版本之间的"发布"= 调 VS 权重，不是 Rollout 的职责；但 API 强制 strategy 存在，
+# 故保留最小 canary（无 steps 无 trafficRouting），详见 reviews-v1.yaml 头部注释。
 # 与 v1 的差异：名字后缀、version 标签、镜像 tag。
 # v2 版本行为：调用 ratings 展示黑色星级。
 apiVersion: argoproj.io/v1alpha1
@@ -15,6 +15,9 @@ metadata:
 spec:
   replicas: 1
   revisionHistoryLimit: 2           # 保留 2 个历史 ReplicaSet，够一次回滚
+  strategy:
+    canary:
+      maxUnavailable: 0             # 最小 canary：无 steps 无 trafficRouting，语义见 v1 头部注释
   selector:
     matchLabels:
       app: reviews

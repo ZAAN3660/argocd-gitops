@@ -1,9 +1,10 @@
-# v2（发布策略切换：版本内渐进发布 → A/B 测试）
+# v3（修复 InvalidSpec：补回最小 canary 策略）
 # A/B 测试：三个版本（v1/v2/v3）长期并存，流量分配由共享 VirtualService 的
 # 权重 + header 规则决定（见 overlays 下的 virtual-service.yaml）。
-# 版本之间的"发布"= 调 VS 权重，不是 Rollout 的职责，因此本 Rollout
-# 不再带 strategy：版本内镜像更新走默认滚动替换，canary 机制整体退役
-# （金丝雀解决"新旧渐变"，A/B 解决"版本并存"，两者二选一不可叠加）。
+# 版本之间的"发布"= 调 VS 权重，不是 Rollout 的职责。
+# 但 Rollout API 强制 strategy 写 canary/blueGreen 之一（缺失会被控制器判 InvalidSpec），
+# 故保留最小 canary：无 steps、无 trafficRouting——版本内镜像更新 = 一次性整批替换
+# （maxUnavailable: 0 保证先起新的再缩旧的），流量分配完全由共享 VS 的权重/header 决定。
 # v1 版本行为：不调用 ratings，评论区无星级。
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
@@ -15,6 +16,9 @@ metadata:
 spec:
   replicas: 1
   revisionHistoryLimit: 2           # 保留 2 个历史 ReplicaSet，够一次回滚
+  strategy:
+    canary:
+      maxUnavailable: 0             # 最小 canary：无 steps 无 trafficRouting，语义见头部注释
   selector:
     matchLabels:
       app: reviews
