@@ -1,0 +1,16 @@
+# v5（重构：DR 改名 reviews 后 patch target 同步；镜像 tag 写死在 base）
+# 本层职责：namespace、DR host 注入、东西向 VS（三环境权重不同，留在 overlay）。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: staging
+resources:
+  - ../../base
+  - virtual-service.yaml
+patches:
+  - target:
+      kind: DestinationRule
+      name: reviews
+    patch: |-
+      - op: replace
+        path: /spec/host
+        value: reviews.staging.svc.cluster.local

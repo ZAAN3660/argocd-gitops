@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   # project 必须先于 appset 同步。否则，appset 引用的 project 会因不存在而导致应用无法 syncing
-  - projects/bookstore-backend.yaml        # 后端应用域边界
-  - projects/bookstore-frontend.yaml       # 前端应用域边界
-  - projects/bookstore-algorithm.yaml      # 算法应用域边界
-  - appsets/bookstore-backend.yaml         # 后端应用批量生成器，扫描 apps/bookstore-backend 目录按环境发散
+  - projects/bookinfo.yaml                # bookinfo 应用域边界
+  - projects/bookstore-frontend.yaml      # 前端应用域边界
+  - projects/bookstore-algorithm.yaml     # 算法应用域边界
+  - appsets/bookinfo.yaml                 # bookinfo 应用批量生成器，扫描 apps/bookinfo 目录按环境发散

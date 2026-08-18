@@ -1,0 +1,29 @@
+# v5（写实化：资源名与应用名一致，host 的命名空间段由 overlay patch 注入）
+# 熔断骨架：connectionPool 限制到上游的连接/请求并发，
+# outlierDetection 在实例连续返回 5xx 时把它驱逐出负载均衡池。
+# 取值是"压测豁免档"：准备压测/灰度发布期间，阈值放到实际打不穿的程度，
+# 避免熔断干扰。档位速查：官方演示档（1/1/1、5xx×1、驱逐 3m）| 日常安全档
+# （10/10/10、5xx×5、驱逐 30s）| 压测豁免档（本文件当前值）。
+# 压测结束后建议切回日常安全档（git 历史可查）。
+# host 写占位 FQDN：DestinationRule 的 host 是目标服务的全限定名，
+# 跨命名空间必须显式，由 overlay patch 换成 <短名>.<ns>.svc.cluster.local。
+# 注意：本 DR 只覆盖稳定通道短名；host 模式的金丝雀短名
+# （<短名>-canary）不受熔断保护，需要时复制本文档再改 host。
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: ratings
+spec:
+  host: ratings.<namespace>.svc.cluster.local   # 占位：实际值由 overlay patch 注入
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1024                # 压测豁免：1024 条连接，单副本 Python 应用打不穿
+      http:
+        http1MaxPendingRequests: 1024       # 压测豁免：排队上限 1024
+        maxRequestsPerConnection: 0         # 0 = 连接不限复用次数（Envoy 默认语义）
+    outlierDetection:
+      consecutive5xxErrors: 100             # 压测豁免：连续 100 次 5xx 才驱逐（≈不驱逐）
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100

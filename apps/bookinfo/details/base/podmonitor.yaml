@@ -1,0 +1,29 @@
+# v5（写实化：资源名与应用名一致）
+# 抓网格指标：直接按 Pod 标签抓取（Pod 是稳定实体），不跟 Service 走——
+# 发布时 Service selector 会被控制器动态改，跟着 Service 会让监控目标抖动。
+# 只保留 envoy 端点：bookinfo 镜像不暴露业务 /metrics，等应用加了再加回来。
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: details
+  labels:
+    release: kube-prometheus-stack         # 必须带：stack 的 Prometheus 只认领带此标签的监控资源
+spec:
+  selector:
+    matchLabels:
+      app: details                          # 与 Pod 实际标签一致，stable+canary 一起抓
+  podMetricsEndpoints:
+    - port: http-envoy-prom                 # sidecar 端口名（Istio 注入时自动创建，15090）
+      interval: 3s
+      path: /stats/prometheus               # sidecar 暴露指标的路径
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_label_rollouts_pod_template_hash]
+          targetLabel: rollouts_pod_template_hash   # 把 Pod 的 hash 标签提成指标标签
+          regex: (.+)
+          replacement: ${1}
+          # 效果：网格指标多出 rollouts_pod_template_hash 标签，
+          # 分析模板靠它区分 stable/canary 两批 Pod 的数据
+    # 业务指标端点（bookinfo 未暴露 /metrics，加了端点也抓不到，先注释）：
+    # - port: http
+    #   interval: 3s
+    #   path: /metrics

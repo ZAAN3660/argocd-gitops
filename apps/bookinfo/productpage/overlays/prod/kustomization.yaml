@@ -1,0 +1,20 @@
+# v8（重构：base 写实化后改名 patch 全部删除，本层只保留环境差异）
+# 环境差异三件：namespace（环境边界）、镜像 tag、DR host。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: prod
+resources:
+  - ../../base
+  - virtual-service.yaml                    # 合并后的 VS：同时管外部入口与网格内调用，Rollout 接管其权重
+  - gateway.yaml                            # 南北流量的统一入口
+images:
+  - name: docker.io/istio/examples-bookinfo-productpage-v1
+    newTag: 1.16.2
+patches:
+  - target:
+      kind: DestinationRule
+      name: productpage
+    patch: |-
+      - op: replace
+        path: /spec/host
+        value: productpage.prod.svc.cluster.local

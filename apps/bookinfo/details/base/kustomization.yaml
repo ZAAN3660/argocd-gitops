@@ -1,0 +1,19 @@
+# v1（写实 base：全局骨架拆分后每应用自持一份）
+# 与 productpage/ratings 的 base 同构，差异只在名字、镜像、路由引用。
+# app 标签直接写进各资源文件（selector 与 Pod 模板同步），
+# 本层 labels 只贴官方推荐标签（不加 includeSelectors，选择器保持 app 单键）。
+# app.kubernetes.io/instance 不写：Argo CD 自 v2.2 起默认占用该键做追踪标签。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - pairs:
+      app.kubernetes.io/name: details           # 官方推荐标签：应用名
+      app.kubernetes.io/part-of: bookinfo       # 官方推荐标签：所属应用
+      app.kubernetes.io/managed-by: argocd      # 官方推荐标签：管理工具
+resources:
+  - rollout.yaml                                # 灰度发布总指挥
+  - service.yaml                                # 稳定通道（官方短名，镜像硬编码）
+  - service-canary.yaml                         # 金丝雀通道（<短名>-canary）
+  - scaledobject.yaml                           # KEDA 自动扩缩容
+  - podmonitor.yaml                             # 网格指标抓取
+  - destination-rule.yaml                       # 熔断保护

@@ -1,0 +1,37 @@
+# v8（重构改名：reviews-dr → reviews，与应用名一致，全仓去掉 -dr 后缀）
+# base 里 host 写占位 FQDN，各 overlay 用 patch 换成自己命名空间的真实
+# FQDN：DestinationRule 的 host 是目标服务的全限定名，跨命名空间必须显式。
+# v3 新增 trafficPolicy 熔断：与官方 Circuit Breaking 任务页同构——
+# 官方示例正是给 reviews 的 v1/v2/v3 三个 subset 挂连接池+异常驱逐。
+# 取值是"压测豁免档"（阈值放到实际打不穿），准备压测/灰度发布期间
+# 不让熔断干预。档位速查：官方演示档（1/1/1、5xx×1、3m）| 日常安全档
+# （10/10/10、5xx×5、30s）| 压测豁免档（当前值）；压测后建议切回
+# 日常安全档（git 历史可查）。复盘详见 docs/istio-resilience.md。
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: reviews
+spec:
+  host: reviews.<namespace>.svc.cluster.local    # 占位：实际值由 overlay patch 注入，这里仅保持字段完整
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1024                 # 压测豁免：1024 条连接
+      http:
+        http1MaxPendingRequests: 1024        # 压测豁免：排队上限 1024
+        maxRequestsPerConnection: 0          # 0 = 连接不限复用次数
+    outlierDetection:
+      consecutive5xxErrors: 100              # 压测豁免：连续 100 次 5xx 才驱逐（≈不驱逐）
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100
+  subsets:
+    - name: v1                                # subset 名是路由层引用子集时的句柄
+      labels:
+        version: v1                           # 按 Pod 的 version 标签切分流量子集
+    - name: v2
+      labels:
+        version: v2
+    - name: v3
+      labels:
+        version: v3
