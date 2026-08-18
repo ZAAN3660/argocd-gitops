@@ -1,4 +1,4 @@
-# v5（重构：DR 改名 reviews 后 patch target 同步；镜像 tag 写死在 base）
+# v5.1（骨架环境：放开 prod 但三个版本 Rollout 副本数 0）
 # 本层职责：namespace、DR host 注入、东西向 VS（三环境权重不同，留在 overlay）。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -7,6 +7,27 @@ resources:
   - ../../base
   - virtual-service.yaml
 patches:
+  - target:
+      kind: Rollout
+      name: reviews-v1
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+  - target:
+      kind: Rollout
+      name: reviews-v2
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+  - target:
+      kind: Rollout
+      name: reviews-v3
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
   - target:
       kind: DestinationRule
       name: reviews

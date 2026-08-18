@@ -1,5 +1,6 @@
-# v8（重构：base 写实化后改名 patch 全部删除，本层只保留环境差异）
-# 环境差异三件：namespace（环境边界）、镜像 tag、DR host。
+# v8.1（骨架环境：放开 prod 但副本数 0）
+# Rollout replicas=0：环境骨架先就位，不起 Pod；
+# ScaledObject minReplicaCount 同步设为 0：否则 KEDA 会把副本拉回 1。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: prod
@@ -10,6 +11,20 @@ images:
   - name: docker.io/istio/examples-bookinfo-ratings-v1
     newTag: 1.16.2
 patches:
+  - target:
+      kind: Rollout
+      name: ratings
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+  - target:
+      kind: ScaledObject
+      name: ratings
+    patch: |-
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 0
   - target:
       kind: DestinationRule
       name: ratings

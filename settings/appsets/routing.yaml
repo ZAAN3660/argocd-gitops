@@ -15,12 +15,12 @@ spec:
           - environment: dev
             server: https://kubernetes.default.svc
             namespace: dev
-          # - environment: staging
-          #   server: https://kubernetes.default.svc
-          #   namespace: staging
-          # - environment: prod
-          #   server: https://kubernetes.default.svc
-          #   namespace: prod
+          - environment: staging
+            server: https://kubernetes.default.svc
+            namespace: staging
+          - environment: prod
+            server: https://kubernetes.default.svc
+            namespace: prod
   template:
     metadata:
       name: 'bookinfo-routing-{{.environment}}'

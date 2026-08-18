@@ -1,7 +1,7 @@
-# v3（合并原 bookinfo 网关 VS + Gateway 改名后统一三环境）
+# v4（三环境域名独立：staging 环境 hosts 换成 staging.bookinfo.com）
 # 一个 VS 同时管两路流量：
-#   南北向：hosts=bookinfo.example.com + gateways=productpage（外部入口）
-#   东西向：hosts=productpage + gateways=mesh（网格内短名调用）
+# 南北向：hosts=staging.bookinfo.com + gateways=productpage（外部入口）
+# 东西向：hosts=productpage + gateways=mesh（网格内短名调用）
 # 注意：gateways 里 mesh 必须保留——列表里没有 mesh 时，VS 只对列出的
 # Gateway 生效，网格内调用将绕过 VS 直连 Service（灰度期间会打到金丝雀 Pod）。
 # Rollout.trafficRouting 引用本 VS 的 productpage-route 权重。
@@ -12,11 +12,11 @@ metadata:
   name: productpage
 spec:
   hosts:
-    - bookinfo.example.com  # 外部入口域名
-    - productpage           # 网格内短名
+    - staging.bookinfo.com                # 外部入口域名（staging 环境专属）
+    - productpage                         # 网格内短名
   gateways:
-    - productpage           # 外部入口 Gateway（南北向）
-    - mesh                  # 网格内 sidecar（东西向），必须保留
+    - productpage                         # 外部入口 Gateway（南北向）
+    - mesh                                # 网格内 sidecar（东西向），必须保留
   http:
     - name: productpage-route
       timeout: 10s

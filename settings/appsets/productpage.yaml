@@ -15,12 +15,12 @@ spec:
           - environment: dev              # 环境名：同时用作 overlay 路径段和应用名后缀
             server: https://kubernetes.default.svc
             namespace: dev                # 该环境独占的命名空间
-          # - environment: staging
-          #   server: https://kubernetes.default.svc
-          #   namespace: staging
-          # - environment: prod
-          #   server: https://kubernetes.default.svc
-          #   namespace: prod
+          - environment: staging
+            server: https://kubernetes.default.svc
+            namespace: staging
+          - environment: prod
+            server: https://kubernetes.default.svc
+            namespace: prod
   template:                               # 每个组合套这份模板，产出 1 个 Application
     metadata:
       name: 'bookinfo-productpage-{{.environment}}'
