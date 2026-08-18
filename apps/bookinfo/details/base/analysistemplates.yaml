@@ -9,7 +9,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: success-rate
+  name: details-success-rate
 spec:
   args:
     - name: stable-hash                     # 保留便于扩展 stable/canary 对比，当前查询只用 canary-hash
@@ -33,7 +33,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: p99-latency
+  name: details-p99-latency
 spec:
   args:
     - name: stable-hash
@@ -56,7 +56,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: traffic-check
+  name: details-traffic-check
 spec:
   args:
     - name: canary-hash

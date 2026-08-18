@@ -57,7 +57,7 @@ spec:
       scaleDownDelaySeconds: 30             # promote 后旧版保留 30s 再缩，留快速回退窗口
       # prePromotionAnalysis:               # 可选：promote 前自动分析（模板需另建，routing 应用已删除）
       #   templates:
-      #     - templateName: success-rate    # 绿 Pod 成功率 >= 90%
+      #     - templateName: productpage-success-rate    # 绿 Pod 成功率 >= 90%
       #   args:
       #     - name: preview-hash
       #       valueFrom:
