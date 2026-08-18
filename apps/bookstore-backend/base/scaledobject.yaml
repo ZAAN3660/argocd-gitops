@@ -43,4 +43,4 @@ spec:
         serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
         query: |                            # 占位 query：overlay patch 替换 destination_service
           sum(rate(istio_requests_total{destination_service=~"app.*", response_code=~"2..|3.."}[2m]))
-        threshold: "10"                     # 每秒成功请求超 10 扩容；演示值，生产按容量评估
+        threshold: "100000"                     # 每秒成功请求超 10 扩容；演示值，生产按容量评估
