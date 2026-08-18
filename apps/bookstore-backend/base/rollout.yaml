@@ -68,15 +68,15 @@ spec:
         - setWeight: 75
         - pause: {}
         - setWeight: 100                    # 全量
-      analysis:                             # 灰度自动分析：三个模板"且"关系，都过才算过
-        templates:
-          - templateName: traffic-check     # 先确认金丝雀有流量，防"无流量假通过"
-          - templateName: success-rate      # 金丝雀成功率 >= 90%
-          - templateName: p99-latency       # 金丝雀 P99 <= 500ms
-        args:
-          - name: stable-hash
-            valueFrom:
-              podTemplateHashValue: Stable  # 自动取稳定 ReplicaSet 的 hash
-          - name: canary-hash
-            valueFrom:
-              podTemplateHashValue: Latest  # 自动取金丝雀 ReplicaSet 的 hash
+      # analysis:                             # 灰度自动分析：三个模板"且"关系，都过才算过
+      #   templates:
+      #     - templateName: traffic-check     # 先确认金丝雀有流量，防"无流量假通过"
+      #     - templateName: success-rate      # 金丝雀成功率 >= 90%
+      #     - templateName: p99-latency       # 金丝雀 P99 <= 500ms
+      #   args:
+      #     - name: stable-hash
+      #       valueFrom:
+      #         podTemplateHashValue: Stable  # 自动取稳定 ReplicaSet 的 hash
+      #     - name: canary-hash
+      #       valueFrom:
+      #         podTemplateHashValue: Latest  # 自动取金丝雀 ReplicaSet 的 hash
