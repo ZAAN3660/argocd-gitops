@@ -5,6 +5,9 @@ namespace: dev
 resources:
   - ../../base
   - virtual-service.yaml
+images:
+  - name: app                                # 匹配 base 里名为 app 的容器镜像字段
+    newTag: 1.20.3
 patches:
   - target:                                 # 目标：base 里的 DestinationRule
       kind: DestinationRule
