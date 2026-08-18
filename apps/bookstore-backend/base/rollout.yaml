@@ -57,7 +57,7 @@ spec:
       trafficRouting:                       # 流量切分交给 Istio（与 nginx 方案二选一，不能同时配）
         istio:
           virtualService:
-            name: bookinfo                  # 本环境命名空间里 routing 层维护的 VS
+            name: productpage               # 合并后的 VS（与产品服务同名）：同时管南北+东西流量，Rollout 接管其权重
             routes:
               - app-route                   # 占位：只列"权重"那条 route，header/cookie 静态规则 Rollout 不碰
       steps:                                # 发布节奏：逐步放量，每步 pause 等分析通过

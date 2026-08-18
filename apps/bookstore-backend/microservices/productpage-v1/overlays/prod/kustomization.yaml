@@ -18,8 +18,7 @@ labels:
     # app.kubernetes.io/instance 不写：Argo CD 自 v2.2 起默认占用该键做追踪标签，避免冲突
 resources:
   - ../../../../base
-  - virtual-service.yaml                    # 东西向 VS：网格内调用 productpage
-  - bookinfo-vs.yaml                        # 网关 VS：外部入口路由，Rollout 接管其 productpage-route 权重
+  - virtual-service.yaml                    # 合并后的 VS：同时管外部入口与网格内调用，Rollout 接管其权重
   - gateway.yaml                            # 南北流量的统一入口（自 routing-v1 迁入）
 images:
   - name: app                                # 匹配 base 里名为 app 的容器镜像字段
@@ -41,7 +40,7 @@ patches:
         value: productpage-canary                   # 金丝雀通道
       - op: replace
         path: /spec/strategy/canary/trafficRouting/istio/virtualService/routes/0
-        value: productpage-route                    # 只接管网关 VS（routing-v1 应用）里这一条权重路由
+        value: productpage-route                    # 接管合并后 productpage VS 里这一条权重路由
       - op: replace
         path: /spec/selector/matchLabels/app
         value: productpage                          # labels 转换器不处理 Rollout 的 selector 路径，必须显式改写，否则 Rollout 选不中自己的 Pod
