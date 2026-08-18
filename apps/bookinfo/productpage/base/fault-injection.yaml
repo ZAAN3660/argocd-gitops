@@ -1,0 +1,61 @@
+# 故障注入（Fault Injection）练手模板 —— 未启用，教学保留
+# 不在 kustomization.yaml 的 resources 里 → 不渲染进集群，即"注释掉"。
+#
+# 【心智骨架】
+# fault 挂在 VS 的 http route 上，两个注入原语：
+#   1. delay —— 模拟"服务变慢"
+#   2. abort —— 模拟"服务故障"
+#
+# 【运行时因果链】（生效链：入口流量 → Gateway → productpage）
+# 这是四个模板里唯一挂在【入口】的注入——Istio 官方故障注入任务的
+# 标准位置：外部请求刚进网格就被做手脚，故障在调用链最上游注入，
+# 所有下游调用方都会感受到。
+#   → 只有带 x-fault-injection: on 的入口请求被注入
+#   → 50% 延迟 5s、10% 直接 503
+#
+# 【练手步骤】
+#   1. kubectl apply -f 本文件 -n dev
+#   2. 正常访问 dev.bookinfo.com：如常（未带 header）
+#   3. 带 header 访问（浏览器插件或 curl --resolve）：
+#      curl -H 'x-fault-injection: on' http://dev.bookinfo.com/productpage
+#      刷新若干次：约一半明显变慢、十分之一直接 503
+#   4. 练完 kubectl delete -f 本文件 -n dev
+#
+# 【陷阱】
+#   1. 同 host 多 VS 会合并路由：与正式 productpage VS 同 host（且
+#      gateways 相同），靠 match header 限定注入范围。
+#   2. host 里的域名是 dev 环境专属：练手环境换域名即可
+#      （staging.bookinfo.com / prod.bookinfo.com）。
+#   3. gateways 列表里 mesh 必须保留：没有 mesh 时网格内短名调用会
+#      绕过本 VS，注入对网格内流量失效。
+#   4. 入口注入 = 最上游注入：故障会被所有下游重试放大，观察时
+#      注意与 reviews 侧重试（attempts: 3）的叠加。
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: productpage-fault-injection
+spec:
+  hosts:
+    - dev.bookinfo.com                 # 练手环境换成对应域名
+  gateways:
+    - productpage                      # 入口 Gateway（南北向注入）
+  http:
+    - name: productpage-fault-route
+      match:
+        - headers:
+            x-fault-injection:
+              exact: "on"
+      fault:
+        delay:
+          percentage:
+            value: 50
+          fixedDelay: 5s
+        abort:
+          percentage:
+            value: 10
+          httpStatus: 503
+      route:
+        - destination:
+            host: productpage
+            port:
+              number: 9080

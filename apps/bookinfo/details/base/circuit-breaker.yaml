@@ -1,0 +1,54 @@
+# 熔断（Circuit Breaking）练手模板 —— 未启用，教学保留
+# 不在 kustomization.yaml 的 resources 里 → 不渲染进集群，即"注释掉"。
+#
+# 【与正式 DR 的分工】
+# destination-rule.yaml 的正式 DR 是压测豁免档（1024 连接 / 100 次 5xx，
+# 打不穿）。本文件是【演示档实验模板】（1/1/1、5xx×1、驱逐 3m），
+# 一打就穿。本文件专攻 details-canary：正式 DR 注释已声明"金丝雀短名
+# 不受熔断保护"，本文件补位，且与正式 DR host 不同，手动 apply 零冲突。
+#
+# 【心智骨架】
+# 熔断 = trafficPolicy 的两个部件：
+#   1. connectionPool   —— "堵"：连接/请求数超限就拒绝新连接
+#   2. outlierDetection —— "踢"：实例连续 5xx 就被驱逐出负载均衡池
+# 两者都写在【调用方出站时读取的 DR】上，管的是调用方的行为。
+#
+# 【运行时因果链】（生效链：productpage 调 details-canary）
+# productpage 的 sidecar 调 details-canary
+#   → 读本 DR：并发连接超过 1 → 新连接被拒（connectionPool 生效）
+#   → details 实例连续 1 次 5xx → 被驱逐 3m（outlierDetection）
+#   → 3m 内流量转向健康实例
+#
+# 【练手步骤】
+#   1. 把 host 里的 <namespace> 替换成 dev，手动 apply：
+#      kubectl apply -f apps/bookinfo/details/base/circuit-breaker.yaml
+#   2. 制造 5xx 或高并发打 productpage 转发到 details，观察驱逐/拒连：
+#      kubectl -n dev logs deploy/productpage -c istio-proxy | grep -i eject
+#   3. 练完删除：kubectl delete -f apps/bookinfo/details/base/circuit-breaker.yaml
+#
+# 【陷阱】
+#   1. DR 是客户端侧配置：改的是调用方的出站行为，不是被调方自身。
+#   2. 熔断 + 重试互相放大：正式 VS 有 retries: 3，驱逐后的重试可能
+#      打爆其他实例。
+#   3. 想对正式短名（details）练手：改本文件 host 会与正式 DR 冲突
+#      （Istio 同 host 只认一份）。改正式档位请走 GitOps：把阈值复制进
+#      destination-rule.yaml 提交（git 历史可查回滚）。
+#   4. 阈值是官方演示档，仅教学用。
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: details-canary-circuit-breaker
+spec:
+  host: details-canary.<namespace>.svc.cluster.local   # 手动 apply 前替换 <namespace>
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1                # 官方演示档：1 条连接即打穿
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 0
+    outlierDetection:
+      consecutive5xxErrors: 1            # 官方演示档：1 次 5xx 即驱逐
+      interval: 10s
+      baseEjectionTime: 3m               # 官方演示档：驱逐 3 分钟
+      maxEjectionPercent: 100
