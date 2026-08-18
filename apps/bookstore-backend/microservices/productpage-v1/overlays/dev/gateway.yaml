@@ -5,7 +5,7 @@
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
-  name: bookinfo-gateway
+  name: productpage
 spec:
   selector:
     istio: ingressgateway                   # 选中 istio ingress gateway 这个实际转发代理
