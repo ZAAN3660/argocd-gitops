@@ -1,6 +1,6 @@
 # v1（一个应用一个 AppSet：取消 git 目录扫描，路径固定，环境清单每应用独立维护）
 # 本文件为 details 应用生成按环境发散的 Application。
-# 与 productpage/ratings/reviews/routing 各自的 AppSet 同构，差异只在名字与路径。
+# 与 productpage/ratings/reviews 各自的 AppSet 同构，差异只在名字与路径。
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:

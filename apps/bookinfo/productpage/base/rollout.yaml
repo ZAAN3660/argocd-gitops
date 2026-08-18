@@ -55,7 +55,7 @@ spec:
       previewService: productpage-preview   # 绿：新版预发布，promote 前集群内直连验证
       autoPromotionEnabled: false           # 手动 promote：kubectl argo rollouts promote productpage
       scaleDownDelaySeconds: 30             # promote 后旧版保留 30s 再缩，留快速回退窗口
-      # prePromotionAnalysis:               # 可选：promote 前自动分析（模板在 routing 应用）
+      # prePromotionAnalysis:               # 可选：promote 前自动分析（模板需另建，routing 应用已删除）
       #   templates:
       #     - templateName: success-rate    # 绿 Pod 成功率 >= 90%
       #   args:

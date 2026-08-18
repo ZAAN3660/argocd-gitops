@@ -8,4 +8,3 @@ resources:
   - appsets/details.yaml                  # 生成 bookinfo-details-<env>
   - appsets/ratings.yaml                  # 生成 bookinfo-ratings-<env>
   - appsets/reviews.yaml                  # 生成 bookinfo-reviews-<env>
-  - appsets/routing.yaml                  # 生成 bookinfo-routing-<env>（治理层）
