@@ -1,14 +1,3 @@
-# v5（蓝绿化：canary destination 退役，VS 静态指向 active Service）
-# 一个 VS 同时管两路流量：
-# 南北向：hosts=dev.bookinfo.com + gateways=productpage（外部入口）
-# 东西向：hosts=productpage + gateways=mesh（网格内短名调用）
-# 注意：gateways 里 mesh 必须保留——列表里没有 mesh 时，VS 只对列出的
-# Gateway 生效，网格内调用将绕过 VS 直连 Service。
-# 蓝绿模式下本 VS 是静态的：流量始终指向 productpage（active Service），
-# promote 的切换发生在 Service selector 层，Rollout 不再改 VS 权重
-# （蓝绿策略没有 trafficRouting 字段，VS 上也没东西可改）。
-# 绿色版本验证：promote 前集群内直连 productpage-preview:9080（网格内短名）。
-# 历史：v1 东西向 VS → v2 合并 → v3 改名统一 → v4 域名分环境 → v5 蓝绿化
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
@@ -19,38 +8,62 @@ spec:
     - productpage                         # 网格内短名
   gateways:
     - productpage                         # 外部入口 Gateway（南北向）
-    - mesh                                # 网格内 sidecar（东西向），必须保留
+    - mesh                                # 网格内 sidecar（东西向），必须保留，否则网格
+                                          # 内调用将绕过 VS 直连 Service
+
+  # http 列表是一组"路由规则"：请求按顺序自上而下匹配，命中第一条即停止
   http:
-    # ============ 练手模板：入口故障注入（注释保留，不生效） ============
-    # 启用：取消下面注释（保持本块位于 productpage-route 之前——带 match
-    # 的 route 必须排在无 match route 前面，否则永远匹配不到）。
-    # 只有带 x-fault-injection: on 的入口请求被注入：50% 延迟 5s、10% 直接 503。
-    # 这是四个应用里唯一挂在【入口】的注入（官方故障注入任务标准位置）：
-    # 故障在最上游注入，所有下游都会感受到，reviews 侧重试（attempts: 3）会放大。
-    # 练手：取消注释 → 提交 sync → 带 header 访问本环境域名（dev.bookinfo.com）观察。
-    # - name: productpage-fault-route
-    #   match:
-    #     - headers:
-    #         x-fault-injection:
-    #           exact: "on"
-    #   fault:
-    #     delay:
-    #       percentage: { value: 50 }
-    #       fixedDelay: 5s        # 5s > 调用方 perTryTimeout 2s：触发重试连锁
-    #     abort:
-    #       percentage: { value: 10 }
-    #       httpStatus: 503
-    #   route:
-    #     - destination: { host: productpage, port: { number: 9080 } }
+    # ---------- 第 1 条：故障注入路由（只接住带注入开关的请求） ----------
+    # delay 与 abort 各自独立抽样；同一请求若同时命中两者：行为是"先睡后杀"——扣留 5 秒后网关直接
+    # 回 503，不转发。（Envoy 源码注释："Delays can be followed by aborts"）。同时命中的概率
+    # 约 50% × 10% = 5%
+    #
+    # 本路由因配置了 fault，Istio 会忽略同路由内的 timeout/retries（官方 proto 注释：
+    # "timeouts or retries will not be enabled when faults are enabled"）——注入的 503 
+    # 不会被重试，原样回到客户端。这正是 fault 与重试拆成两条路由的原因。
+    - name: productpage-fault-route
+      match:
+        - headers:
+            x-fault-injection:            # 请求头 x-fault-injection 为 on 时命中本路由
+              exact: "on"                 # 其他值（如 off）或不带此头 → 落到第 2 条路由
+      fault:                              # 故障注入
+        # 延迟故障：命中后网关先把请求扣留 5 秒
+        delay:                            
+          percentage: { value: 50 }       # 命中本路由的请求中 50% 会被扣留
+          fixedDelay: 5s
+        # 终止故障：网关直接回 503，不转发给下游
+        abort:                            
+          percentage: { value: 10 }       # 命中本路由的请求中 10% 会被终止
+          httpStatus: 503
+      route:
+        # 未命中 delay/abort 的请求，以及命中 delay 但未命中 abort 的请求，扣留结束后正常转发
+        - destination: { host: productpage, port: { number: 9080 } }
+
+    # ---------- 第 2 条：正常路由（无 match = 兜底，接住其余所有请求） ----------
     - name: productpage-route
-      timeout: 10s
+      # 【总预算】route 级超时：请求进网关到最终响应的总时长上限（含所有重试耗时）；超时后整体失败
+      # （Envoy 回 504），不再发起新重试
+      timeout: 15s                  
       retries:
+        # 重试次数（不含原始请求）。官方原文："最多发出的请求数 = 1 + attempts"
+        # 即 1 次原始请求 + 最多 3 次重试 = 最多 4 次尝试
         attempts: 3
+        # 【单次预算】每次尝试（原始 + 每次重试）的超时；某次尝试超时后，仅当错误命中 retryOn 才重
+        # 试。默认值 = route 级 timeout（并非固定 15s；两者都没配时才落到 Envoy 默认的 15s）。
+        # 要让重试有意义，它必须明显小于 route timeout                      
         perTryTimeout: 2s
+        # ① 写接口 / 不确知幂等性（最保守，只重试"确定没送达"的失败）
+        # retryOn: connect-failure,refused-stream
+        # ② 读接口 / 幂等接口（通用档，你现在的配置）
+        # retryOn: gateway-error,connect-failure,refused-stream,reset
+        # ③ 精准档：只信特定状态码（Istio 支持数字码直写）
+        # retryOn: "503,connect-failure,refused-stream"
+        # ④ gRPC 服务
+        # retryOn: cancelled,deadline-exceeded,unavailable,internal,resource-exhausted
         retryOn: gateway-error,connect-failure,refused-stream
       route:
         - destination:
-            host: productpage              # 只指 active Service：蓝绿切换对 VS 完全透明
-            port:
+            host: productpage             # 指向 Kubernetes Service；蓝绿切换靠 Service 的
+            port:                         # selector 翻转，VS 无需改动
               number: 9080
           weight: 100

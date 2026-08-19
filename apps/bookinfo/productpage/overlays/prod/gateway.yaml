@@ -1,8 +1,3 @@
-# v1.3（三环境域名独立：dev.bookinfo.com / staging.bookinfo.com / prod.bookinfo.com）
-# 入口网关：把集群外 HTTP/HTTPS 流量接进网格，绑定到 Istio 的
-# ingressgateway。本环境的 VirtualService 挂在同名 Gateway 上，
-# 入口统一但路由规则分环境。
-# 历史：v1 bookinfo-gateway（routing-v1/base）→ v1.1 迁入本 overlay → v1.2 改名 productpage
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
