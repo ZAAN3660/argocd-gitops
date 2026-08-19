@@ -1,5 +1,3 @@
-# v8（重构：base 写实化后改名 patch 全部删除，本层只保留环境差异）
-# 环境差异三件：namespace（环境边界）、镜像 tag（dev 走新版镜像）、DR host。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: dev

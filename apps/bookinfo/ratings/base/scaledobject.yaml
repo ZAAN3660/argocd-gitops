@@ -1,5 +1,3 @@
-# v5（写实化：资源名与应用名一致）
-# KEDA 自动扩缩容：CPU / 内存 / QPS 三个信号谁超标谁触发，
 # 实际扩缩由 KEDA 创建的 HPA 执行，副本数取各指标建议值的最大值。
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
@@ -8,9 +6,9 @@ metadata:
 spec:
   scaleTargetRef:
     apiVersion: argoproj.io/v1alpha1
-    kind: Rollout                           # 扩的是 Rollout：与灰度发布共存，KEDA 只调副本数不碰流量
+    kind: Rollout
     name: ratings
-  minReplicaCount: 1                        # 最少副本：演示环境统一 1（生产环境别设 0，保底容灾）
+  minReplicaCount: 1                        # 最少副本
   maxReplicaCount: 4                        # 扩容上限
   pollingInterval: 5                        # 每 N 秒查一次触发器指标
   cooldownPeriod: 120                       # 指标降下来后等 N 秒才缩容，防抖动
@@ -30,11 +28,11 @@ spec:
               value: 20                     # 一次最多缩 20%
               periodSeconds: 60
   triggers:
-    # - type: cpu                             # 触发器 1：CPU 使用率超 80%（依赖 resources.requests.cpu）
+    # - type: cpu                             # 触发器 1：CPU 使用率超 resources.requests.cpu 的 80%
     #   metricType: Utilization
     #   metadata:
     #     value: "80"
-    # - type: memory                          # 触发器 2：内存使用率超 75%（依赖 resources.requests.memory）
+    # - type: memory                          # 触发器 2：内存使用率超 resources.requests.memory 的 75%
     #   metricType: Utilization
     #   metadata:
     #     value: "75"

@@ -1,10 +1,3 @@
-# v6
-# reviews 单应用多版本工程：Service reviews + DestinationRule（subset
-# v1/v2/v3 + 熔断）+ 三个版本 Rollout 全部同在本应用——共享资源天然单
-# 所有者，不再拆分应用。三个 Rollout 不带 trafficRouting（子集流量契约
-# 是静态的，Rollout 无法表达版本内切流比例），版本内发布 = 副本数金丝雀
-# + 自动分析回滚。东西向 VS 在各 overlay 里。
-# Service 名必须用官方短名 reviews：productpage 镜像硬编码 http://reviews:9080。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 labels:
@@ -20,6 +13,6 @@ resources:
   - reviews-v1.yaml                         # 版本 Rollout：无 trafficRouting，副本数金丝雀
   - reviews-v2.yaml                         # 版本 Rollout：同上
   - reviews-v3.yaml                         # 版本 Rollout：同上
-  - podmonitor.yaml                         # 抓三个版本 envoy 端点：让 Grafana 有 destination 视角指标
-  - envoyfilter-ratelimit.yaml              # 本地限流（v4：随应用就近管理，一个 EF 覆盖三版本）
-  - analysistemplates.yaml                  # 灰度分析模板 + 实验模板（v5：随应用就近管理）
+  - podmonitor.yaml                         # 网格指标抓取
+  - envoyfilter-ratelimit.yaml              # 本地限流
+  - analysistemplates.yaml                  # 分析模板

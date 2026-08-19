@@ -1,5 +1,3 @@
-# v5（重构：DR 改名 reviews 后 patch target 同步；镜像 tag 写死在 base，images 条目删除）
-# 本层职责：namespace、DR host 注入、东西向 VS（三环境权重不同，留在 overlay）。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: dev
