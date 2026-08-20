@@ -36,8 +36,8 @@ spec:
             value:
               stat_prefix: http_local_rate_limiter
               token_bucket:
-                max_tokens: 60              # 日常安全档：桶容量 60（≈1 req/s）
-                tokens_per_fill: 60         # 每 fill_interval 补充 60 个
+                max_tokens: 100000          # 压测豁免档（原 60/60s 日常安全档）：≈1667 req/s/实例；压测完调回
+                tokens_per_fill: 100000     # 每 fill_interval 补充 100000 个
                 fill_interval: 60s
               filter_enabled:
                 runtime_key: local_rate_limit_enabled
