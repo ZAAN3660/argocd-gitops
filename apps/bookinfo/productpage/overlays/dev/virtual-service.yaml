@@ -27,10 +27,10 @@ spec:
             x-fault-injection:            # 请求头 x-fault-injection 为 on 时命中本路由
               exact: "on"                 # 其他值（如 off）或不带此头 → 落到第 2 条路由
       fault:                              # 故障注入
-        # 延迟故障：命中后网关先把请求扣留 5 秒
+        # 延迟故障：命中后网关先把请求扣留 8 秒
         delay:                            
           percentage: { value: 50 }       # 命中本路由的请求中 50% 会被扣留
-          fixedDelay: 5s
+          fixedDelay: 8s
         # 终止故障：网关直接回 503，不转发给下游
         abort:                            
           percentage: { value: 10 }       # 命中本路由的请求中 10% 会被终止
