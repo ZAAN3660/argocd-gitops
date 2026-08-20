@@ -22,6 +22,7 @@ spec:
         # pending 也满（http1MaxPendingRequests）→ 返回 503。
         # HTTP/2 无 pending 概念，连接数满 → 直接 503。
         maxConnections: 1024            # Envoy 默认值
+      http:
         # HTTP/1.1 一个连接同一时刻只能处理一个请求，在连接池满，且连接全忙时，新请求必
         # 须在调用方（Envoy sidecar) 的 pending 队列里等待，直到有空闲连接或等待超时。
         # 连接池满 + 队列满 = 直接拒（503）
@@ -55,6 +56,6 @@ spec:
       # 30s，第二次 60s，第三次 90s……
       baseEjectionTime: 30s
       # 驱逐的最大时长：实际驱逐时长超过该值时，按该值驱逐，避免驱逐时间过长导致服务不可用
-      maxEjectionTime: 300s
+      # maxEjectionTime: 300s     # Istio API 不暴露，Envoy 才有此概念
       # 同一时刻允许被驱逐实例占总实例的最大百分比（默认仅 10%）
       maxEjectionPercent: 100
