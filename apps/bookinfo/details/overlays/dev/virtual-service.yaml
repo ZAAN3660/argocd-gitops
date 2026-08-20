@@ -17,7 +17,7 @@ spec:
     # 不会被重试，原样回到客户端。这正是 fault 与重试拆成两条路由的原因。
     - name: details-fault-route
       match:
-        - sourceLabels: {app: productpage}  # 来自 productpage 应用的请求命中路由
+        - sourceLabels: {app: abc}  # 来自 productpage 应用的请求命中路由
         # - headers:
         #     x-fault-injection:            # 请求头 x-fault-injection 为应用短名时命中路由
         #       exact: "on"                 # 其他值或不带此头 → 落到第 2 条路由
