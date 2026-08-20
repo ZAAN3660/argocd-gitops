@@ -7,7 +7,7 @@ resources:
   - gateway.yaml                            # 南北流量的统一入口
 images:
   - name: docker.io/istio/examples-bookinfo-productpage-v1
-    newTag: 1.20.3
+    newTag: 1.20.0                          # 可用 TAG：1.20.0 、1.20.1 、1.20.2 、1.20.3
 patches:
   - target:
       kind: ScaledObject

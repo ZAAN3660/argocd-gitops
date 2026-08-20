@@ -17,9 +17,10 @@ spec:
     # 不会被重试，原样回到客户端。这正是 fault 与重试拆成两条路由的原因。
     - name: details-fault-route
       match:
-        - headers:
-            x-fault-injection:            # 请求头 x-fault-injection 为应用短名时命中路由
-              exact: "details"            # 其他值或不带此头 → 落到第 2 条路由
+        - sourceLabels: {app: reviews}    # 来自 reviews 应用的请求命中路由道
+        # - headers:
+        #     x-fault-injection:            # 请求头 x-fault-injection 为应用短名时命中路由
+        #       exact: "on"                 # 其他值或不带此头 → 落到第 2 条路由
       fault:                              # 故障注入
         # 延迟故障：命中后网关先把请求扣留 8 秒
         delay:                            
