@@ -24,12 +24,12 @@ spec:
         #       exact: "on"                 # 其他值或不带此头 → 落到第 2 条路由
       fault:                              # 故障注入
         # 延迟故障：命中后网关先把请求扣留 5 秒
-        delay:                            
-          percentage: { value: 50 }       # 命中本路由的请求中 50% 会被扣留
-          fixedDelay: 5s
+        # delay:                            
+        #   percentage: { value: 50 }       # 命中本路由的请求中 50% 会被扣留
+        #   fixedDelay: 5s
         # 终止故障：网关直接回 503，不转发给下游
         abort:                            
-          percentage: { value: 10 }       # 命中本路由的请求中 10% 会被终止
+          percentage: { value: 50 }       # 命中本路由的请求中 50% 会被终止
           httpStatus: 503
       route:
         # 未命中 delay/abort 的请求，以及命中 delay 但未命中 abort 的请求，扣留结束后正常转发
