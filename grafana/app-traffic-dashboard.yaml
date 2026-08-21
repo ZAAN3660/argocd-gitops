@@ -1476,7 +1476,6 @@
         "type": "custom"
       },
       {
-        "allValue": ".*",
         "current": {
           "selected": true,
           "text": [
@@ -1500,7 +1499,7 @@
         },
         "description": "K8s服务名（含灰度变体）。灰度期间双账本服务名不对称：调用方账记\"所拨的服务\"、被调方账记\"Pod所属的服务\"，建议把一个服务及其 -canary/-preview 变体都勾上以覆盖双视角。",
         "hide": 0,
-        "includeAll": true,
+        "includeAll": false,
         "multi": true,
         "name": "service",
         "options": [
