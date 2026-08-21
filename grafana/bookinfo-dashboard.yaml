@@ -75,7 +75,8 @@
         }
       ],
       "title": "QPS（当前）",
-      "type": "stat"
+      "type": "stat",
+      "description": "- **是什么**：所选服务的当前请求速率（每秒）。\n- **怎么读**：口径随 $reporter 切换——source=调用方的体验，destination=服务的真实处理量。\n- **异常特征**：注入故障后骤降=故障生效；无操作地归零=流量源中断。"
     },
     {
       "datasource": {
@@ -140,7 +141,8 @@
         }
       ],
       "title": "成功率（2xx）",
-      "type": "stat"
+      "type": "stat",
+      "description": "- **是什么**：2xx 响应占比（%）。\n- **怎么读**：与故障大盘的「5xx 双视角」互补；source 视角包含调用方侧失败（熔断/注入）。\n- **异常特征**：低于 100% 即有非 2xx 响应，下钻 id32（响应码）与 id33（原因标志）定位。"
     },
     {
       "datasource": {
@@ -195,7 +197,8 @@
         }
       ],
       "title": "P99 延迟",
-      "type": "stat"
+      "type": "stat",
+      "description": "- **是什么**：P99 延迟（毫秒），最慢 1% 请求的耗时。\n- **怎么读**：尾部延迟，比平均值对长尾问题敏感得多。\n- **异常特征**：与 QPS 无关地持续升高=依赖变慢或资源瓶颈。"
     },
     {
       "datasource": {
@@ -258,7 +261,8 @@
         }
       ],
       "title": "5xx 错误率",
-      "type": "stat"
+      "type": "stat",
+      "description": "- **是什么**：5xx 响应占比（%）。\n- **怎么读**：服务层错误的最直接信号。\n- **异常特征**：>0 即异常——先看 id32 定位 5xx 响应码，再看 id33 定位根因（超时/熔断/断连）。"
     },
     {
       "collapsed": false,
@@ -349,7 +353,8 @@
         }
       ],
       "title": "QPS by Service（source 视角最准；workload 为真相兜底）",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **是什么**：所选服务的 QPS，两条口径——按服务名与按工作负载名。\n- **怎么读**：source 视角最准（能看见全部调用）；destination 为真相兜底（服务实际处理量）。\n- **异常特征**：两条线明显分叉=有请求死在半路（熔断/注入/超时）。"
     },
     {
       "datasource": {
@@ -421,7 +426,8 @@
         }
       ],
       "title": "QPS by Pod（灰度期间看新旧 Pod 流量切分）",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **是什么**：每个 Pod 收到的 QPS。\n- **怎么读**：灰度发布期间看新旧 Pod 的流量切分进度，核对是否符合预期权重。\n- **异常特征**：个别 Pod 流量恒为 0=端点异常或权重配置错误。"
     },
     {
       "datasource": {
@@ -493,7 +499,8 @@
         }
       ],
       "title": "请求量 by 响应码（堆叠）",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **是什么**：请求量按响应码堆叠。\n- **怎么读**：一眼看出响应码构成变化（2xx/3xx/4xx/5xx 各占多少）。\n- **异常特征**：4xx 占比突升=调用方问题（错误 URL、认证失败、越权）；5xx 占比突升=服务端问题。"
     },
     {
       "collapsed": false,
@@ -589,7 +596,8 @@
         }
       ],
       "title": "P50 / P95 / P99 延迟趋势",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **是什么**：延迟分位数趋势（P50/P95/P99 三条线）。\n- **怎么读**：P50 看典型体验、P95 看次尾、P99 看最差 1%；三者差距大=长尾严重。\n- **异常特征**：P99 与 P50 同步抬升=整体变慢；仅 P99 抬升=个别慢请求（GC、锁、下游抖动）。"
     },
     {
       "datasource": {
@@ -661,7 +669,8 @@
         }
       ],
       "title": "P99 by Pod（定位慢 Pod）",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **是什么**：各 Pod 的 P99 延迟。\n- **怎么读**：定位「慢 Pod」——个别实例拖后腿的场景。\n- **异常特征**：单 Pod 明显慢=该实例资源争抢或宿主机问题，配合故障大盘 CPU 面板看。"
     },
     {
       "datasource": {
@@ -733,7 +742,8 @@
         }
       ],
       "title": "延迟分布热力图",
-      "type": "heatmap"
+      "type": "heatmap",
+      "description": "- **是什么**：延迟桶分布热力图（纵轴延迟、色深请求量）。\n- **怎么读**：看延迟分布形状——色带越集中越健康。\n- **异常特征**：色带整体右移=全局变慢；出现第二条孤立色带=一批明显更慢的请求。"
     },
     {
       "collapsed": false,
@@ -822,7 +832,8 @@
         }
       ],
       "title": "成功率趋势（2xx 占比）",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **是什么**：2xx 占比的时间趋势。\n- **怎么读**：与 id4（当前值）配套，看成功率的演变过程而非瞬时值。\n- **异常特征**：阶梯式下跌=某个变更引入问题，对照 Argo CD 部署时间定位。"
     },
     {
       "datasource": {
@@ -900,7 +911,8 @@
         }
       ],
       "title": "错误请求 QPS（4xx / 5xx）",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **是什么**：4xx 与 5xx 请求速率（两条线）。\n- **怎么读**：4xx=客户端错误（请求本身有问题），5xx=服务端错误（服务或依赖出问题）——先分清责任侧。\n- **异常特征**：4xx 突升=调用方/网关配置问题；5xx 突升=服务故障。"
     },
     {
       "datasource": {
@@ -972,7 +984,8 @@
         }
       ],
       "title": "异常响应标志（超时/熔断/连接失败等）",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **是什么**：按 response_flags 拆分的异常请求速率。\n- **怎么读**：DC=断连、UC=上游拒绝、UO=熔断拒绝、URX=重试耗尽、DI=注入延迟、FI=注入故障、UT=超时。\n- **异常特征**：哪个标志升起=哪类故障发生，与故障大盘的实验面板一一对应。"
     },
     {
       "collapsed": false,
