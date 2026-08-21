@@ -1440,7 +1440,7 @@
           }
         ],
         "query": {
-          "query": "label_values(istio_requests_total, destination_workload_namespace)",
+          "query": "label_values(kube_service_info, namespace)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -1502,11 +1502,11 @@
           }
         ],
         "query": {
-          "query": "label_values(istio_requests_total{destination_workload_namespace=\"$namespace\"}, destination_service)",
+          "query": "label_replace(kube_service_info{namespace=~\"$namespace\"}, \"svc_fqdn\", \"$1.$namespace.svc.cluster.local\", \"service\", \"(.*)\")",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
-        "regex": "",
+        "regex": "/svc_fqdn=\"([^\"]+)\"/",
         "skipUrlSync": false,
         "sort": 1,
         "type": "query"
