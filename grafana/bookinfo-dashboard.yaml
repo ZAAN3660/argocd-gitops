@@ -1030,7 +1030,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 8,
         "x": 0,
         "y": 33
       },
@@ -1052,13 +1052,14 @@
       },
       "targets": [
         {
-          "expr": "(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{rollouts_pod_template_hash}}",
           "refId": "A"
         }
       ],
       "title": "QPS by Pod Hash（Argo Rollouts 灰度对比）",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——版本 hash 标签只有在被调方账上才指向被灰度服务自身，调用方账上是来源 Pod 的 hash。"
     },
     {
       "datasource": {
@@ -1103,8 +1104,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 8,
+        "x": 8,
         "y": 33
       },
       "id": 42,
@@ -1124,13 +1125,262 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.99, sum by (le, rollouts_pod_template_hash) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.99, sum by (le, rollouts_pod_template_hash) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{rollouts_pod_template_hash}}",
           "refId": "A"
         }
       ],
       "title": "P99 by Pod Hash（新旧版本延迟对比）",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——版本 hash 标签只有在被调方账上才指向被灰度服务自身，调用方账上是来源 Pod 的 hash。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "axisSoftMax": 100,
+            "axisSoftMin": 0,
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 33
+      },
+      "id": 43,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001) * 100) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
+          "legendFormat": "{{rollouts_pod_template_hash}}",
+          "refId": "A"
+        }
+      ],
+      "title": "灰度成功率 by Pod Hash（新旧版本错误对比）",
+      "type": "timeseries",
+      "description": "- **是什么**：灰度期间各版本（Pod Hash）的成功率（2xx 占比）对比。\n- **怎么读**：直接回答「新版本是否引入了错误」——canary 成功率低于 stable 就应考虑回滚。\n- **异常特征**：canary 与 stable 成功率分叉=版本问题而非全局故障。\n- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——版本 hash 标签只有在被调方账上才指向被灰度服务自身，调用方账上是来源 Pod 的 hash。"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 105,
+      "panels": [],
+      "title": "🌐 加密与来源",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 43
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(sum by (connection_security_policy) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"connection_security_policy\", \"无流量\", \"__name__\", \".*\")",
+          "legendFormat": "{{connection_security_policy}}",
+          "refId": "A"
+        }
+      ],
+      "title": "mTLS 覆盖率（加密 vs 明文）",
+      "type": "timeseries",
+      "description": "- **是什么**：请求的连接安全策略（mTLS 状态）分布。\n- **怎么读**：mutual_tls=sidecar 间双向 TLS 加密生效；none=明文；unknown=安全信息未记录。\n- **异常特征**：对某服务做完 mTLS 策略实验后仍只有 none/unknown=策略未覆盖到该链路。\n- **背景**：Istio 默认自动 mTLS——即使没有 PeerAuthentication，sidecar 间也是 mutual_tls；明文只出现在对端无 sidecar 的链路上。\n- **视角说明**：固定被调方视角——安全策略标签只在 destination 账上被可靠填充（实测：source 账全是 unknown）。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 43
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(sum by (source_workload, response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(label_replace(vector(0), \"source_workload\", \"无调用方\", \"__name__\", \".*\"), \"response_code\", \"—\", \"__name__\", \".*\")",
+          "legendFormat": "{{source_workload}}·{{response_code}}",
+          "refId": "A"
+        }
+      ],
+      "title": "入站请求按来源（谁在打我）",
+      "type": "timeseries",
+      "description": "- **是什么**：各调用方工作负载对本服务的请求量，按响应码堆叠。\n- **怎么读**：直接回答「谁在打我、打出了什么响应码」。\n- **异常特征**：某个来源高比例异常码=该调用方的问题（重试风暴、错误配置）。\n- **视角说明**：固定调用方视角——来源标签只存在于 source 账上，切 destination 时本面板为空。"
     }
   ],
   "refresh": "5s",
