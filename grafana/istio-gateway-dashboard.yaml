@@ -843,6 +843,409 @@
         }
       ],
       "description": "- **是什么**：网关 Pod 累计重启次数。\n- **怎么读**：正常为 0；重启=网关自身不稳定。\n- **异常特征**：频繁重启时入口会出现短暂全挂（重启窗口）。"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
+      "id": 104,
+      "panels": [],
+      "title": "🔌 连接池与队列",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 50
+      },
+      "id": 14,
+      "title": "连接建立速率（按后端）",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (cluster) (label_replace(rate(envoy_cluster_upstream_cx_total{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval]), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无连接\", \"__name__\", \".*\")",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：网关到各后端的新连接建立速率。\n- **怎么读**：正常很低（连接复用）；陡升=连接被频繁重建。\n- **异常特征**：与连接失败面板对照——重连风暴=后端健康检查失败或配置推送。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 50
+      },
+      "id": 15,
+      "title": "上游在途请求",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (cluster) (label_replace(envoy_cluster_upstream_rq_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}, \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无在途\", \"__name__\", \".*\")",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：网关已发给上游、尚未完成响应处理的在途请求数。\n- **怎么读**：健康时≈QPS×平均耗时。\n- **异常特征**：高而不退=后端慢。**边界**：延迟故障注入的请求在故障过滤器里排队（尚未进入上游池），这里看不到——看 P99 与 DI 标志面板。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 58
+      },
+      "id": 16,
+      "title": "上游排队中请求",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (cluster) (label_replace(envoy_cluster_upstream_rq_pending_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}, \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无排队\", \"__name__\", \".*\")",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：等待可用上游连接的排队请求数。\n- **怎么读**：正常为 0；>0=连接池已满，请求在等。\n- **异常特征**：持续排队=连接池太小或后端处理过慢（100QPS 压测下此面板为 0 说明池不是瓶颈）。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "id": 17,
+      "title": "排队溢出与驱逐",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (cluster) (label_replace(rate(envoy_cluster_upstream_rq_pending_overflow{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval]), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无溢出\", \"__name__\", \".*\")",
+          "legendFormat": "{{cluster}}·溢出",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (cluster) (label_replace(rate(envoy_cluster_upstream_rq_pending_failure_eject{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval]), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无驱逐\", \"__name__\", \".*\")",
+          "legendFormat": "{{cluster}}·驱逐",
+          "refId": "B"
+        }
+      ],
+      "description": "- **是什么**：连接池溢出（超出 pending 上限被拒绝）与被驱逐请求的速率。\n- **怎么读**：正常全 0。\n- **异常特征**：>0=连接池被击穿——扩容后端或调大连接池配置。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 66
+      },
+      "id": 18,
+      "title": "连接失败与超时",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(envoy_cluster_upstream_cx_connect_fail{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0)",
+          "legendFormat": "连接失败",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(envoy_cluster_upstream_cx_connect_timeout{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0)",
+          "legendFormat": "连接超时",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(envoy_cluster_upstream_rq_timeout{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0)",
+          "legendFormat": "请求超时",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(envoy_cluster_upstream_rq_active_overflow{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0)",
+          "legendFormat": "在途溢出",
+          "refId": "D"
+        }
+      ],
+      "description": "- **是什么**：连接建立失败/超时与请求超时速率。\n- **怎么读**：正常≈0。\n- **异常特征**：连接失败突升=后端不可达；请求超时突升=后端慢或 perTryTimeout 过短（你们 VS 配了 2s/3 次重试，超时会放大为多倍请求量）。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 66
+      },
+      "id": 19,
+      "title": "故障注入活动（DI/FI 标志）",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (response_flags) (rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\", response_flags=~\".*(DI|FI).*\"}[$__rate_interval])) or on() label_replace(vector(0), \"response_flags\", \"无注入\", \"__name__\", \".*\")",
+          "legendFormat": "{{response_flags}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：被故障注入处理的请求速率（DI=延迟注入、FI=中止注入）。\n- **怎么读**：压注故障时核对注入是否按配置百分比生效。\n- **异常特征**：DI 速率高而入口QPS 低=延迟把吞吐卡死（Little法则：吞吐=并发÷平均延迟）——这是 4.95 现象的本体。"
     }
   ]
 }
