@@ -1411,7 +1411,7 @@
           "text": "prometheus",
           "value": "prometheus"
         },
-        "hide": 0,
+        "hide": 2,
         "includeAll": false,
         "multi": false,
         "name": "datasource",
@@ -1431,7 +1431,7 @@
           ],
           "selected": true
         },
-        "hide": 0,
+        "hide": 1,
         "includeAll": false,
         "multi": true,
         "name": "namespace",
@@ -1451,7 +1451,7 @@
           "text": "source",
           "value": "source"
         },
-        "hide": 0,
+        "hide": 1,
         "includeAll": false,
         "multi": false,
         "name": "reporter",
@@ -1482,7 +1482,7 @@
           "selected": true
         },
         "description": "K8s服务名（含灰度变体）。灰度期间双账本服务名不对称：调用方账记\"所拨的服务\"、被调方账记\"Pod所属的服务\"，建议把一个服务及其 -canary/-preview 变体都勾上以覆盖双视角。",
-        "hide": 0,
+        "hide": 1,
         "includeAll": false,
         "multi": true,
         "name": "service",
