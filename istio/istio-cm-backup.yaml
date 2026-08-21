@@ -7,7 +7,7 @@
 #
 # ── 背景: 改了什么 ─────────────────────────────────────────────────────────
 # 2026-08-21 为了给《故障监控 - Bookinfo Fault & Resilience》Grafana 大盘
-# （grafana/bookinfo-fault-dashboard.yaml）提供连接池/熔断器/Pending 队列/
+# （grafana/app-fault-dashboard.yaml）提供连接池/熔断器/Pending 队列/
 # 重试等面板数据，对 meshConfig 做了一处修改：在 defaultConfig 下追加了
 # proxyStatsMatcher.inclusionPrefixes。
 #

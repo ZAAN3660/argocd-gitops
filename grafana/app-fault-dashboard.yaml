@@ -2687,7 +2687,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "应用 / 故障监控",
-  "uid": "bookinfo-fault-view",
+  "uid": "app-fault-view",
   "version": 16,
   "weekStart": ""
 }

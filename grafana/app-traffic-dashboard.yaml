@@ -1534,7 +1534,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "应用 / 流量总览",
-  "uid": "bookinfo-app-view",
+  "uid": "app-traffic-view",
   "version": 10,
   "weekStart": ""
 }
