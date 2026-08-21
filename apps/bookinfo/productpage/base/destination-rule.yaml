@@ -21,12 +21,12 @@ spec:
         # 达到上限后：HTTP/1.1 请求先进 pending 队列等待空闲连接；
         # pending 也满（http1MaxPendingRequests）→ 返回 503。
         # HTTP/2 无 pending 概念，连接数满 → 直接 503。
-        maxConnections: 1024            # Envoy 默认值
+        maxConnections: 4096            # 2026-08-21 压测：故障延迟会占用连接（实测池≈在途数），100QPS×5s延迟下默认1024会满，放宽到4096
       http:
         # HTTP/1.1 一个连接同一时刻只能处理一个请求，在连接池满，且连接全忙时，新请求必
         # 须在调用方（Envoy sidecar) 的 pending 队列里等待，直到有空闲连接或等待超时。
         # 连接池满 + 队列满 = 直接拒（503）
-        http1MaxPendingRequests: 1024   # Envoy 默认值
+        http1MaxPendingRequests: 4096   # 同上：连接池满时待排队的请求上限，与 maxConnections 同步放宽
         # Envoy 的负载均衡（RANDOM/ROUND_ROBIN/LEAST_REQUEST）不是对每个请求做负载
         # 均衡，是对"建立连接"这个动作做负载均衡，连接一旦建立，后续请求固定复用这条连接。
         #
