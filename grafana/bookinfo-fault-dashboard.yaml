@@ -2657,7 +2657,7 @@
         },
         "description": "语义说明：canonical 服务名（canary/preview 后缀已归一化），选中一个即同时覆盖 stable 与 canary Pod。",
         "hide": 0,
-        "includeAll": false,
+        "includeAll": true,
         "multi": true,
         "name": "svc",
         "options": [],
@@ -2669,7 +2669,8 @@
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
-        "type": "query"
+        "type": "query",
+        "allValue": ".*"
       }
     ]
   },

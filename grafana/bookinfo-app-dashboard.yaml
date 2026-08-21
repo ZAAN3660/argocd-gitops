@@ -1476,7 +1476,7 @@
         "type": "custom"
       },
       {
-        "allValue": "",
+        "allValue": ".*",
         "current": {
           "selected": true,
           "text": [
@@ -1494,7 +1494,7 @@
         },
         "description": "语义说明：列的是 canonical 服务名（Istio 已把 canary/preview 等灰度后缀归一化），选中一个名字即同时覆盖它的 stable 与 canary Pod。",
         "hide": 0,
-        "includeAll": false,
+        "includeAll": true,
         "multi": true,
         "name": "service",
         "options": [
