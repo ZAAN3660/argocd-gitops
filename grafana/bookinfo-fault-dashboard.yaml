@@ -2389,6 +2389,199 @@
         }
       ],
       "description": "- **是什么**：网关到各后端服务的活跃连接数。\n- **怎么读**：连接池水位；骤降=后端不可达。\n- **异常特征**：为 0 而入口QPS>0=所有请求都失败。"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 85
+      },
+      "id": 110,
+      "panels": [],
+      "title": "🔄 扩缩容（KEDA）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 86
+      },
+      "id": 33,
+      "title": "KEDA触发指标值",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "keda_scaler_metrics_value",
+          "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：各 ScaledObject 的触发器当前值（你们=Prometheus QPS）。\n- **怎么读**：压测期间应随流量起伏；有流量但恒 0=扩缩链路断裂。\n- **异常特征**：与流量大盘对照——流量升而触发值不动，看下一面板。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 86
+      },
+      "id": 34,
+      "title": "Scaler错误速率",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (exported_namespace, scaledObject) (rate(keda_scaler_detail_errors_total[$__rate_interval])) or on() label_replace(vector(0), \"scaledObject\", \"无错误\", \"__name__\", \".*\")",
+          "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：KEDA 查询 Prometheus 失败的速率。\n- **怎么读**：正常为 0。\n- **异常特征**：上升=operator 连不上 Prometheus，扩缩决策失真（该扩容不扩容）。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 86
+      },
+      "id": 35,
+      "title": "operator重启次数",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "kube_pod_container_status_restarts_total{namespace=\"keda\", pod=~\"keda-operator.*\", container=\"keda-operator\"} or on() label_replace(vector(0), \"pod\", \"无重启\", \"__name__\", \".*\")",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：KEDA operator 累计重启次数。\n- **怎么读**：正常为 0；重启窗口内扩缩暂停。\n- **异常特征**：频繁重启=leader election 丢失，历史上发生过 17 次。"
     }
   ],
   "refresh": "5s",
