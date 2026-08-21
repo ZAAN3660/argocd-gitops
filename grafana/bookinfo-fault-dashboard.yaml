@@ -380,7 +380,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (response_flags, reporter) (rate(istio_requests_total{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags!=\"-\"}[$__rate_interval]))",
+          "expr": "(sum by (response_flags, reporter) (rate(istio_requests_total{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags!=\"-\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "{{response_flags}}·{{reporter}}",
           "refId": "A"
         }
@@ -453,12 +453,12 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval]))",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "调用方5xx(source)",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval]))",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "被调方5xx(destination)",
           "refId": "B"
         }
@@ -531,7 +531,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))",
+          "expr": "(sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "{{response_code}}",
           "refId": "A"
         }
@@ -604,7 +604,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (response_flags) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]))",
+          "expr": "(sum by (response_flags) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "{{response_flags}}",
           "refId": "A"
         }
@@ -1274,7 +1274,7 @@
           "refId": "A"
         },
         {
-          "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=\"429\"}[$__rate_interval]))",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=\"429\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "429@被调方",
           "refId": "B"
         }
@@ -1818,7 +1818,7 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))",
+          "expr": "(histogram_quantile(0.99, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P99·{{reporter}}",
           "refId": "A"
         }
@@ -1891,7 +1891,7 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))",
+          "expr": "(histogram_quantile(0.50, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P50·{{reporter}}",
           "refId": "A"
         }
