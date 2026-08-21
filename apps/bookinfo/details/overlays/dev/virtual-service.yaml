@@ -16,24 +16,24 @@ spec:
     # "timeouts or retries will not be enabled when faults are enabled"）——注入的 503 
     # 不会被重试，原样回到客户端。这正是 fault 与重试拆成两条路由的原因。
     #
-    # - name: details-fault-route
-    #   match:
-    #     - sourceLabels: {app: abc}  # 来自 productpage 应用的请求命中路由
-    #     # - headers:
-    #     #     x-fault-injection:            # 请求头 x-fault-injection 为应用短名时命中路由
-    #     #       exact: "on"                 # 其他值或不带此头 → 落到第 2 条路由
-    #   fault:                              # 故障注入
-    #     # 延迟故障：命中后网关先把请求扣留 5 秒
-    #     delay:                            
-    #       percentage: { value: 50 }       # 命中本路由的请求中 50% 会被扣留
-    #       fixedDelay: 5s
-    #     # 终止故障：网关直接回 503，不转发给下游
-    #     abort:                            
-    #       percentage: { value: 10 }       # 命中本路由的请求中 10% 会被终止
-    #       httpStatus: 503
-    #   route:
-    #     # 未命中 delay/abort 的请求，以及命中 delay 但未命中 abort 的请求，扣留结束后正常转发
-    #     - destination: { host: details, port: { number: 9080 } }
+    - name: details-fault-route
+      match:
+        - sourceLabels: {app: productpage}  # 来自 productpage 应用的请求命中路由
+        # - headers:
+        #     x-fault-injection:            # 请求头 x-fault-injection 为应用短名时命中路由
+        #       exact: "on"                 # 其他值或不带此头 → 落到第 2 条路由
+      fault:                              # 故障注入
+        # 延迟故障：命中后网关先把请求扣留 5 秒
+        delay:                            
+          percentage: { value: 50 }       # 命中本路由的请求中 50% 会被扣留
+          fixedDelay: 5s
+        # 终止故障：网关直接回 503，不转发给下游
+        abort:                            
+          percentage: { value: 10 }       # 命中本路由的请求中 10% 会被终止
+          httpStatus: 503
+      route:
+        # 未命中 delay/abort 的请求，以及命中 delay 但未命中 abort 的请求，扣留结束后正常转发
+        - destination: { host: details, port: { number: 9080 } }
 
     # ---------- 第 2 条：正常路由（无 match = 兜底，接住其余所有请求） ----------
     - name: details-route
