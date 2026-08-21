@@ -11,5 +11,5 @@ spec:
       app: istio-ingressgateway
   podMetricsEndpoints:
     - port: http-envoy-prom           # 网关 envoy 指标端口名（15090）
-      interval: 3s
+      interval: 15s                   # 2026-08-21 由 3s 调慢：网关 stats 数千条 ×3Pod，3s 抓取把 Prometheus 压垮（查询超时）
       path: /stats/prometheus         # envoy 暴露指标的路径
