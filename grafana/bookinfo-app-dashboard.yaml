@@ -1510,7 +1510,7 @@
           }
         ],
         "query": {
-          "query": "label_values(istio_requests_total, destination_canonical_service)",
+          "query": "label_values(istio_requests_total{destination_canonical_service!=\"unknown\"}, destination_canonical_service)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,

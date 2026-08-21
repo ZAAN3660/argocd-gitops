@@ -690,12 +690,12 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"})",
+          "expr": "sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}) or on() label_replace(vector(0), \"cluster_name\", \"无连接\", \"__name__\", \".*\")",
           "legendFormat": "连接·{{cluster_name}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"})",
+          "expr": "sum by (cluster_name) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}) or on() label_replace(vector(0), \"cluster_name\", \"无连接\", \"__name__\", \".*\")",
           "legendFormat": "请求·{{cluster_name}}",
           "refId": "B"
         }
@@ -768,12 +768,12 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_upstream_rq_pending_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"})",
+          "expr": "sum by (cluster_name) (envoy_cluster_upstream_rq_pending_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}) or on() label_replace(vector(0), \"cluster_name\", \"无排队\", \"__name__\", \".*\")",
           "legendFormat": "排队中·{{cluster_name}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_pending_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval]))",
+          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_pending_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无溢出\", \"__name__\", \".*\")",
           "legendFormat": "溢出/秒·{{cluster_name}}",
           "refId": "B"
         }
@@ -846,17 +846,17 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_fail{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval]))",
+          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_fail{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无连接失败\", \"__name__\", \".*\")",
           "legendFormat": "建连失败·{{cluster_name}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval]))",
+          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无超时\", \"__name__\", \".*\")",
           "legendFormat": "建连超时·{{cluster_name}}",
           "refId": "B"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_cx_destroy_local_with_active_rq{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval]))",
+          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_cx_destroy_local_with_active_rq{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无销毁\", \"__name__\", \".*\")",
           "legendFormat": "带请求销毁·{{cluster_name}}",
           "refId": "C"
         }
@@ -929,12 +929,12 @@
       },
       "targets": [
         {
-          "expr": "sum by (pod) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\", cluster_name=~\"inbound[|]9080.*\"})",
+          "expr": "sum by (pod) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\", cluster_name=~\"inbound[|]9080.*\"}) or on() label_replace(vector(0), \"pod\", \"无Pod\", \"__name__\", \".*\")",
           "legendFormat": "连接·{{pod}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (pod) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\", cluster_name=~\"inbound[|]9080.*\"})",
+          "expr": "sum by (pod) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\", cluster_name=~\"inbound[|]9080.*\"}) or on() label_replace(vector(0), \"pod\", \"无Pod\", \"__name__\", \".*\")",
           "legendFormat": "请求·{{pod}}",
           "refId": "B"
         }
@@ -1020,17 +1020,17 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_circuit_breakers_default_cx_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"})",
+          "expr": "sum by (cluster_name) (envoy_cluster_circuit_breakers_default_cx_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}) or on() label_replace(vector(0), \"cluster_name\", \"无熔断\", \"__name__\", \".*\")",
           "legendFormat": "连接熔断·{{cluster_name}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"})",
+          "expr": "sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}) or on() label_replace(vector(0), \"cluster_name\", \"无熔断\", \"__name__\", \".*\")",
           "legendFormat": "请求熔断·{{cluster_name}}",
           "refId": "B"
         },
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_pending_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"})",
+          "expr": "sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_pending_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}) or on() label_replace(vector(0), \"cluster_name\", \"无熔断\", \"__name__\", \".*\")",
           "legendFormat": "Pending熔断·{{cluster_name}}",
           "refId": "C"
         }
@@ -1103,12 +1103,12 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_outlier_detection_ejections_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"})",
+          "expr": "sum by (cluster_name) (envoy_cluster_outlier_detection_ejections_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}) or on() label_replace(vector(0), \"cluster_name\", \"无驱逐\", \"__name__\", \".*\")",
           "legendFormat": "驱逐中·{{cluster_name}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_outlier_detection_ejections_total{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval]))",
+          "expr": "sum by (cluster_name) (rate(envoy_cluster_outlier_detection_ejections_total{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无驱逐事件\", \"__name__\", \".*\")",
           "legendFormat": "驱逐事件/秒·{{cluster_name}}",
           "refId": "B"
         }
@@ -1181,22 +1181,22 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval]))",
+          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无重试\", \"__name__\", \".*\")",
           "legendFormat": "重试·{{cluster_name}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_success{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval]))",
+          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_success{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无重试成功\", \"__name__\", \".*\")",
           "legendFormat": "重试成功·{{cluster_name}}",
           "refId": "B"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval]))",
+          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无重试溢出\", \"__name__\", \".*\")",
           "legendFormat": "重试溢出·{{cluster_name}}",
           "refId": "C"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval]))",
+          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*(${svc:regex})[.]$namespace[.]svc.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无超时\", \"__name__\", \".*\")",
           "legendFormat": "超时·{{cluster_name}}",
           "refId": "D"
         }
@@ -1360,7 +1360,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (container) (rate(container_cpu_usage_seconds_total{container!=\"\", namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\"}[$__rate_interval]))",
+          "expr": "sum by (container) (rate(container_cpu_usage_seconds_total{container!=\"\", namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"container\", \"无容器\", \"__name__\", \".*\")",
           "legendFormat": "{{container}}",
           "refId": "A"
         }
@@ -1433,7 +1433,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (container) (container_memory_working_set_bytes{container!=\"\", namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\"})",
+          "expr": "sum by (container) (container_memory_working_set_bytes{container!=\"\", namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\"}) or on() label_replace(vector(0), \"container\", \"无容器\", \"__name__\", \".*\")",
           "legendFormat": "{{container}}",
           "refId": "A"
         }
@@ -1519,7 +1519,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (pod, container) (kube_pod_container_status_restarts_total{namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\"})",
+          "expr": "sum by (pod, container) (kube_pod_container_status_restarts_total{namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\"}) or on() label_replace(label_replace(vector(0), \"pod\", \"无Pod\", \"__name__\", \".*\"), \"container\", \"无Pod\", \"__name__\", \".*\")",
           "legendFormat": "{{pod}}/{{container}}",
           "refId": "A"
         }
@@ -1731,7 +1731,7 @@
       },
       "targets": [
         {
-          "expr": "count(up{namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\"})",
+          "expr": "count(up{namespace=\"$namespace\", pod=~\"(${svc:regex})-.*\"}) or on() label_replace(vector(0), \"__name__\", \"在线Pod数\", \"__name__\", \".*\")",
           "legendFormat": "Pod 数",
           "refId": "A"
         }
@@ -2075,7 +2075,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(sidecar_injection_failure_total[$__rate_interval]))",
+          "expr": "sum(rate(sidecar_injection_failure_total[$__rate_interval])) or on() label_replace(vector(0), \"__name__\", \"注入失败速率\", \"__name__\", \".*\")",
           "legendFormat": "失败速率",
           "refId": "A"
         }
@@ -2662,7 +2662,7 @@
         "name": "svc",
         "options": [],
         "query": {
-          "query": "label_values(istio_requests_total, destination_canonical_service)",
+          "query": "label_values(istio_requests_total{destination_canonical_service!=\"unknown\"}, destination_canonical_service)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
