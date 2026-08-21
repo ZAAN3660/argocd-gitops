@@ -657,7 +657,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "- **是什么**：网关 envoy 进程的 CPU 消耗（两个副本之和）。\n- **正常**：远低于核心数；压测时看网关是否成为瓶颈。\n- **异常**：持续>1 核且延迟同步恶化=考虑扩容或优化路由配置。",
+      "description": "- **是什么**：网关 envoy 进程的 CPU 消耗（按 Pod 拆分，两个副本各一条线）。\n- **正常**：远低于核心数；压测时看网关是否成为瓶颈。\n- **异常**：持续>1 核且延迟同步恶化=考虑扩容或优化路由配置。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -704,8 +704,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", container=\"istio-proxy\"}[$__rate_interval])) or vector(0)",
-          "legendFormat": "网关CPU",
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", container=\"istio-proxy\"}[$__rate_interval])) or on() label_replace(vector(0), \"pod\", \"无Pod\", \"__name__\", \".*\")",
+          "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
@@ -717,7 +717,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "- **是什么**：网关 envoy 进程内存（工作集）。\n- **正常**：随连接数与配置体量缓慢波动。\n- **异常**：持续上涨不回落=疑似内存泄漏，观察长周期趋势。",
+      "description": "- **是什么**：网关 envoy 进程内存（工作集，按 Pod 拆分）。\n- **正常**：随连接数与配置体量缓慢波动。\n- **异常**：持续上涨不回落=疑似内存泄漏，观察长周期趋势。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -764,8 +764,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", container=\"istio-proxy\"}) or vector(0)",
-          "legendFormat": "网关内存",
+          "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", container=\"istio-proxy\"}) or on() label_replace(vector(0), \"pod\", \"无Pod\", \"__name__\", \".*\")",
+          "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
@@ -896,7 +896,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cluster) (label_replace(rate(envoy_cluster_upstream_cx_total{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval]), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无连接\", \"__name__\", \".*\")",
+          "expr": "sum by (cluster) (label_replace(rate(envoy_cluster_upstream_cx_total{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", cluster_name=~\"outbound.*\"}[$__rate_interval]), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无连接\", \"__name__\", \".*\")",
           "legendFormat": "{{cluster}}",
           "refId": "A"
         }
@@ -955,7 +955,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cluster) (label_replace(envoy_cluster_upstream_rq_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}, \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无在途\", \"__name__\", \".*\")",
+          "expr": "sum by (cluster) (label_replace(envoy_cluster_upstream_rq_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", cluster_name=~\"outbound.*\"}, \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无在途\", \"__name__\", \".*\")",
           "legendFormat": "{{cluster}}",
           "refId": "A"
         }
@@ -1014,7 +1014,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cluster) (label_replace(envoy_cluster_upstream_rq_pending_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}, \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无排队\", \"__name__\", \".*\")",
+          "expr": "sum by (cluster) (label_replace(envoy_cluster_upstream_rq_pending_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", cluster_name=~\"outbound.*\"}, \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无排队\", \"__name__\", \".*\")",
           "legendFormat": "{{cluster}}",
           "refId": "A"
         }
@@ -1073,7 +1073,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cluster) (label_replace(rate(envoy_cluster_upstream_rq_pending_overflow{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval]), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无溢出\", \"__name__\", \".*\")",
+          "expr": "sum by (cluster) (label_replace(rate(envoy_cluster_upstream_rq_pending_overflow{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", cluster_name=~\"outbound.*\"}[$__rate_interval]), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无溢出\", \"__name__\", \".*\")",
           "legendFormat": "{{cluster}}·溢出",
           "refId": "A"
         },
@@ -1082,7 +1082,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cluster) (label_replace(rate(envoy_cluster_upstream_rq_pending_failure_eject{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval]), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无驱逐\", \"__name__\", \".*\")",
+          "expr": "sum by (cluster) (label_replace(rate(envoy_cluster_upstream_rq_pending_failure_eject{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", cluster_name=~\"outbound.*\"}[$__rate_interval]), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\")) or on() label_replace(vector(0), \"cluster\", \"无驱逐\", \"__name__\", \".*\")",
           "legendFormat": "{{cluster}}·驱逐",
           "refId": "B"
         }
@@ -1141,8 +1141,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(envoy_cluster_upstream_cx_connect_fail{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0)",
-          "legendFormat": "连接失败",
+          "expr": "label_replace(sum(rate(envoy_cluster_upstream_cx_connect_fail{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0), \"err\", \"连接失败\", \"err\", \"^$\")",
+          "legendFormat": "{{err}}",
           "refId": "A"
         },
         {
@@ -1150,8 +1150,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(envoy_cluster_upstream_cx_connect_timeout{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0)",
-          "legendFormat": "连接超时",
+          "expr": "label_replace(label_replace(sum(rate(envoy_cluster_upstream_cx_connect_timeout{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0), \"err\", \"连接超时\", \"err\", \"^$\"), \"err\", \"连接超时\", \"err\", \"^$\")",
+          "legendFormat": "{{err}}",
           "refId": "B"
         },
         {
@@ -1159,8 +1159,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(envoy_cluster_upstream_rq_timeout{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0)",
-          "legendFormat": "请求超时",
+          "expr": "label_replace(label_replace(sum(rate(envoy_cluster_upstream_rq_timeout{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0), \"err\", \"请求超时\", \"err\", \"^$\"), \"err\", \"请求超时\", \"err\", \"^$\")",
+          "legendFormat": "{{err}}",
           "refId": "C"
         },
         {
@@ -1168,8 +1168,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(envoy_cluster_upstream_rq_active_overflow{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0)",
-          "legendFormat": "在途溢出",
+          "expr": "label_replace(label_replace(sum(rate(envoy_cluster_upstream_rq_active_overflow{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}[$__rate_interval])) or vector(0), \"err\", \"在途溢出\", \"err\", \"^$\"), \"err\", \"在途溢出\", \"err\", \"^$\")",
+          "legendFormat": "{{err}}",
           "refId": "D"
         }
       ],
