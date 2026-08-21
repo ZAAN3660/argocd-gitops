@@ -1445,7 +1445,7 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
+        "skipUrlSync": true,
         "sort": 1,
         "type": "query"
       },
@@ -1472,7 +1472,7 @@
           }
         ],
         "query": "destination,source",
-        "skipUrlSync": false,
+        "skipUrlSync": true,
         "type": "custom"
       },
       {
@@ -1510,7 +1510,7 @@
           }
         ],
         "query": {
-          "query": "label_values(istio_requests_total{destination_canonical_service!=\"unknown\"}, destination_canonical_service)",
+          "query": "label_values(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"unknown\"}, destination_canonical_service)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
