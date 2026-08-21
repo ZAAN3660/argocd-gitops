@@ -70,7 +70,7 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "QPS",
           "refId": "A"
         }
@@ -136,7 +136,7 @@
       },
       "targets": [
         {
-          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)) or vector(0)",
           "legendFormat": "2xx%",
           "refId": "A"
         }
@@ -192,7 +192,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.99, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])))) or vector(0)",
+          "expr": "(histogram_quantile(0.99, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P99",
           "refId": "A"
         }
@@ -256,7 +256,7 @@
       },
       "targets": [
         {
-          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)) or vector(0)",
           "legendFormat": "5xx%",
           "refId": "A"
         }
@@ -343,12 +343,12 @@
       },
       "targets": [
         {
-          "expr": "(sum by (destination_service) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"destination_service\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(sum by (destination_service) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"destination_service\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{destination_service}} (source)",
           "refId": "A"
         },
         {
-          "expr": "(sum by (destination_workload) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"destination_workload\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(sum by (destination_workload) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"destination_workload\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{destination_workload}} (workload)",
           "refId": "B"
         }
@@ -421,7 +421,7 @@
       },
       "targets": [
         {
-          "expr": "(sum by (pod) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"pod\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(sum by (pod) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"pod\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -494,7 +494,7 @@
       },
       "targets": [
         {
-          "expr": "label_replace((sum by (response_code) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\"), \"response_code\", \"无响应(0)\", \"response_code\", \"^0$\")",
+          "expr": "label_replace((sum by (response_code) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\"), \"response_code\", \"无响应(0)\", \"response_code\", \"^0$\")",
           "legendFormat": "{{response_code}}",
           "refId": "A"
         }
@@ -581,17 +581,17 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.50, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])))) or vector(0)",
+          "expr": "(histogram_quantile(0.50, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P50",
           "refId": "A"
         },
         {
-          "expr": "(histogram_quantile(0.95, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])))) or vector(0)",
+          "expr": "(histogram_quantile(0.95, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P95",
           "refId": "B"
         },
         {
-          "expr": "(histogram_quantile(0.99, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])))) or vector(0)",
+          "expr": "(histogram_quantile(0.99, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P99",
           "refId": "C"
         }
@@ -664,7 +664,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.99, sum by (le, pod) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"pod\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.99, sum by (le, pod) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"pod\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -736,7 +736,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval]))",
+          "expr": "sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))",
           "format": "heatmap",
           "legendFormat": "{{le}}",
           "refId": "A"
@@ -827,7 +827,7 @@
       },
       "targets": [
         {
-          "expr": "(100 * sum by (destination_service) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum by (destination_service) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])), 0.001)) or on() label_replace(vector(0), \"destination_service\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(100 * sum by (destination_service) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum by (destination_service) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)) or on() label_replace(vector(0), \"destination_service\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{destination_service}} 2xx%",
           "refId": "A"
         }
@@ -901,12 +901,12 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "5xx QPS",
           "refId": "A"
         },
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\", response_code=~\"4..\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"4..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "4xx QPS",
           "refId": "B"
         }
@@ -979,7 +979,7 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_flags) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\", response_flags!=\"-\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_flags\", \"无异常\", \"__name__\", \".*\")",
+          "expr": "(sum by (response_flags) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_flags!=\"-\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_flags\", \"无异常\", \"__name__\", \".*\")",
           "legendFormat": "{{response_flags}}",
           "refId": "A"
         }
@@ -1066,7 +1066,7 @@
       },
       "targets": [
         {
-          "expr": "(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{rollouts_pod_template_hash}}",
           "refId": "A"
         }
@@ -1139,7 +1139,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.99, sum by (le, rollouts_pod_template_hash) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.99, sum by (le, rollouts_pod_template_hash) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{rollouts_pod_template_hash}}",
           "refId": "A"
         }
@@ -1220,7 +1220,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval])), 0.001) * 100) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001) * 100) or on() label_replace(vector(0), \"rollouts_pod_template_hash\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{rollouts_pod_template_hash}}",
           "refId": "A"
         }
@@ -1310,7 +1310,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(sum by (connection_security_policy) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"connection_security_policy\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "(sum by (connection_security_policy) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"connection_security_policy\", \"无流量\", \"__name__\", \".*\")",
           "legendFormat": "{{connection_security_policy}}",
           "refId": "A"
         }
@@ -1387,7 +1387,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(sum by (source_workload, response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"$service\"}[$__rate_interval]))) or on() label_replace(label_replace(vector(0), \"source_workload\", \"无调用方\", \"__name__\", \".*\"), \"response_code\", \"—\", \"__name__\", \".*\")",
+          "expr": "(sum by (source_workload, response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(label_replace(vector(0), \"source_workload\", \"无调用方\", \"__name__\", \".*\"), \"response_code\", \"—\", \"__name__\", \".*\")",
           "legendFormat": "{{source_workload}}·{{response_code}}",
           "refId": "A"
         }
@@ -1424,13 +1424,17 @@
       },
       {
         "current": {
-          "value": "dev",
-          "text": "dev",
+          "value": [
+            "dev"
+          ],
+          "text": [
+            "dev"
+          ],
           "selected": true
         },
         "hide": 0,
         "includeAll": false,
-        "multi": false,
+        "multi": true,
         "name": "namespace",
         "options": [
           {
@@ -1477,25 +1481,25 @@
       },
       {
         "current": {
-          "selected": true,
-          "text": [
-            "details",
-            "details-canary",
-            "ratings",
-            "ratings-canary",
-            "productpage",
-            "productpage-preview",
-            "reviews"
-          ],
           "value": [
-            "details",
-            "details-canary",
-            "ratings",
-            "ratings-canary",
-            "productpage",
-            "productpage-preview",
-            "reviews"
-          ]
+            "details.dev.svc.cluster.local",
+            "details-canary.dev.svc.cluster.local",
+            "ratings.dev.svc.cluster.local",
+            "ratings-canary.dev.svc.cluster.local",
+            "productpage.dev.svc.cluster.local",
+            "productpage-preview.dev.svc.cluster.local",
+            "reviews.dev.svc.cluster.local"
+          ],
+          "text": [
+            "details.dev.svc.cluster.local",
+            "details-canary.dev.svc.cluster.local",
+            "ratings.dev.svc.cluster.local",
+            "ratings-canary.dev.svc.cluster.local",
+            "productpage.dev.svc.cluster.local",
+            "productpage-preview.dev.svc.cluster.local",
+            "reviews.dev.svc.cluster.local"
+          ],
+          "selected": true
         },
         "description": "K8s服务名（含灰度变体）。灰度期间双账本服务名不对称：调用方账记\"所拨的服务\"、被调方账记\"Pod所属的服务\"，建议把一个服务及其 -canary/-preview 变体都勾上以覆盖双视角。",
         "hide": 0,
@@ -1515,7 +1519,7 @@
           }
         ],
         "query": {
-          "query": "label_values(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_service_name!=\"unknown\"}, destination_service_name)",
+          "query": "label_values(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_service!=\"unknown\"}, destination_service)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
