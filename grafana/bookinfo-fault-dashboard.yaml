@@ -2662,7 +2662,7 @@
         "name": "svc",
         "options": [],
         "query": {
-          "query": "label_values(istio_requests_total{destination_workload_namespace=\"$namespace\"}, destination_canonical_service)",
+          "query": "label_values(istio_requests_total, destination_canonical_service)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
