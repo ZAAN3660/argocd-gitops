@@ -1515,7 +1515,7 @@
         },
         "refresh": 1,
         "regex": "/svc_fqdn=\"([^\"]+)\"/",
-        "skipUrlSync": false,
+        "skipUrlSync": true,
         "sort": 1,
         "type": "query"
       }

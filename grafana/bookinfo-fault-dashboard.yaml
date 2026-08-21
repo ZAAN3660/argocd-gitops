@@ -2667,7 +2667,7 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
+        "skipUrlSync": true,
         "sort": 1,
         "type": "query",
         "allValue": ".*"
