@@ -39,6 +39,9 @@ spec:
             requests:                       # KEDA CPU/内存触发器的"使用率"分母，缺了触发器不生效
               cpu: 100m
               memory: 128Mi
+            limits:                          # 封顶：防止异常流量打爆节点，也是 CPU 节流/OOM 观测的前提
+              cpu: 500m
+              memory: 256Mi
           readinessProbe:                   # 就绪探针：Pod 就绪才收流量，promote 切流的前提
             tcpSocket:                      # bookinfo 镜像无统一就绪端点，TCP 探活与镜像解耦
               port: 9080

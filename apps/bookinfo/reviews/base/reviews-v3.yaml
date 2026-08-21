@@ -38,3 +38,10 @@ spec:
           image: docker.io/istio/examples-bookinfo-reviews-v3:1.20.3
           ports:
             - containerPort: 9080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

@@ -588,7 +588,7 @@
   "time": { "from": "now-30m", "to": "now" },
   "timepicker": {},
   "timezone": "",
-  "title": "监控大盘 - Bookinfo",
+  "title": "Bookinfo / 流量总览",
   "uid": "bookinfo-app-view",
   "version": 1,
   "weekStart": ""
