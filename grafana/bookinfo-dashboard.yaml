@@ -1,5 +1,7 @@
 {
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -9,36 +11,65 @@
   "panels": [
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 100,
       "panels": [],
       "title": "📊 概览",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
           "unit": "reqps"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
       "id": 1,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "textMode": "auto"
       },
       "targets": [
         {
-          "expr": "sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "QPS",
           "refId": "A"
         }
@@ -47,35 +78,63 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [
-            { "color": "red", "value": null },
-            { "color": "yellow", "value": 99 },
-            { "color": "green", "value": 99.9 }
-          ] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 99
+              },
+              {
+                "color": "green",
+                "value": 99.9
+              }
+            ]
+          },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
       "id": 2,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "textMode": "auto"
       },
       "targets": [
         {
-          "expr": "100 * sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)",
+          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)) or vector(0)",
           "legendFormat": "2xx%",
           "refId": "A"
         }
@@ -84,29 +143,53 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
           "unit": "ms"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
       "id": 3,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "textMode": "auto"
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))",
+          "expr": "(histogram_quantile(0.99, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P99",
           "refId": "A"
         }
@@ -115,33 +198,61 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [
-            { "color": "green", "value": null },
-            { "color": "yellow", "value": 0.5 },
-            { "color": "red", "value": 2 }
-          ] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
       "id": 4,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "textMode": "auto"
       },
       "targets": [
         {
-          "expr": "100 * sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)",
+          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)) or vector(0)",
           "legendFormat": "5xx%",
           "refId": "A"
         }
@@ -151,38 +262,88 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
       "id": 101,
       "panels": [],
       "title": "🚦 流量 QPS",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "reqps"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 6
+      },
       "id": 11,
       "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "sum by (destination_service) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))",
+          "expr": "(sum by (destination_service) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "{{destination_service}} (source)",
           "refId": "A"
         },
         {
-          "expr": "sum by (destination_workload) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))",
+          "expr": "(sum by (destination_workload) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "{{destination_workload}} (workload)",
           "refId": "B"
         }
@@ -191,26 +352,70 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "reqps"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 6
+      },
       "id": 12,
       "options": {
-        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "sum by (pod) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))",
+          "expr": "(sum by (pod) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -219,26 +424,70 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "drawStyle": "bars", "fillOpacity": 100, "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "normal" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "reqps"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 6
+      },
       "id": 13,
       "options": {
-        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "sum by (response_code) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))",
+          "expr": "(sum by (response_code) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "{{response_code}}",
           "refId": "A"
         }
@@ -248,43 +497,93 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
       "id": 102,
       "panels": [],
       "title": "⏱ 延迟",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "drawStyle": "line", "fillOpacity": 5, "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "ms"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 15
+      },
       "id": 21,
       "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))",
+          "expr": "(histogram_quantile(0.50, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))",
+          "expr": "(histogram_quantile(0.95, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))",
+          "expr": "(histogram_quantile(0.99, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "P99",
           "refId": "C"
         }
@@ -293,26 +592,70 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "drawStyle": "line", "fillOpacity": 5, "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "ms"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 15
+      },
       "id": 22,
       "options": {
-        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum by (le, pod) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))",
+          "expr": "(histogram_quantile(0.99, sum by (le, pod) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -321,28 +664,65 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "scaleDistribution": { "type": "linear" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "ms"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 15
+      },
       "id": 23,
       "options": {
         "calculate": false,
         "cellGap": 1,
         "cellValues": {},
-        "color": { "exponent": 0.5, "fill": "dark-orange", "mode": "scheme", "reverse": false, "scale": "exponential", "scheme": "Oranges", "steps": 64 },
-        "exemplars": { "color": "rgba(255,0,255,0.7)" },
-        "legend": { "show": true },
+        "color": {
+          "exponent": 0.5,
+          "fill": "dark-orange",
+          "mode": "scheme",
+          "reverse": false,
+          "scale": "exponential",
+          "scheme": "Oranges",
+          "steps": 64
+        },
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "legend": {
+          "show": true
+        },
         "showValue": "never",
-        "tooltip": { "show": true, "yHistogram": false }
+        "tooltip": {
+          "show": true,
+          "yHistogram": false
+        }
       },
       "targets": [
         {
@@ -357,35 +737,86 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
       "id": 103,
       "panels": [],
       "title": "✅ 可靠性 / 成功率",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "axisSoftMax": 100, "axisSoftMin": 0, "drawStyle": "line", "fillOpacity": 5, "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "axisSoftMax": 100,
+            "axisSoftMin": 0,
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
           "mappings": [],
           "max": 100,
           "min": 0,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 24
+      },
       "id": 31,
       "options": {
-        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "100 * sum by (destination_service) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum by (destination_service) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)",
+          "expr": "(100 * sum by (destination_service) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"2..\"}[$__rate_interval])) / clamp_min(sum by (destination_service) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)) or vector(0)",
           "legendFormat": "{{destination_service}} 2xx%",
           "refId": "A"
         }
@@ -394,31 +825,76 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "drawStyle": "line", "fillOpacity": 5, "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "reqps"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 24
+      },
       "id": 32,
       "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval]))",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "5xx QPS",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"4..\"}[$__rate_interval]))",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_code=~\"4..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "4xx QPS",
           "refId": "B"
         }
@@ -427,26 +903,70 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "drawStyle": "line", "fillOpacity": 5, "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "normal" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "reqps"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 24
+      },
       "id": 33,
       "options": {
-        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "sum by (response_flags) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_flags!=\"-\"}[$__rate_interval]))",
+          "expr": "(sum by (response_flags) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\", response_flags!=\"-\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "{{response_flags}}",
           "refId": "A"
         }
@@ -456,33 +976,83 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
       "id": 104,
       "panels": [],
       "title": "🔀 灰度版本（Pod Hash）对比",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "reqps"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 33 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
       "id": 41,
       "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))",
+          "expr": "(sum by (rollouts_pod_template_hash) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "{{rollouts_pod_template_hash}}",
           "refId": "A"
         }
@@ -491,26 +1061,70 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "", "drawStyle": "line", "fillOpacity": 5, "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "ms"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
       "id": 42,
       "options": {
-        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum by (le, rollouts_pod_template_hash) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))",
+          "expr": "(histogram_quantile(0.99, sum by (le, rollouts_pod_template_hash) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or vector(0)",
           "legendFormat": "{{rollouts_pod_template_hash}}",
           "refId": "A"
         }
@@ -521,11 +1135,19 @@
   ],
   "refresh": "5s",
   "schemaVersion": 39,
-  "tags": ["istio", "application", "rollouts"],
+  "tags": [
+    "istio",
+    "application",
+    "rollouts"
+  ],
   "templating": {
     "list": [
       {
-        "current": { "selected": false, "text": "prometheus", "value": "prometheus" },
+        "current": {
+          "selected": false,
+          "text": "prometheus",
+          "value": "prometheus"
+        },
         "hide": 0,
         "includeAll": false,
         "multi": false,
@@ -538,13 +1160,26 @@
         "type": "datasource"
       },
       {
-        "current": { "selected": false, "text": "dev", "value": "dev" },
+        "current": {
+          "selected": false,
+          "text": "dev",
+          "value": "dev"
+        },
         "hide": 0,
         "includeAll": false,
         "multi": false,
         "name": "namespace",
-        "options": [{ "selected": true, "text": "dev", "value": "dev" }],
-        "query": { "query": "label_values(istio_requests_total, destination_workload_namespace)", "refId": "StandardVariableQuery" },
+        "options": [
+          {
+            "selected": true,
+            "text": "dev",
+            "value": "dev"
+          }
+        ],
+        "query": {
+          "query": "label_values(istio_requests_total, destination_workload_namespace)",
+          "refId": "StandardVariableQuery"
+        },
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -552,14 +1187,26 @@
         "type": "query"
       },
       {
-        "current": { "selected": true, "text": "destination", "value": "destination" },
+        "current": {
+          "selected": true,
+          "text": "destination",
+          "value": "destination"
+        },
         "hide": 0,
         "includeAll": false,
         "multi": false,
         "name": "reporter",
         "options": [
-          { "selected": true, "text": "destination", "value": "destination" },
-          { "selected": false, "text": "source", "value": "source" }
+          {
+            "selected": true,
+            "text": "destination",
+            "value": "destination"
+          },
+          {
+            "selected": false,
+            "text": "source",
+            "value": "source"
+          }
         ],
         "query": "destination,source",
         "skipUrlSync": false,
@@ -567,16 +1214,34 @@
       },
       {
         "allValue": "",
-        "current": { "selected": true, "text": "details.dev.svc.cluster.local + details-canary.dev.svc.cluster.local", "value": ["details.dev.svc.cluster.local", "details-canary.dev.svc.cluster.local"] },
+        "current": {
+          "selected": true,
+          "text": "details.dev.svc.cluster.local + details-canary.dev.svc.cluster.local",
+          "value": [
+            "details.dev.svc.cluster.local",
+            "details-canary.dev.svc.cluster.local"
+          ]
+        },
         "hide": 0,
         "includeAll": false,
         "multi": true,
         "name": "service",
         "options": [
-          { "selected": true, "text": "details.dev.svc.cluster.local", "value": "details.dev.svc.cluster.local" },
-          { "selected": true, "text": "details-canary.dev.svc.cluster.local", "value": "details-canary.dev.svc.cluster.local" }
+          {
+            "selected": true,
+            "text": "details.dev.svc.cluster.local",
+            "value": "details.dev.svc.cluster.local"
+          },
+          {
+            "selected": true,
+            "text": "details-canary.dev.svc.cluster.local",
+            "value": "details-canary.dev.svc.cluster.local"
+          }
         ],
-        "query": { "query": "label_values(istio_requests_total{destination_workload_namespace=\"$namespace\"}, destination_service)", "refId": "StandardVariableQuery" },
+        "query": {
+          "query": "label_values(istio_requests_total{destination_workload_namespace=\"$namespace\"}, destination_service)",
+          "refId": "StandardVariableQuery"
+        },
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -585,7 +1250,10 @@
       }
     ]
   },
-  "time": { "from": "now-30m", "to": "now" },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "Bookinfo / 流量总览",
