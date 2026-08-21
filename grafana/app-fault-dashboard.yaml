@@ -690,7 +690,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.99, sum by (destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) - histogram_quantile(0.99, sum by (destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.99, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) - histogram_quantile(0.99, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
           "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
@@ -763,7 +763,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.50, sum by (destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) - histogram_quantile(0.50, sum by (destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.50, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) - histogram_quantile(0.50, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
           "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
