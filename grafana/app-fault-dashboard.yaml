@@ -28,7 +28,7 @@
           },
           "id": 90,
           "options": {
-            "content": "**这个大盘是干什么的**：故障注入 / 熔断 / 限流实验期间，观察「故障信号出现在哪里」以及「防御机制是否按预期工作」。它和《应用 / 流量总览》互补：那个看正常流量，这个看异常与弹性。\n\n### 核心概念：一次调用，两份上报\n\n一次 A→B 的调用会产生**两份互相独立的记录**（Istio 标准指标，用 reporter 维度区分）：\n\n| 上报视角 | 谁记 | 记了什么 |\n|---|---|---|\n| 调用方（客户端）上报 reporter=\"source\" | A 的 sidecar | A 发出的**全部**请求，包括半路失败、被熔断拒绝、被注入故障的 |\n| 服务方（服务端）上报 reporter=\"destination\" | B 的 sidecar | 只有**真正到达 B** 的请求 |\n\n> 故障注入不是让监控失灵，而是让信号「搬家」：abort / 熔断 / 超时都发生在调用方侧，只进调用方上报。**两个视角的数据对不齐，本身就是故障证据。**\n\n### response_flags 速查表（故障原因码：全称 + 含义）\n\n| 标志 | 英文全称 | 含义 | 常见触发场景 |\n|---|---|---|---|\n| FI | Fault Injected | 故障注入 abort 命中 | 注入实验生效 |\n| DI | Delay Injected | 延迟注入命中 | delay 实验生效 |\n| RL | Rate Limited | 被本地限流拦截 | 压测超过 EnvoyFilter 阈值，返回 429 |\n| UO | Upstream Overflow | 熔断/连接池溢出拒绝 | 连接池满、熔断器打开 |\n| UH | No Healthy Upstream | 无健康上游 | 服务全挂、被驱逐、缩容未就绪 |\n| UI | Upstream Connection Failure | 上游建连失败 | 上游崩溃或网络故障 |\n| UT | Upstream Timeout | 上游超时 | VirtualService 的 timeout 触发 |\n| URX | Upstream Retry Limit Exceeded | 重试耗尽 | 重试次数用光仍失败 |\n| UR | Upstream Remote Reset | 上游重置连接 | 上游异常断开 |\n| UC | Upstream Connection Termination | 上游连接中断 | 网络或上游崩溃 |\n| NR | No Route | 找不到路由 | 目标服务不存在/未注册 |\n| DC | Downstream Connection Termination | 下游连接中断 | 客户端提前断开 |\n| SI | Stream Idle Timeout | 流空闲超时 | 长时间无活动被断开 |\n| DF | Deadline Exceeded | 超过截止时间 | 请求超时上限 |\n\n### 指标的三个来源\n\n1. **istio_requests_total** —— 请求指标，来自两侧 sidecar（Istio 标准指标，永远有）；\n2. **envoy_cluster_*** —— Envoy 运行态：连接池、熔断器、Pending 队列、重试、驱逐。**已通过 meshConfig 的 proxyStatsMatcher 放开**（详见 istio/istio-cm-backup.yaml）；\n3. **container_*** —— CPU/内存，来自 kubelet，与 Istio 无关，任何情况下都有数据。\n\n### 做注入实验时的推荐观察顺序\n\n📊故障总览 → 🚨故障信号（确认注入命中）→ 📐延迟异常（定位在哪一侧）→ ⛓连接池与排队（看堆积）→ 🛡熔断与弹性（看防御触发）→ 🖥资源（看对应用的冲击）→ 🩺Pod 健康 → 🚪网关 → 🔄扩缩容（KEDA）→ 🧠控制面（istiod）。\n\n### 新人常见困惑\n\n- **面板没数据 ≠ 监控坏了**：abort 注入时服务方本来就该无感；熔断未触发时各种计数为 0 是健康的。\n- **5xx 双视角对比**：两条线分开 = 请求死在半路；两条线重合 = 服务方自己真的在报错。\n- **没有「空闲连接」直接指标**：用「活跃连接 − 活跃请求」近似，HTTP/2 多路复用下不准确。\n- 每个面板右上角 ⓘ 图标里还有该面板的「是什么 / 正常 / 异常」三要素说明。",
+            "content": "**这个大盘是干什么的**：故障注入 / 熔断 / 限流实验期间，观察「故障信号出现在哪里」以及「防御机制是否按预期工作」。它和《应用 / 流量总览》互补：那个看正常流量，这个看异常与弹性。\n\n### 核心概念：一次调用，两份上报\n\n一次 A→B 的调用会产生**两份互相独立的记录**（Istio 标准指标，用 reporter 维度区分）：\n\n| 上报视角 | 谁记 | 记了什么 |\n|---|---|---|\n| 调用方（客户端）上报 reporter=\"source\" | A 的 sidecar | A 发出的**全部**请求，包括半路失败、被熔断拒绝、被注入故障的 |\n| 服务方（服务端）上报 reporter=\"destination\" | B 的 sidecar | 只有**真正到达 B** 的请求 |\n\n> 故障注入不是让监控失灵，而是让信号「搬家」：abort / 熔断 / 超时都发生在调用方侧，只进调用方上报。**两个视角的数据对不齐，本身就是故障证据。**\n\n### response_flags 速查表（故障原因码：全称 + 含义）\n\n| 标志 | 英文全称 | 含义 | 常见触发场景 |\n|---|---|---|---|\n| FI | Fault Injected | 故障注入 abort 命中 | 注入实验生效 |\n| DI | Delay Injected | 延迟注入命中 | delay 实验生效 |\n| RL | Rate Limited | 被本地限流拦截 | 压测超过 EnvoyFilter 阈值，返回 429 |\n| UO | Upstream Overflow | 熔断/连接池溢出拒绝 | 连接池满、熔断器打开 |\n| UH | No Healthy Upstream | 无健康上游 | 服务全挂、被驱逐、缩容未就绪 |\n| UI | Upstream Connection Failure | 上游建连失败 | 上游崩溃或网络故障 |\n| UT | Upstream Timeout | 上游超时 | VirtualService 的 timeout 触发 |\n| URX | Upstream Retry Limit Exceeded | 重试耗尽 | 重试次数用光仍失败 |\n| UR | Upstream Remote Reset | 上游重置连接 | 上游异常断开 |\n| UC | Upstream Connection Termination | 上游连接中断 | 网络或上游崩溃 |\n| NR | No Route | 找不到路由 | 目标服务不存在/未注册 |\n| DC | Downstream Connection Termination | 下游连接中断 | 客户端提前断开 |\n| SI | Stream Idle Timeout | 流空闲超时 | 长时间无活动被断开 |\n| DF | Deadline Exceeded | 超过截止时间 | 请求超时上限 |\n\n### 指标的三个来源\n\n1. **istio_requests_total** —— 请求指标，来自两侧 sidecar（Istio 标准指标，永远有）；\n2. **envoy_cluster_*** —— Envoy 运行态：连接池、熔断器、Pending 队列、重试、驱逐。**已通过 meshConfig 的 proxyStatsMatcher 放开**（详见 istio/istio-cm-backup.yaml）；\n3. **container_*** —— CPU/内存，来自 kubelet，与 Istio 无关，任何情况下都有数据。\n\n### 做注入实验时的推荐观察顺序\n\n📊故障总览 → 🚨故障信号（确认注入命中）→ 🎯定位元凶（按服务5xx）→ 📐延迟异常（定位在哪一侧）→ ⛓连接池与排队（看堆积）→ 🛡熔断与弹性（看防御触发）→ 🖥资源（看对应用的冲击）→ 🩺Pod 健康 → 🚪网关 → 🔄扩缩容（KEDA）→ 🧠控制面（istiod）。\n\n### 新人常见困惑\n\n- **面板没数据 ≠ 监控坏了**：abort 注入时服务方本来就该无感；熔断未触发时各种计数为 0 是健康的。\n- **5xx 双视角对比**：两条线分开 = 请求死在半路；两条线重合 = 服务方自己真的在报错。\n- **没有「空闲连接」直接指标**：用「活跃连接 − 活跃请求」近似，HTTP/2 多路复用下不准确。\n- 每个面板右上角 ⓘ 图标里还有该面板的「是什么 / 正常 / 异常」三要素说明。",
             "mode": "markdown"
           },
           "type": "text"
@@ -617,7 +617,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 24
       },
       "id": 106,
       "panels": [],
@@ -670,7 +670,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 25
       },
       "id": 23,
       "options": {
@@ -744,7 +744,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 25
       },
       "id": 24,
       "options": {
@@ -777,7 +777,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 33
       },
       "id": 102,
       "panels": [],
@@ -830,7 +830,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 25
+        "y": 34
       },
       "id": 9,
       "options": {
@@ -908,7 +908,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 25
+        "y": 34
       },
       "id": 10,
       "options": {
@@ -986,7 +986,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 25
+        "y": 34
       },
       "id": 11,
       "options": {
@@ -1069,7 +1069,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 25
+        "y": 34
       },
       "id": 12,
       "options": {
@@ -1107,7 +1107,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 42
       },
       "id": 103,
       "panels": [],
@@ -1160,7 +1160,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 34
+        "y": 43
       },
       "id": 13,
       "options": {
@@ -1243,7 +1243,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 34
+        "y": 43
       },
       "id": 14,
       "options": {
@@ -1321,7 +1321,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 34
+        "y": 43
       },
       "id": 15,
       "options": {
@@ -1409,7 +1409,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 34
+        "y": 43
       },
       "id": 16,
       "options": {
@@ -1447,7 +1447,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 51
       },
       "id": 104,
       "panels": [],
@@ -1500,7 +1500,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 43
+        "y": 52
       },
       "id": 17,
       "options": {
@@ -1573,7 +1573,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 43
+        "y": 52
       },
       "id": 18,
       "options": {
@@ -1606,7 +1606,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 60
       },
       "id": 105,
       "panels": [],
@@ -1659,7 +1659,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 52
+        "y": 61
       },
       "id": 19,
       "options": {
@@ -1719,7 +1719,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 52
+        "y": 61
       },
       "id": 20,
       "options": {
@@ -1798,7 +1798,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 52
+        "y": 61
       },
       "id": 21,
       "options": {
@@ -1871,7 +1871,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 69
       },
       "id": 22,
       "options": {
@@ -1904,7 +1904,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 66
+        "y": 75
       },
       "id": 109,
       "panels": [],
@@ -1940,7 +1940,7 @@
         "h": 5,
         "w": 8,
         "x": 0,
-        "y": 67
+        "y": 76
       },
       "id": 30,
       "options": {
@@ -2000,7 +2000,7 @@
         "h": 5,
         "w": 8,
         "x": 8,
-        "y": 67
+        "y": 76
       },
       "id": 31,
       "options": {
@@ -2060,7 +2060,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 67
+        "y": 76
       },
       "id": 32,
       "options": {
@@ -2097,7 +2097,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 81
       },
       "id": 110,
       "panels": [],
@@ -2133,7 +2133,7 @@
         "h": 5,
         "w": 8,
         "x": 0,
-        "y": 73
+        "y": 82
       },
       "id": 33,
       "options": {
@@ -2193,7 +2193,7 @@
         "h": 5,
         "w": 8,
         "x": 8,
-        "y": 73
+        "y": 82
       },
       "id": 34,
       "options": {
@@ -2253,7 +2253,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 73
+        "y": 82
       },
       "id": 35,
       "options": {
@@ -2290,7 +2290,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 78
+        "y": 87
       },
       "id": 108,
       "panels": [],
@@ -2323,7 +2323,7 @@
         "h": 5,
         "w": 8,
         "x": 0,
-        "y": 79
+        "y": 88
       },
       "id": 25,
       "options": {
@@ -2380,7 +2380,7 @@
         "h": 5,
         "w": 8,
         "x": 8,
-        "y": 79
+        "y": 88
       },
       "id": 26,
       "options": {
@@ -2437,7 +2437,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 79
+        "y": 88
       },
       "id": 27,
       "options": {
@@ -2494,7 +2494,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 84
+        "y": 93
       },
       "id": 28,
       "options": {
@@ -2551,7 +2551,7 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 84
+        "y": 93
       },
       "id": 29,
       "options": {
@@ -2581,6 +2581,150 @@
       ],
       "title": "istiod CPU（核）",
       "type": "timeseries"
+    },
+    {
+      "type": "row",
+      "id": 111,
+      "title": "🎯定位元凶（按服务5xx）",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "collapsed": false,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 112,
+      "title": "5xx速率·按服务（调用方视角）",
+      "type": "timeseries",
+      "description": "- **是什么**：每个应用在调用方视角被记下 5xx 的速率。**不跟随服务勾选**，固定展示全部应用，用于 5xx 风暴时定位元凶。\n- **怎么用**：风暴时冲得最高的那条线就是问题应用——调用方 envoy 对它发起的请求在失败（熔断/连接池满/无健康上游），配合故障信号面板的 UO/UH/UC 确认失败原因。",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "expr": "sum by (destination_canonical_service) (rate(istio_requests_total{reporter=\"source\", response_code=~\"5..\", destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\"}[$__rate_interval]))",
+          "legendFormat": "{{destination_canonical_service}}"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 113,
+      "title": "5xx速率·按服务（服务方视角）",
+      "type": "timeseries",
+      "description": "- **是什么**：每个应用在服务方视角被记下 5xx 的速率（=应用自己真实返回了 5xx）。\n- **怎么用**：本面板与左图对比——两边同时冲高=应用本身在报错（500）；只有左图冲高=请求根本没到达应用（503 类），元凶是左图里冲高的目标应用。",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "expr": "sum by (destination_canonical_service) (rate(istio_requests_total{reporter=\"destination\", response_code=~\"5..\", destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\"}[$__rate_interval]))",
+          "legendFormat": "{{destination_canonical_service}}"
+        }
+      ]
     }
   ],
   "refresh": "5s",
