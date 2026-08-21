@@ -28,7 +28,7 @@
           },
           "id": 90,
           "options": {
-            "content": "**这个大盘是干什么的**：故障注入 / 熔断 / 限流实验期间，观察「故障信号出现在哪里」以及「防御机制是否按预期工作」。它和《应用 / 流量总览》互补：那个看正常流量，这个看异常与弹性。\n\n### 核心概念：一次调用，两份上报\n\n一次 A→B 的调用会产生**两份互相独立的记录**（Istio 标准指标，用 reporter 维度区分）：\n\n| 上报视角 | 谁记 | 记了什么 |\n|---|---|---|\n| 调用方（客户端）上报 reporter=\"source\" | A 的 sidecar | A 发出的**全部**请求，包括半路失败、被熔断拒绝、被注入故障的 |\n| 服务方（服务端）上报 reporter=\"destination\" | B 的 sidecar | 只有**真正到达 B** 的请求 |\n\n> 故障注入不是让监控失灵，而是让信号「搬家」：abort / 熔断 / 超时都发生在调用方侧，只进调用方上报。**两个视角的数据对不齐，本身就是故障证据。**\n\n### response_flags 速查表（故障原因码：全称 + 含义）\n\n| 标志 | 英文全称 | 含义 | 常见触发场景 |\n|---|---|---|---|\n| FI | Fault Injected | 故障注入 abort 命中 | 注入实验生效 |\n| DI | Delay Injected | 延迟注入命中 | delay 实验生效 |\n| RL | Rate Limited | 被本地限流拦截 | 压测超过 EnvoyFilter 阈值，返回 429 |\n| UO | Upstream Overflow | 熔断/连接池溢出拒绝 | 连接池满、熔断器打开 |\n| UH | No Healthy Upstream | 无健康上游 | 服务全挂、被驱逐、缩容未就绪 |\n| UI | Upstream Connection Failure | 上游建连失败 | 上游崩溃或网络故障 |\n| UT | Upstream Timeout | 上游超时 | VirtualService 的 timeout 触发 |\n| URX | Upstream Retry Limit Exceeded | 重试耗尽 | 重试次数用光仍失败 |\n| UR | Upstream Remote Reset | 上游重置连接 | 上游异常断开 |\n| UC | Upstream Connection Termination | 上游连接中断 | 网络或上游崩溃 |\n| NR | No Route | 找不到路由 | 目标服务不存在/未注册 |\n| DC | Downstream Connection Termination | 下游连接中断 | 客户端提前断开 |\n| SI | Stream Idle Timeout | 流空闲超时 | 长时间无活动被断开 |\n| DF | Deadline Exceeded | 超过截止时间 | 请求超时上限 |\n\n### 指标的三个来源\n\n1. **istio_requests_total** —— 请求指标，来自两侧 sidecar（Istio 标准指标，永远有）；\n2. **envoy_cluster_*** —— Envoy 运行态：连接池、熔断器、Pending 队列、重试、驱逐。**已通过 meshConfig 的 proxyStatsMatcher 放开**（详见 istio/istio-cm-backup.yaml）；\n3. **container_*** —— CPU/内存，来自 kubelet，与 Istio 无关，任何情况下都有数据。\n\n### 做注入实验时的推荐观察顺序\n\n📊故障总览 → 🚨故障信号（确认注入命中）→ 🎯定位元凶（按服务5xx）→ 📐延迟异常（定位在哪一侧）→ ⛓连接池与排队（看堆积）→ 🛡熔断与弹性（看防御触发）→ 🖥资源（看对应用的冲击）→ 🩺Pod 健康 → 🚪网关 → 🔄扩缩容（KEDA）→ 🧠控制面（istiod）。\n\n### 新人常见困惑\n\n- **面板没数据 ≠ 监控坏了**：abort 注入时服务方本来就该无感；熔断未触发时各种计数为 0 是健康的。\n- **5xx 双视角对比**：两条线分开 = 请求死在半路；两条线重合 = 服务方自己真的在报错。\n- **没有「空闲连接」直接指标**：用「活跃连接 − 活跃请求」近似，HTTP/2 多路复用下不准确。\n- 每个面板右上角 ⓘ 图标里还有该面板的「是什么 / 正常 / 异常」三要素说明。",
+            "content": "**这个大盘是干什么的**：故障注入 / 熔断 / 限流实验期间，观察「故障信号出现在哪里」以及「防御机制是否按预期工作」。它和《应用 / 流量总览》互补：那个看正常流量，这个看异常与弹性。\n\n### 核心概念：一次调用，两份上报\n\n一次 A→B 的调用会产生**两份互相独立的记录**（Istio 标准指标，用 reporter 维度区分）：\n\n| 上报视角 | 谁记 | 记了什么 |\n|---|---|---|\n| 调用方（客户端）上报 reporter=\"source\" | A 的 sidecar | A 发出的**全部**请求，包括半路失败、被熔断拒绝、被注入故障的 |\n| 服务方（服务端）上报 reporter=\"destination\" | B 的 sidecar | 只有**真正到达 B** 的请求 |\n\n> 故障注入不是让监控失灵，而是让信号「搬家」：abort / 熔断 / 超时都发生在调用方侧，只进调用方上报。**两个视角的数据对不齐，本身就是故障证据。**\n\n### response_flags 速查表（故障原因码：全称 + 含义）\n\n| 标志 | 英文全称 | 含义 | 常见触发场景 |\n|---|---|---|---|\n| FI | Fault Injected | 故障注入 abort 命中 | 注入实验生效 |\n| DI | Delay Injected | 延迟注入命中 | delay 实验生效 |\n| RL | Rate Limited | 被本地限流拦截 | 压测超过 EnvoyFilter 阈值，返回 429 |\n| UO | Upstream Overflow | 熔断/连接池溢出拒绝 | 连接池满、熔断器打开 |\n| UH | No Healthy Upstream | 无健康上游 | 服务全挂、被驱逐、缩容未就绪 |\n| UI | Upstream Connection Failure | 上游建连失败 | 上游崩溃或网络故障 |\n| UT | Upstream Timeout | 上游超时 | VirtualService 的 timeout 触发 |\n| URX | Upstream Retry Limit Exceeded | 重试耗尽 | 重试次数用光仍失败 |\n| UR | Upstream Remote Reset | 上游重置连接 | 上游异常断开 |\n| UC | Upstream Connection Termination | 上游连接中断 | 网络或上游崩溃 |\n| NR | No Route | 找不到路由 | 目标服务不存在/未注册 |\n| DC | Downstream Connection Termination | 下游连接中断 | 客户端提前断开 |\n| SI | Stream Idle Timeout | 流空闲超时 | 长时间无活动被断开 |\n| DF | Deadline Exceeded | 超过截止时间 | 请求超时上限 |\n\n### 指标的三个来源\n\n1. **istio_requests_total** —— 请求指标，来自两侧 sidecar（Istio 标准指标，永远有）；\n2. **envoy_cluster_*** —— Envoy 运行态：连接池、熔断器、Pending 队列、重试、驱逐。**已通过 meshConfig 的 proxyStatsMatcher 放开**（详见 istio/istio-cm-backup.yaml）；\n3. **container_*** —— CPU/内存，来自 kubelet，与 Istio 无关，任何情况下都有数据。\n\n### 做注入实验时的推荐观察顺序\n\n📊故障总览 → 🚨故障信号（确认注入命中）→ 🎯定位元凶（按服务5xx）→ 📐延迟异常（按服务：差值+绝对值）→ ⛓连接池与排队（看堆积）→ 🛡熔断与弹性（看防御触发）→ 🖥资源（看对应用的冲击）→ 🩺Pod 健康 → 🚪网关 → 🔄扩缩容（KEDA）→ 🧠控制面（istiod）。\n\n### 新人常见困惑\n\n- **面板没数据 ≠ 监控坏了**：abort 注入时服务方本来就该无感；熔断未触发时各种计数为 0 是健康的。\n- **5xx 双视角对比**：两条线分开 = 请求死在半路；两条线重合 = 服务方自己真的在报错。\n- **没有「空闲连接」直接指标**：用「活跃连接 − 活跃请求」近似，HTTP/2 多路复用下不准确。\n- 每个面板右上角 ⓘ 图标里还有该面板的「是什么 / 正常 / 异常」三要素说明。",
             "mode": "markdown"
           },
           "type": "text"
@@ -55,7 +55,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：调用方自己记录的 5xx 比例。\n- **正常**：0。\n- **异常**：>0 且右侧「服务方视角」低=大量请求在半路死亡（这些错误发生在调用方 sidecar，只记在调用方（客户端）上报数据里）；熔断、故障注入 abort、超时发生时升高。",
+      "description": "- **是什么**：每个应用在调用方视角的 5xx 率。\n- **怎么用**：谁冲到 100% 谁就是元凶；配合服务方视角图区分\"请求没到\"还是\"应用真报错\"。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -106,12 +106,12 @@
       },
       "targets": [
         {
-          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)) or vector(0)",
-          "legendFormat": "5xx%",
+          "expr": "(100 * sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
       ],
-      "title": "5xx 率·调用方视角",
+      "title": "5xx率·按服务（调用方视角）",
       "type": "stat"
     },
     {
@@ -119,7 +119,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：服务方实际收到的请求里 5xx 的占比。\n- **正常**：0。\n- **异常**：>0=服务方自己真的返回了错误；与左侧差距大=大量请求没到服务方（熔断/注入/超时挡在门口）。",
+      "description": "- **是什么**：每个应用在服务方视角的 5xx 率（应用自己真实返回 5xx 的比例）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -170,12 +170,12 @@
       },
       "targets": [
         {
-          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])), 0.001)) or vector(0)",
-          "legendFormat": "5xx%",
+          "expr": "(100 * sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"destination\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"destination\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
       ],
-      "title": "5xx 率·服务方视角",
+      "title": "5xx率·按服务（服务方视角）",
       "type": "stat"
     },
     {
@@ -234,12 +234,12 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"4..|5..\"}[$__rate_interval]))) or vector(0)",
-          "legendFormat": "失败 req/s",
+          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_code=~\"4..|5..\"}[$__rate_interval]))) or vector(0)",
+          "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
       ],
-      "title": "失败请求速率",
+      "title": "失败请求速率·按服务",
       "type": "stat"
     },
     {
@@ -247,7 +247,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：被熔断挡下的请求速率：UO=熔断/队列溢出，UH=无健康上游。\n- **正常**：0。\n- **异常**：非 0=熔断正在拒绝流量。注意：这常常是防御生效的信号而非坏事——关键看拒绝的同时下游是否保住了。",
+      "description": "- **是什么**：每个应用被熔断/无健康上游拒绝的速率（调用方 envoy 拒绝）。\n- **怎么用**：503 风暴元凶的直接证据——冲高的应用就是被拒绝访问的目标。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -294,12 +294,12 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_flags=~\"UO|UH\"}[$__rate_interval]))) or vector(0)",
-          "legendFormat": "UO|UH req/s",
+          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_flags=~\"UO|UH\"}[$__rate_interval]))) or vector(0)",
+          "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
       ],
-      "title": "熔断拒绝速率（UO|UH）",
+      "title": "熔断拒绝速率·按服务（UO|UH）",
       "type": "stat"
     },
     {
@@ -320,7 +320,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：每类「非正常结局」的请求速率，按原因+视角堆叠（source=调用方（客户端）上报，destination=服务方（服务端）上报）。\n- **正常**：全部接近 0。\n- **异常**：UO/UH/URX/NC=依赖故障；FI/DI=你的注入实验生效。标志含义见顶部说明的速查表。",
+      "description": "- **是什么**：每个应用带异常标志（response_flags）的请求速率。\n- **怎么用**：异常集中在哪个应用一眼可见；具体标志类型看本行右侧两个面板。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -380,12 +380,12 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_flags, reporter) (rate(istio_requests_total{reporter=~\"source|destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_flags!=\"-\"}[$__rate_interval]))) or on() label_replace(label_replace(vector(0), \"response_flags\", \"无异常\", \"__name__\", \".*\"), \"reporter\", \"—\", \"__name__\", \".*\")",
-          "legendFormat": "{{response_flags}}·{{reporter}}",
+          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_flags!=\"-\"}[$__rate_interval]))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无异常\", \"__name__\", \".*\")",
+          "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
       ],
-      "title": "异常标志速率（堆叠）",
+      "title": "异常请求速率·按服务",
       "type": "timeseries"
     },
     {
@@ -452,12 +452,12 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "调用方（客户端）上报",
           "refId": "A"
         },
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "服务方（服务端）上报",
           "refId": "B"
         }
@@ -530,7 +530,7 @@
       },
       "targets": [
         {
-          "expr": "label_replace((sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"4..|5..\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\"), \"response_code\", \"无响应(0)\", \"response_code\", \"^0$\")",
+          "expr": "label_replace((sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", response_code=~\"4..|5..\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\"), \"response_code\", \"无响应(0)\", \"response_code\", \"^0$\")",
           "legendFormat": "{{response_code}}",
           "refId": "A"
         }
@@ -543,7 +543,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：故障注入/限流是否真的触发了——做实验时优先盯这张图。\n- **正常**：全部接近 0。\n- **异常**：实验开始后对应线不动=注入配置没生效（查 VirtualService/EnvoyFilter）；注入 abort 时 FI 抬升、delay 时 DI 抬升、压测超限流阈值时 RL 抬升。",
+      "description": "- **是什么**：每个应用被注入（FI=故障/DI=延迟）或被限流（RL）命中的速率。\n- **怎么用**：注入实验时看哪个应用正在被注入。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -603,12 +603,12 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_flags) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_flags\", \"无注入/限流\", \"__name__\", \".*\")",
-          "legendFormat": "{{response_flags}}",
+          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无注入/限流\", \"__name__\", \".*\")",
+          "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
       ],
-      "title": "故障注入命中（FI/DI）与限流（RL）",
+      "title": "故障注入命中/限流·按服务",
       "type": "timeseries"
     },
     {
@@ -621,7 +621,7 @@
       },
       "id": 106,
       "panels": [],
-      "title": "📐 延迟异常（注入延迟效应）",
+      "title": "📐延迟异常（按服务）",
       "type": "row"
     },
     {
@@ -629,7 +629,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：每个服务的 P99 延迟差值 = 调用方视角 − 服务方视角（差值视图）。\n- **正常**：接近 0=两侧看到的速度一致。\n- **异常**：正差值明显=延迟/重试开销发生在调用方侧（差值≈注入的延迟量）；负差值=服务方侧更慢。\n- **盲区**：若某服务两侧都慢（两侧一致抬高，差值≈0），这条线不会暴露它——这种情况要看延迟的绝对值，告诉我一声我可以把「服务方绝对值」加成姊妹面板。",
+      "description": "- **是什么**：每个服务的 P99 延迟差值 = 调用方视角 − 服务方视角（差值视图）。\n- **正常**：接近 0=两侧看到的速度一致。\n- **异常**：正差值明显=延迟/重试开销发生在调用方侧（差值≈注入的延迟量）；负差值=服务方侧更慢。\n- **盲区**：差值≈0 但延迟很高的服务，看本行最右侧的「P99·按服务（绝对值）」面板。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -668,7 +668,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 8,
         "x": 0,
         "y": 25
       },
@@ -690,7 +690,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.99, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) - histogram_quantile(0.99, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.99, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\"}[$__rate_interval]))) - histogram_quantile(0.99, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
           "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
@@ -742,8 +742,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 8,
+        "x": 8,
         "y": 25
       },
       "id": 24,
@@ -763,7 +763,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.50, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) - histogram_quantile(0.50, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.50, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\"}[$__rate_interval]))) - histogram_quantile(0.50, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
           "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
@@ -849,13 +849,13 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}) or on() label_replace(vector(0), \"cluster_name\", \"无连接\", \"__name__\", \".*\")",
-          "legendFormat": "连接·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无连接\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}) or on() label_replace(vector(0), \"cluster_name\", \"无连接\", \"__name__\", \".*\")",
-          "legendFormat": "请求·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无连接\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "B"
         }
       ],
@@ -927,13 +927,13 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_upstream_rq_pending_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}) or on() label_replace(vector(0), \"cluster_name\", \"无排队\", \"__name__\", \".*\")",
-          "legendFormat": "排队中·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_upstream_rq_pending_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无排队\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_pending_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无溢出\", \"__name__\", \".*\")",
-          "legendFormat": "溢出/秒·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_pending_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无溢出\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "B"
         }
       ],
@@ -1005,18 +1005,18 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_fail{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无连接失败\", \"__name__\", \".*\")",
-          "legendFormat": "建连失败·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_fail{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无连接失败\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无超时\", \"__name__\", \".*\")",
-          "legendFormat": "建连超时·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无超时\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "B"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_cx_destroy_local_with_active_rq{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无销毁\", \"__name__\", \".*\")",
-          "legendFormat": "带请求销毁·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_cx_destroy_local_with_active_rq{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无销毁\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "C"
         }
       ],
@@ -1088,17 +1088,17 @@
       },
       "targets": [
         {
-          "expr": "sum by (pod) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", pod=~\"(${service_short:regex})-.*\", cluster_name=~\"inbound[|]9080.*\"}) or on() label_replace(vector(0), \"pod\", \"无Pod\", \"__name__\", \".*\")",
-          "legendFormat": "连接·{{pod}}",
+          "expr": "label_replace(label_replace(sum by (pod) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", cluster_name=~\"inbound[|]9080.*\"}), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无Pod\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (pod) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", pod=~\"(${service_short:regex})-.*\", cluster_name=~\"inbound[|]9080.*\"}) or on() label_replace(vector(0), \"pod\", \"无Pod\", \"__name__\", \".*\")",
-          "legendFormat": "请求·{{pod}}",
+          "expr": "label_replace(label_replace(sum by (pod) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", cluster_name=~\"inbound[|]9080.*\"}), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无Pod\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "B"
         }
       ],
-      "title": "入站连接与活跃请求（服务方 Pod）",
+      "title": "入站连接与活跃请求·按服务（服务方）",
       "type": "timeseries"
     },
     {
@@ -1179,18 +1179,18 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_circuit_breakers_default_cx_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}) or on() label_replace(vector(0), \"cluster_name\", \"无熔断\", \"__name__\", \".*\")",
-          "legendFormat": "连接熔断·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_circuit_breakers_default_cx_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无熔断\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}) or on() label_replace(vector(0), \"cluster_name\", \"无熔断\", \"__name__\", \".*\")",
-          "legendFormat": "请求熔断·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无熔断\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "B"
         },
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_pending_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}) or on() label_replace(vector(0), \"cluster_name\", \"无熔断\", \"__name__\", \".*\")",
-          "legendFormat": "Pending熔断·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_pending_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无熔断\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "C"
         }
       ],
@@ -1262,13 +1262,13 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (envoy_cluster_outlier_detection_ejections_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}) or on() label_replace(vector(0), \"cluster_name\", \"无驱逐\", \"__name__\", \".*\")",
-          "legendFormat": "驱逐中·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_outlier_detection_ejections_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无驱逐\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_outlier_detection_ejections_total{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无驱逐事件\", \"__name__\", \".*\")",
-          "legendFormat": "驱逐事件/秒·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_outlier_detection_ejections_total{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无驱逐事件\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "B"
         }
       ],
@@ -1340,23 +1340,23 @@
       },
       "targets": [
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无重试\", \"__name__\", \".*\")",
-          "legendFormat": "重试·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无重试\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_success{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无重试成功\", \"__name__\", \".*\")",
-          "legendFormat": "重试成功·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_success{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无重试成功\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "B"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无重试溢出\", \"__name__\", \".*\")",
-          "legendFormat": "重试溢出·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无重试溢出\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "C"
         },
         {
-          "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*($service)\"}[$__rate_interval])) or on() label_replace(vector(0), \"cluster_name\", \"无超时\", \"__name__\", \".*\")",
-          "legendFormat": "超时·{{cluster_name}}",
+          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无超时\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "D"
         }
       ],
@@ -1428,17 +1428,17 @@
       },
       "targets": [
         {
-          "expr": "sum by (pod) (rate(envoy_http_local_rate_limiter_http_local_rate_limit_enforced{namespace=\"$namespace\", pod=~\"(${service_short:regex})-.*\"}[$__rate_interval]))",
-          "legendFormat": "限流拦截·{{pod}}",
+          "expr": "label_replace(label_replace(sum by (pod) (rate(envoy_http_local_rate_limiter_http_local_rate_limit_enforced{namespace=\"$namespace\"}[$__rate_interval])), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无限流\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[$__rate_interval]))) or vector(0)",
-          "legendFormat": "429@服务方",
+          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"destination\", response_code=\"429\"}[$__rate_interval]))) or vector(0)",
+          "legendFormat": "{{destination_canonical_service}}",
           "refId": "B"
         }
       ],
-      "title": "本地限流（EnvoyFilter）",
+      "title": "本地限流（EnvoyFilter）·按服务",
       "type": "timeseries"
     },
     {
@@ -1519,12 +1519,12 @@
       },
       "targets": [
         {
-          "expr": "sum by (container) (rate(container_cpu_usage_seconds_total{container!=\"\", namespace=\"$namespace\", pod=~\"(${service_short:regex})-.*\"}[$__rate_interval])) or on() label_replace(vector(0), \"container\", \"无容器\", \"__name__\", \".*\")",
-          "legendFormat": "{{container}}",
+          "expr": "sum by (svc) (label_replace(label_replace(rate(container_cpu_usage_seconds_total{container!=\"\", namespace=\"$namespace\"}[$__rate_interval]), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无容器\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
-      "title": "CPU 使用率（核数，按容器）",
+      "title": "CPU使用率·按服务（核数）",
       "type": "timeseries"
     },
     {
@@ -1592,12 +1592,12 @@
       },
       "targets": [
         {
-          "expr": "sum by (container) (container_memory_working_set_bytes{container!=\"\", namespace=\"$namespace\", pod=~\"(${service_short:regex})-.*\"}) or on() label_replace(vector(0), \"container\", \"无容器\", \"__name__\", \".*\")",
-          "legendFormat": "{{container}}",
+          "expr": "sum by (svc) (label_replace(label_replace(container_memory_working_set_bytes{container!=\"\", namespace=\"$namespace\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无容器\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
-      "title": "内存 working set（按容器）",
+      "title": "内存working set·按服务",
       "type": "timeseries"
     },
     {
@@ -1678,12 +1678,12 @@
       },
       "targets": [
         {
-          "expr": "sum by (pod, container) (kube_pod_container_status_restarts_total{namespace=\"$namespace\", pod=~\"(${service_short:regex})-.*\"}) or on() label_replace(label_replace(vector(0), \"pod\", \"无Pod\", \"__name__\", \".*\"), \"container\", \"无Pod\", \"__name__\", \".*\")",
-          "legendFormat": "{{pod}}/{{container}}",
+          "expr": "sum by (svc) (label_replace(label_replace(kube_pod_container_status_restarts_total{namespace=\"$namespace\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无重启\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
-      "title": "容器重启次数",
+      "title": "容器重启次数·按服务",
       "type": "timeseries"
     },
     {
@@ -1738,12 +1738,12 @@
       },
       "targets": [
         {
-          "expr": "sum(kube_pod_container_status_last_terminated_reason{namespace=\"$namespace\", pod=~\"(${service_short:regex})-.*\", reason=\"OOMKilled\"}) or vector(0)",
-          "legendFormat": "OOMKilled",
+          "expr": "sum by (svc) (label_replace(label_replace(kube_pod_container_status_last_terminated_reason{namespace=\"$namespace\", reason=\"OOMKilled\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无OOM\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
-      "title": "OOMKilled",
+      "title": "OOMKilled·按服务",
       "type": "stat"
     },
     {
@@ -1817,12 +1817,12 @@
       },
       "targets": [
         {
-          "expr": "up{namespace=\"$namespace\", pod=~\"(${service_short:regex})-.*\"}",
-          "legendFormat": "{{pod}}",
+          "expr": "sum by (svc) (label_replace(label_replace(up{namespace=\"$namespace\"} == 0, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无抓取失败\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
-      "title": "Sidecar 抓取状态（up）",
+      "title": "Sidecar抓取失败Pod数·按服务",
       "type": "timeseries"
     },
     {
@@ -1890,12 +1890,12 @@
       },
       "targets": [
         {
-          "expr": "count(up{namespace=\"$namespace\", pod=~\"(${service_short:regex})-.*\"}) or on() label_replace(vector(0), \"__name__\", \"在线Pod数\", \"__name__\", \".*\")",
-          "legendFormat": "Pod 数",
+          "expr": "sum by (svc) (label_replace(label_replace(up{namespace=\"$namespace\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无在线Pod\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
-      "title": "在线 Pod 数（KEDA 扩缩观察）",
+      "title": "在线Pod数·按服务",
       "type": "timeseries"
     },
     {
@@ -2648,7 +2648,7 @@
       "id": 112,
       "title": "5xx速率·按服务（调用方视角）",
       "type": "timeseries",
-      "description": "- **是什么**：每个应用在调用方视角被记下 5xx 的速率。**不跟随服务勾选**，固定展示全部应用，用于 5xx 风暴时定位元凶。\n- **怎么用**：风暴时冲得最高的那条线就是问题应用——调用方 envoy 对它发起的请求在失败（熔断/连接池满/无健康上游），配合故障信号面板的 UO/UH/UC 确认失败原因。",
+      "description": "- **是什么**：每个应用在调用方视角被记下 5xx 的速率。固定展示全部应用，用于 5xx 风暴时定位元凶。\n- **怎么用**：风暴时冲得最高的那条线就是问题应用——调用方 envoy 对它发起的请求在失败（熔断/连接池满/无健康上游），配合故障信号面板的 UO/UH/UC 确认失败原因。",
       "targets": [
         {
           "datasource": {
@@ -2725,6 +2725,70 @@
           "legendFormat": "{{destination_canonical_service}}"
         }
       ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 25
+      },
+      "id": 114,
+      "title": "P99·按服务（服务方视角）",
+      "type": "timeseries",
+      "description": "- **是什么**：每个应用 P99 延迟的绝对值（服务方视角）。\n- **怎么用**：与左侧两个差值面板配合——差值≈0 而这里很高=服务真的慢（两侧一致抬高）；差值大而这里低=延迟发生在调用方侧。",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "expr": "(histogram_quantile(0.99, sum by (le, destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
+          "legendFormat": "{{destination_canonical_service}}"
+        }
+      ]
     }
   ],
   "refresh": "5s",
@@ -2777,79 +2841,6 @@
         "skipUrlSync": true,
         "sort": 1,
         "type": "query"
-      },
-      {
-        "current": {
-          "value": [
-            "details.dev.svc.cluster.local",
-            "details-canary.dev.svc.cluster.local",
-            "ratings.dev.svc.cluster.local",
-            "ratings-canary.dev.svc.cluster.local",
-            "productpage.dev.svc.cluster.local",
-            "productpage-preview.dev.svc.cluster.local",
-            "reviews.dev.svc.cluster.local"
-          ],
-          "text": [
-            "details.dev.svc.cluster.local",
-            "details-canary.dev.svc.cluster.local",
-            "ratings.dev.svc.cluster.local",
-            "ratings-canary.dev.svc.cluster.local",
-            "productpage.dev.svc.cluster.local",
-            "productpage-preview.dev.svc.cluster.local",
-            "reviews.dev.svc.cluster.local"
-          ],
-          "selected": true
-        },
-        "description": "全限定服务名（destination_service）。灰度期间两个上报视角记的名字不对称：调用方（客户端）上报记「所拨的服务」、服务方（服务端）上报记「Pod 所属的服务」，建议把一个服务及其 -canary/-preview 变体成对勾选，否则双视角会断一半。",
-        "hide": 0,
-        "includeAll": false,
-        "multi": true,
-        "name": "service",
-        "query": {
-          "query": "label_values(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_service!=\"unknown\"}, destination_service)",
-          "refId": "StandardVariableQuery"
-        },
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": true,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "name": "service_short",
-        "label": "service_short",
-        "hide": 2,
-        "type": "query",
-        "refresh": 1,
-        "sort": 1,
-        "multi": true,
-        "includeAll": false,
-        "skipUrlSync": true,
-        "query": {
-          "query": "label_values(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}, destination_service_name)",
-          "refId": "StandardVariableQuery"
-        },
-        "current": {
-          "value": [
-            "details",
-            "details-canary",
-            "ratings",
-            "ratings-canary",
-            "productpage",
-            "productpage-preview",
-            "reviews"
-          ],
-          "text": [
-            "details",
-            "details-canary",
-            "ratings",
-            "ratings-canary",
-            "productpage",
-            "productpage-preview",
-            "reviews"
-          ],
-          "selected": true
-        }
       }
     ]
   },
