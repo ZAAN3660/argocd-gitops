@@ -2630,12 +2630,12 @@
           }
         ],
         "query": {
-          "query": "label_values(istio_requests_total, destination_workload_namespace)",
+          "query": "label_values(kube_service_info, namespace)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
+        "skipUrlSync": true,
         "sort": 1,
         "type": "query"
       },
