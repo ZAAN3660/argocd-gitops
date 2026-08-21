@@ -30,7 +30,7 @@ spec:
         # 延迟故障：命中后网关先把请求扣留 8 秒
         delay:                            
           percentage: { value: 50 }       # 命中本路由的请求中 50% 会被扣留
-          fixedDelay: 8s
+          fixedDelay: 5s
         # 终止故障：网关直接回 503，不转发给下游
         abort:                            
           percentage: { value: 10 }       # 命中本路由的请求中 10% 会被终止
