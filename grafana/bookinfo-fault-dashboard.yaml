@@ -380,7 +380,7 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_flags, reporter) (rate(istio_requests_total{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags!=\"-\"}[$__rate_interval]))) or label_replace(label_replace(vector(0), \"response_flags\", \"无异常\", \"__name__\", \".*\"), \"reporter\", \"—\", \"__name__\", \".*\")",
+          "expr": "(sum by (response_flags, reporter) (rate(istio_requests_total{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags!=\"-\"}[$__rate_interval]))) or on() label_replace(label_replace(vector(0), \"response_flags\", \"无异常\", \"__name__\", \".*\"), \"reporter\", \"—\", \"__name__\", \".*\")",
           "legendFormat": "{{response_flags}}·{{reporter}}",
           "refId": "A"
         }
@@ -531,7 +531,7 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))) or label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\")",
+          "expr": "(sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\")",
           "legendFormat": "{{response_code}}",
           "refId": "A"
         }
@@ -604,7 +604,7 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_flags) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]))) or label_replace(vector(0), \"response_flags\", \"无注入/限流\", \"__name__\", \".*\")",
+          "expr": "(sum by (response_flags) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_flags\", \"无注入/限流\", \"__name__\", \".*\")",
           "legendFormat": "{{response_flags}}",
           "refId": "A"
         }
@@ -1818,7 +1818,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.99, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))) or label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.99, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
           "legendFormat": "P99·{{reporter}}",
           "refId": "A"
         }
@@ -1891,7 +1891,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.50, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))) or label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.50, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
           "legendFormat": "P50·{{reporter}}",
           "refId": "A"
         }
