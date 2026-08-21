@@ -1,0 +1,848 @@
+{
+  "title": "Istio / 网关",
+  "uid": "istio-gateway-dashboard",
+  "tags": [
+    "istio",
+    "网关"
+  ],
+  "editable": true,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "panels": [],
+      "title": "🚪 入口总览",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "title": "入口QPS",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval])) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：网关每秒处理的入口请求速率（网关视角，含网关自生成的响应）。\n- **怎么读**：入口腿无直接计数（Istio不在网关记 destination 视角），用网关→后端转发量近似——HTTP 1:1 转发，仅无路由请求略有出入。\n- **异常特征**：骤降=入口故障或后端全挂。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 2,
+      "title": "入口5xx率",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\",response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval])), 1)) * 100 or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：入口 5xx 占比。\n- **怎么读**：0=健康；本指标上升=入口处已能观测到故障。\n- **异常特征**：>0 时结合下面按响应码面板与后端面板定位。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 3,
+      "title": "入口P99 (ms)",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval]))) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：入口请求延迟 P99（毫秒）。\n- **怎么读**：外部用户视角的尾部延迟；含你们的注入延迟实验效果。\n- **异常特征**：持续高=后端慢或网络问题；与后端 P99 面板对照可定位慢在哪一段。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 4,
+      "title": "上游活跃连接",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(envoy_cluster_upstream_cx_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：网关到所有后端服务的活跃连接总数。\n- **怎么读**：连接池水位，随流量涨落。\n- **异常特征**：为 0 而入口QPS>0=所有请求都失败。"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 101,
+      "panels": [],
+      "title": "🚪 入口流量构成",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 100,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "showPoints": "never"
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 5,
+      "title": "入口请求按响应码",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (response_code) (rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval])) or on() label_replace(vector(0), \"response_code\", \"无流量\", \"__name__\", \".*\")",
+          "legendFormat": "{{response_code}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：入口请求按响应码堆叠（含网关自生成响应，如无路由 404、上游不可用 503）。\n- **怎么读**：503+UH=上游无健康端点；429=触发限流；302/304=重定向与缓存命中。\n- **异常特征**：5xx 占比突升——先看后端面板是哪个服务，再看响应标志区分注入（FI）与真实故障。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 100,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "showPoints": "never"
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 6,
+      "title": "入口请求按协议",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (request_protocol) (rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval])) or on() label_replace(vector(0), \"request_protocol\", \"无流量\", \"__name__\", \".*\")",
+          "legendFormat": "{{request_protocol}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：入口请求按协议（HTTP/gRPC）堆叠。\n- **怎么读**：协议构成画像；实验 gRPC 服务时会看到 grpc 线。\n- **异常特征**：无。"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 102,
+      "panels": [],
+      "title": "🔀 后端视角（网关→各服务）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "id": 7,
+      "title": "各后端QPS",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (svc) (label_replace(rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service\", \"(.*)\\\\.svc\\\\.cluster\\\\.local\")) or on() label_replace(vector(0), \"svc\", \"无后端流量\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：网关转发给各后端服务的 QPS。\n- **怎么读**：入口流量的目的地分布；svc 格式为 服务.命名空间。\n- **异常特征**：某后端 QPS 异常升高=该服务成为热点。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 8,
+      "title": "各后端成功率（2xx）",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(sum by (svc) (label_replace(rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\",response_code=~\"2..\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service\", \"(.*)\\\\.svc\\\\.cluster\\\\.local\")) / clamp_min(sum by (svc) (label_replace(rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service\", \"(.*)\\\\.svc\\\\.cluster\\\\.local\")), 1)) * 100 or on() label_replace(vector(0), \"svc\", \"无后端流量\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：各后端服务的 2xx 占比（网关视角）。\n- **怎么读**：从入口维度看哪个后端在出错；3xx 不计入成功也不计入失败。\n- **异常特征**：某后端成功率下跌→去故障大盘选该服务下钻。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 9,
+      "title": "各后端P99 (ms)",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "label_replace(histogram_quantile(0.99, sum by (destination_service, le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval]))), \"svc\", \"$1\", \"destination_service\", \"(.*)\\\\.svc\\\\.cluster\\\\.local\") or on() label_replace(vector(0), \"svc\", \"无后端流量\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：各后端的 P99 延迟（网关视角）。\n- **怎么读**：与入口 P99 对照——入口慢而后端快=网络/排队开销；一致=后端就是慢。\n- **异常特征**：某后端 P99 突升=该服务变慢（实验注入延迟时这里会立刻体现）。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "id": 10,
+      "title": "上游池活跃连接（按后端）",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "label_replace(sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\") or on() label_replace(vector(0), \"cluster\", \"无后端连接\", \"__name__\", \".*\")",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：网关到各后端的活跃连接数（envoy 连接池）。\n- **怎么读**：连接池水位分布；mTLS 连接复用正常时连接数应稳定。\n- **异常特征**：某后端连接数反复抖升抖降=连接被频繁重建（后端重启或健康检查失败）。"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 103,
+      "panels": [],
+      "title": "⚙️ 网关资源",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "cpu"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 11,
+      "title": "网关CPU（核）",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", container=\"istio-proxy\"}[$__rate_interval])) or vector(0)",
+          "legendFormat": "网关CPU",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：网关 envoy 进程的 CPU 消耗。\n- **怎么读**：两个副本之和；压测时看网关是否成为瓶颈。\n- **异常特征**：CPU 持续>1核且延迟同步恶化=考虑扩容或优化路由配置。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 12,
+      "title": "网关内存",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", container=\"istio-proxy\"}) or vector(0)",
+          "legendFormat": "网关内存",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：网关 envoy 进程内存（工作集）。\n- **怎么读**：正常随连接数与配置体量缓慢波动。\n- **异常特征**：持续上涨不回落=疑似内存泄漏，观察长周期趋势。"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "none"
+            },
+            "showPoints": "never"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 13,
+      "title": "网关Pod重启次数",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "kube_pod_container_status_restarts_total{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", container=\"istio-proxy\"} or on() label_replace(vector(0), \"pod\", \"无重启\", \"__name__\", \".*\")",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "description": "- **是什么**：网关 Pod 累计重启次数。\n- **怎么读**：正常为 0；重启=网关自身不稳定。\n- **异常特征**：频繁重启时入口会出现短暂全挂（重启窗口）。"
+    }
+  ]
+}

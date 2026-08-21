@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: ingressgateway
+  namespace: istio-system
+  labels:
+    release: kube-prometheus-stack   # 必须带：stack 的 Prometheus 只认领带此标签的监控资源
+spec:
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+  podMetricsEndpoints:
+    - port: http-envoy-prom           # 网关 envoy 指标端口名（15090）
+      interval: 3s
+      path: /stats/prometheus         # envoy 暴露指标的路径
