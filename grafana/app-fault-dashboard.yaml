@@ -2605,7 +2605,6 @@
         "includeAll": false,
         "multi": false,
         "name": "datasource",
-        "options": [],
         "query": "prometheus",
         "refresh": 1,
         "regex": "",
@@ -2626,13 +2625,6 @@
         "includeAll": false,
         "multi": true,
         "name": "namespace",
-        "options": [
-          {
-            "selected": true,
-            "text": "dev",
-            "value": "dev"
-          }
-        ],
         "query": {
           "query": "label_values(istio_requests_total{destination_workload_namespace!=\"unknown\"}, destination_workload_namespace)",
           "refId": "StandardVariableQuery"
@@ -2670,7 +2662,6 @@
         "includeAll": false,
         "multi": true,
         "name": "service",
-        "options": [],
         "query": {
           "query": "label_values(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_service!=\"unknown\"}, destination_service)",
           "refId": "StandardVariableQuery"

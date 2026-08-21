@@ -1415,7 +1415,6 @@
         "includeAll": false,
         "multi": false,
         "name": "datasource",
-        "options": [],
         "query": "prometheus",
         "refresh": 1,
         "regex": "",
@@ -1436,13 +1435,6 @@
         "includeAll": false,
         "multi": true,
         "name": "namespace",
-        "options": [
-          {
-            "selected": true,
-            "text": "dev",
-            "value": "dev"
-          }
-        ],
         "query": {
           "query": "label_values(istio_requests_total{destination_workload_namespace!=\"unknown\"}, destination_workload_namespace)",
           "refId": "StandardVariableQuery"
@@ -1463,18 +1455,6 @@
         "includeAll": false,
         "multi": false,
         "name": "reporter",
-        "options": [
-          {
-            "selected": true,
-            "text": "destination",
-            "value": "destination"
-          },
-          {
-            "selected": false,
-            "text": "source",
-            "value": "source"
-          }
-        ],
         "query": "destination,source",
         "skipUrlSync": true,
         "type": "custom"
@@ -1506,24 +1486,12 @@
         "includeAll": false,
         "multi": true,
         "name": "service",
-        "options": [
-          {
-            "selected": true,
-            "text": "details.dev.svc.cluster.local",
-            "value": "details.dev.svc.cluster.local"
-          },
-          {
-            "selected": true,
-            "text": "details-canary.dev.svc.cluster.local",
-            "value": "details-canary.dev.svc.cluster.local"
-          }
-        ],
         "query": {
           "query": "label_values(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_service!=\"unknown\"}, destination_service)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
-        "regex": "/svc_fqdn=\"([^\"]+)\"/",
+        "regex": "",
         "skipUrlSync": true,
         "sort": 1,
         "type": "query"
