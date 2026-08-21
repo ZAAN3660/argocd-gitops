@@ -620,6 +620,166 @@
         "x": 0,
         "y": 15
       },
+      "id": 106,
+      "panels": [],
+      "title": "📐 延迟异常（注入延迟效应）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "- **是什么**：最慢 1% 请求的延迟，两侧账本各一条线。\n- **正常**：两条线接近=服务本身的速度就是如此。\n- **异常**：调用方线明显高于被调方=延迟发生在调用方侧（delay 注入或重试开销），差值≈注入的延迟量；被调方线本身抬高=服务真的慢。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "(histogram_quantile(0.99, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
+          "legendFormat": "P99·{{reporter}}",
+          "refId": "A"
+        }
+      ],
+      "title": "P99 调用方 vs 被调方",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "- **是什么**：中位延迟（一半请求比它快），两侧账本各一条线。\n- **正常**：P50 正常而 P99 拉高=只有少数请求被注入延迟/重试拖慢。\n- **异常**：P50 也拉高=全体请求都慢（服务真的变慢了）。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "(histogram_quantile(0.50, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
+          "legendFormat": "P50·{{reporter}}",
+          "refId": "A"
+        }
+      ],
+      "title": "P50 调用方 vs 被调方",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
       "id": 102,
       "panels": [],
       "title": "⛓ 连接池与排队（Envoy 运行态）",
@@ -671,7 +831,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 16
+        "y": 25
       },
       "id": 9,
       "options": {
@@ -749,7 +909,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 16
+        "y": 25
       },
       "id": 10,
       "options": {
@@ -827,7 +987,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 16
+        "y": 25
       },
       "id": 11,
       "options": {
@@ -910,7 +1070,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 16
+        "y": 25
       },
       "id": 12,
       "options": {
@@ -948,7 +1108,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 33
       },
       "id": 103,
       "panels": [],
@@ -1001,7 +1161,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 25
+        "y": 34
       },
       "id": 13,
       "options": {
@@ -1084,7 +1244,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 25
+        "y": 34
       },
       "id": 14,
       "options": {
@@ -1162,7 +1322,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 25
+        "y": 34
       },
       "id": 15,
       "options": {
@@ -1250,7 +1410,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 25
+        "y": 34
       },
       "id": 16,
       "options": {
@@ -1288,7 +1448,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 42
       },
       "id": 104,
       "panels": [],
@@ -1341,7 +1501,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 34
+        "y": 43
       },
       "id": 17,
       "options": {
@@ -1414,7 +1574,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 34
+        "y": 43
       },
       "id": 18,
       "options": {
@@ -1447,7 +1607,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 51
       },
       "id": 105,
       "panels": [],
@@ -1500,7 +1660,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 43
+        "y": 52
       },
       "id": 19,
       "options": {
@@ -1560,7 +1720,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 43
+        "y": 52
       },
       "id": 20,
       "options": {
@@ -1639,7 +1799,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 43
+        "y": 52
       },
       "id": 21,
       "options": {
@@ -1712,7 +1872,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 60
       },
       "id": 22,
       "options": {
@@ -1745,465 +1905,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 57
-      },
-      "id": 106,
-      "panels": [],
-      "title": "📐 延迟异常（注入延迟效应）",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "description": "- **是什么**：最慢 1% 请求的延迟，两侧账本各一条线。\n- **正常**：两条线接近=服务本身的速度就是如此。\n- **异常**：调用方线明显高于被调方=延迟发生在调用方侧（delay 注入或重试开销），差值≈注入的延迟量；被调方线本身抬高=服务真的慢。",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisLabel": "",
-            "drawStyle": "line",
-            "fillOpacity": 5,
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 58
-      },
-      "id": 23,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "(histogram_quantile(0.99, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
-          "legendFormat": "P99·{{reporter}}",
-          "refId": "A"
-        }
-      ],
-      "title": "P99 调用方 vs 被调方",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "description": "- **是什么**：中位延迟（一半请求比它快），两侧账本各一条线。\n- **正常**：P50 正常而 P99 拉高=只有少数请求被注入延迟/重试拖慢。\n- **异常**：P50 也拉高=全体请求都慢（服务真的变慢了）。",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisLabel": "",
-            "drawStyle": "line",
-            "fillOpacity": 5,
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 58
-      },
-      "id": 24,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "(histogram_quantile(0.50, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
-          "legendFormat": "P50·{{reporter}}",
-          "refId": "A"
-        }
-      ],
-      "title": "P50 调用方 vs 被调方",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
         "y": 66
-      },
-      "id": 108,
-      "panels": [],
-      "title": "🧠 控制面（istiod）",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "- **是什么**：istiod 把最新配置推送到代理的耗时（P99，秒）。\n- **正常**：毫秒级；无推送时段为空。\n- **异常**：进入秒级=配置复杂化或 istiod 过载。",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 0,
-        "y": 67
-      },
-      "id": 25,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(pilot_xds_push_time_bucket[$__rate_interval])))",
-          "legendFormat": "P99",
-          "refId": "A"
-        }
-      ],
-      "title": "xDS 推送耗时 P99（秒）",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "- **是什么**：CDS/EDS/LDS/RDS/SDS 各类型 xDS 推送速率。\n- **正常**：改路由与规则→CDS/LDS/RDS，Pod 扩缩→EDS，证书轮换→SDS——有变更才有推送。\n- **异常**：EDS 无变更地持续高发=集群端点抖动。",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 8,
-        "y": 67
-      },
-      "id": 26,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (type) (rate(pilot_xds_pushes[$__rate_interval]))",
-          "legendFormat": "{{type}}",
-          "refId": "A"
-        }
-      ],
-      "title": "xDS 推送速率（按类型）",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "- **是什么**：Pod 创建时 sidecar 注入失败的速率。\n- **正常**：0。\n- **异常**：>0 时新 Pod 卡在无 sidecar 状态——常见原因：命名空间未打注入标签、注入策略与 Pod 注解冲突。",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 16,
-        "y": 67
-      },
-      "id": 27,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(rate(sidecar_injection_failure_total[$__rate_interval])) or on() label_replace(vector(0), \"__name__\", \"注入失败速率\", \"__name__\", \".*\")",
-          "legendFormat": "失败速率",
-          "refId": "A"
-        }
-      ],
-      "title": "Sidecar 注入失败",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "- **是什么**：与 istiod 保持 gRPC 长连接的代理数量。\n- **正常**：≈全部 sidecar+网关数，随扩缩容同步增减。\n- **异常**：无扩缩容却骤降=代理大面积断开（常与证书或网络问题有关）。",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 0,
-        "y": 72
-      },
-      "id": 28,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(pilot_xds)",
-          "legendFormat": "已连接代理",
-          "refId": "A"
-        }
-      ],
-      "title": "在线代理数",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "- **是什么**：istiod 容器 CPU 消耗。\n- **正常**：远低于 1 核。\n- **异常**：与推送耗时一起恶化=过载，考虑增加副本。",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "unit": "cpu"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 12,
-        "y": 72
-      },
-      "id": 29,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(rate(container_cpu_usage_seconds_total{container=\"discovery\", pod=~\"istiod-.*\"}[$__rate_interval]))",
-          "legendFormat": "istiod CPU",
-          "refId": "A"
-        }
-      ],
-      "title": "istiod CPU（核）",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 78
       },
       "id": 109,
       "panels": [],
@@ -2239,7 +1941,7 @@
         "h": 5,
         "w": 8,
         "x": 0,
-        "y": 79
+        "y": 67
       },
       "id": 30,
       "options": {
@@ -2299,7 +2001,7 @@
         "h": 5,
         "w": 8,
         "x": 8,
-        "y": 79
+        "y": 67
       },
       "id": 31,
       "options": {
@@ -2359,7 +2061,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 79
+        "y": 67
       },
       "id": 32,
       "options": {
@@ -2396,7 +2098,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 85
+        "y": 72
       },
       "id": 110,
       "panels": [],
@@ -2432,7 +2134,7 @@
         "h": 5,
         "w": 8,
         "x": 0,
-        "y": 86
+        "y": 73
       },
       "id": 33,
       "options": {
@@ -2492,7 +2194,7 @@
         "h": 5,
         "w": 8,
         "x": 8,
-        "y": 86
+        "y": 73
       },
       "id": 34,
       "options": {
@@ -2552,7 +2254,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 86
+        "y": 73
       },
       "id": 35,
       "options": {
@@ -2582,6 +2284,304 @@
       ],
       "title": "operator重启次数",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 78
+      },
+      "id": 108,
+      "panels": [],
+      "title": "🧠 控制面（istiod）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "- **是什么**：istiod 把最新配置推送到代理的耗时（P99，秒）。\n- **正常**：毫秒级；无推送时段为空。\n- **异常**：进入秒级=配置复杂化或 istiod 过载。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 79
+      },
+      "id": 25,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(pilot_xds_push_time_bucket[$__rate_interval])))",
+          "legendFormat": "P99",
+          "refId": "A"
+        }
+      ],
+      "title": "xDS 推送耗时 P99（秒）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "- **是什么**：CDS/EDS/LDS/RDS/SDS 各类型 xDS 推送速率。\n- **正常**：改路由与规则→CDS/LDS/RDS，Pod 扩缩→EDS，证书轮换→SDS——有变更才有推送。\n- **异常**：EDS 无变更地持续高发=集群端点抖动。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 79
+      },
+      "id": 26,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (type) (rate(pilot_xds_pushes[$__rate_interval]))",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "xDS 推送速率（按类型）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "- **是什么**：Pod 创建时 sidecar 注入失败的速率。\n- **正常**：0。\n- **异常**：>0 时新 Pod 卡在无 sidecar 状态——常见原因：命名空间未打注入标签、注入策略与 Pod 注解冲突。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 79
+      },
+      "id": 27,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(sidecar_injection_failure_total[$__rate_interval])) or on() label_replace(vector(0), \"__name__\", \"注入失败速率\", \"__name__\", \".*\")",
+          "legendFormat": "失败速率",
+          "refId": "A"
+        }
+      ],
+      "title": "Sidecar 注入失败",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "- **是什么**：与 istiod 保持 gRPC 长连接的代理数量。\n- **正常**：≈全部 sidecar+网关数，随扩缩容同步增减。\n- **异常**：无扩缩容却骤降=代理大面积断开（常与证书或网络问题有关）。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 84
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(pilot_xds)",
+          "legendFormat": "已连接代理",
+          "refId": "A"
+        }
+      ],
+      "title": "在线代理数",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "- **是什么**：istiod 容器 CPU 消耗。\n- **正常**：远低于 1 核。\n- **异常**：与推送耗时一起恶化=过载，考虑增加副本。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "cpu"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 84
+      },
+      "id": 29,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(container_cpu_usage_seconds_total{container=\"discovery\", pod=~\"istiod-.*\"}[$__rate_interval]))",
+          "legendFormat": "istiod CPU",
+          "refId": "A"
+        }
+      ],
+      "title": "istiod CPU（核）",
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",
@@ -2601,7 +2601,7 @@
           "text": "prometheus",
           "value": "prometheus"
         },
-        "hide": 2,
+        "hide": 0,
         "includeAll": false,
         "multi": false,
         "name": "datasource",
@@ -2621,7 +2621,7 @@
           ],
           "selected": true
         },
-        "hide": 1,
+        "hide": 0,
         "includeAll": false,
         "multi": true,
         "name": "namespace",
@@ -2658,7 +2658,7 @@
           "selected": true
         },
         "description": "K8s服务名（含灰度变体）。灰度期间双账本服务名不对称：调用方账记\"所拨的服务\"、被调方账记\"Pod所属的服务\"，建议把一个服务及其 -canary/-preview 变体都勾上以覆盖双视角。",
-        "hide": 1,
+        "hide": 0,
         "includeAll": false,
         "multi": true,
         "name": "service",
