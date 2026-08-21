@@ -361,7 +361,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：每个 Pod 收到的 QPS（固定被调方视角——裸 pod 标签在 source 账上是调用方 Pod，只有 destination 账上才指向本服务的 Pod）。\n- **正常**：各 Pod 流量大致均衡；灰度期间新旧 Pod 按预期权重切分。\n- **异常**：个别 Pod 流量恒为 0=端点异常或权重配置错误。",
+      "description": "- **是什么**：每个 Pod 收到的 QPS（固定服务方视角——裸 pod 标签在 source（客户端）上报里是调用方 Pod，只有 destination（服务端）上报里才指向本服务的 Pod）。\n- **正常**：各 Pod 流量大致均衡；灰度期间新旧 Pod 按预期权重切分。\n- **异常**：个别 Pod 流量恒为 0=端点异常或权重配置错误。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -604,7 +604,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：各 Pod 的 P99 延迟（固定被调方视角，同 id12）。\n- **正常**：各 Pod 的 P99 接近。\n- **异常**：单 Pod 明显慢=该实例资源争抢或宿主机问题，配合故障大盘 CPU 面板看。",
+      "description": "- **是什么**：各 Pod 的 P99 延迟（固定服务方视角，同 id12）。\n- **正常**：各 Pod 的 P99 接近。\n- **异常**：单 Pod 明显慢=该实例资源争抢或宿主机问题，配合故障大盘 CPU 面板看。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1005,7 +1005,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：灰度期间各版本（Pod Hash）收到的 QPS（固定被调方视角——hash 标签在调用方账上是来源 Pod 的 hash，只有被调方账指向被灰度服务自身）。\n- **正常**：流量按 Argo Rollouts 设定的权重在 stable/canary 间切分。\n- **异常**：切分比例与配置不符=canary 步进配置问题；某版本无流量=端点异常。",
+      "description": "- **是什么**：灰度期间各版本（Pod Hash）收到的 QPS（固定服务方视角——hash 标签在调用方（客户端）上报里是来源 Pod 的 hash，只有服务方（服务端）上报指向被灰度服务自身）。\n- **正常**：流量按 Argo Rollouts 设定的权重在 stable/canary 间切分。\n- **异常**：切分比例与配置不符=canary 步进配置问题；某版本无流量=端点异常。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1079,7 +1079,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：灰度期间各版本的 P99 延迟对比（固定被调方视角，同 id41）。\n- **正常**：新旧版本延迟接近。\n- **异常**：canary 明显高于 stable=新版本性能退化，考虑回滚。",
+      "description": "- **是什么**：灰度期间各版本的 P99 延迟对比（固定服务方视角，同 id41）。\n- **正常**：新旧版本延迟接近。\n- **异常**：canary 明显高于 stable=新版本性能退化，考虑回滚。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1152,7 +1152,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "- **是什么**：灰度期间各版本的成功率（2xx 占比）对比（固定被调方视角，同 id41）。\n- **正常**：新旧版本成功率都接近 100%。\n- **异常**：canary 低于 stable=新版本引入了错误（版本问题而非全局故障），应考虑回滚。",
+      "description": "- **是什么**：灰度期间各版本的成功率（2xx 占比）对比（固定服务方视角，同 id41）。\n- **正常**：新旧版本成功率都接近 100%。\n- **异常**：canary 低于 stable=新版本引入了错误（版本问题而非全局故障），应考虑回滚。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1246,7 +1246,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "- **是什么**：请求的连接安全策略（mTLS 状态）分布（固定被调方视角——安全策略标签只在 destination 账上被可靠填充）。\n- **正常**：全为 mutual_tls——Istio 默认自动 mTLS，即使没有 PeerAuthentication，sidecar 间也是加密的；明文只出现在对端无 sidecar 的链路上。\n- **异常**：做 mTLS 策略实验后仍只有 none/unknown=策略未覆盖到该链路。",
+      "description": "- **是什么**：请求的连接安全策略（mTLS 状态）分布（固定服务方视角——安全策略标签只在 destination（服务端）上报里被可靠填充）。\n- **正常**：全为 mutual_tls——Istio 默认自动 mTLS，即使没有 PeerAuthentication，sidecar 间也是加密的；明文只出现在对端无 sidecar 的链路上。\n- **异常**：做 mTLS 策略实验后仍只有 none/unknown=策略未覆盖到该链路。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1323,7 +1323,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "- **是什么**：各调用方工作负载对本服务的请求量，按响应码堆叠（固定调用方视角——来源标签只存在于 source 账上，切 destination 时本面板为空）。\n- **正常**：来源构成稳定。\n- **异常**：某个来源高比例异常码=该调用方的问题（重试风暴、错误配置）。",
+      "description": "- **是什么**：各调用方工作负载对本服务的请求量，按响应码堆叠（固定调用方视角——来源标签只存在于 source（客户端）上报里，切 destination 时本面板为空）。\n- **正常**：来源构成稳定。\n- **异常**：某个来源高比例异常码=该调用方的问题（重试风暴、错误配置）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1481,7 +1481,7 @@
           ],
           "selected": true
         },
-        "description": "K8s服务名（含灰度变体）。灰度期间双账本服务名不对称：调用方账记\"所拨的服务\"、被调方账记\"Pod所属的服务\"，建议把一个服务及其 -canary/-preview 变体都勾上以覆盖双视角。",
+        "description": "全限定服务名（destination_service）。灰度期间两个上报视角记的名字不对称：调用方（客户端）上报记「所拨的服务」、服务方（服务端）上报记「Pod 所属的服务」，建议把一个服务及其 -canary/-preview 变体成对勾选，否则双视角会断一半。",
         "hide": 0,
         "includeAll": false,
         "multi": true,
