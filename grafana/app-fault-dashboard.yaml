@@ -849,12 +849,12 @@
       },
       "targets": [
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无连接\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无连接\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无连接\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无连接\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "B"
         }
@@ -927,12 +927,12 @@
       },
       "targets": [
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_upstream_rq_pending_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无排队\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (envoy_cluster_upstream_rq_pending_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无排队\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_pending_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无溢出\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_pending_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无溢出\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "B"
         }
@@ -1005,17 +1005,17 @@
       },
       "targets": [
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_fail{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无连接失败\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_fail{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无连接失败\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无超时\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_cx_connect_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无超时\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "B"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_cx_destroy_local_with_active_rq{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无销毁\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_cx_destroy_local_with_active_rq{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无销毁\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "C"
         }
@@ -1088,12 +1088,12 @@
       },
       "targets": [
         {
-          "expr": "label_replace(label_replace(sum by (pod) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", cluster_name=~\"inbound[|]9080.*\"}), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无Pod\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (pod) (envoy_cluster_upstream_cx_active{namespace=\"$namespace\", cluster_name=~\"inbound[|]9080.*\"}), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无Pod\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "label_replace(label_replace(sum by (pod) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", cluster_name=~\"inbound[|]9080.*\"}), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无Pod\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (pod) (envoy_cluster_upstream_rq_active{namespace=\"$namespace\", cluster_name=~\"inbound[|]9080.*\"}), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无Pod\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "B"
         }
@@ -1179,17 +1179,17 @@
       },
       "targets": [
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_circuit_breakers_default_cx_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无熔断\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (envoy_cluster_circuit_breakers_default_cx_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无熔断\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无熔断\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无熔断\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "B"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_pending_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无熔断\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (envoy_cluster_circuit_breakers_default_rq_pending_open{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无熔断\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "C"
         }
@@ -1262,12 +1262,12 @@
       },
       "targets": [
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (envoy_cluster_outlier_detection_ejections_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无驱逐\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (envoy_cluster_outlier_detection_ejections_active{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无驱逐\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_outlier_detection_ejections_total{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无驱逐事件\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_outlier_detection_ejections_total{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无驱逐事件\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "B"
         }
@@ -1340,22 +1340,22 @@
       },
       "targets": [
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无重试\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无重试\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_success{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无重试成功\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_success{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无重试成功\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "B"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无重试溢出\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_retry_overflow{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无重试溢出\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "C"
         },
         {
-          "expr": "label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无超时\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (cluster_name) (rate(envoy_cluster_upstream_rq_timeout{namespace=\"$namespace\", cluster_name=~\"outbound[|]9080[|].*\"}[$__rate_interval])), \"svc\", \"$1\", \"cluster_name\", \"outbound[|]9080[|][^|]*[|]([^.]*)[.].*\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无超时\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "D"
         }
@@ -1428,7 +1428,7 @@
       },
       "targets": [
         {
-          "expr": "label_replace(label_replace(sum by (pod) (rate(envoy_http_local_rate_limiter_http_local_rate_limit_enforced{namespace=\"$namespace\"}[$__rate_interval])), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\") or on() label_replace(vector(0), \"svc\", \"无限流\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(sum by (pod) (rate(envoy_http_local_rate_limiter_http_local_rate_limit_enforced{namespace=\"$namespace\"}[$__rate_interval])), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无限流\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         },
@@ -1519,7 +1519,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (svc) (label_replace(label_replace(rate(container_cpu_usage_seconds_total{container!=\"\", namespace=\"$namespace\"}[$__rate_interval]), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无容器\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(rate(container_cpu_usage_seconds_total{container!=\"\", namespace=\"$namespace\"}[$__rate_interval]), \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无容器\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         }
@@ -1592,7 +1592,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (svc) (label_replace(label_replace(container_memory_working_set_bytes{container!=\"\", namespace=\"$namespace\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无容器\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(container_memory_working_set_bytes{container!=\"\", namespace=\"$namespace\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无容器\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         }
@@ -1678,7 +1678,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (svc) (label_replace(label_replace(kube_pod_container_status_restarts_total{namespace=\"$namespace\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无重启\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(kube_pod_container_status_restarts_total{namespace=\"$namespace\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无重启\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         }
@@ -1738,7 +1738,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (svc) (label_replace(label_replace(kube_pod_container_status_last_terminated_reason{namespace=\"$namespace\", reason=\"OOMKilled\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无OOM\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(kube_pod_container_status_last_terminated_reason{namespace=\"$namespace\", reason=\"OOMKilled\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无OOM\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         }
@@ -1817,7 +1817,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (svc) (label_replace(label_replace(up{namespace=\"$namespace\"} == 0, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无抓取失败\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(up{namespace=\"$namespace\"} == 0, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无抓取失败\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         }
@@ -1890,7 +1890,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (svc) (label_replace(label_replace(up{namespace=\"$namespace\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview)$\")) or on() label_replace(vector(0), \"svc\", \"无在线Pod\", \"__name__\", \".*\")",
+          "expr": "sum by (svc) (label_replace(label_replace(up{namespace=\"$namespace\"}, \"svc\", \"$1\", \"pod\", \"^(.+)-[0-9a-f]{5,}-[0-9a-z]{5}$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) or on() label_replace(vector(0), \"svc\", \"无在线Pod\", \"__name__\", \".*\")",
           "legendFormat": "{{svc}}",
           "refId": "A"
         }
