@@ -39,9 +39,7 @@ spec:
             requests:                       # KEDA CPU/内存触发器的"使用率"分母，缺了触发器不生效
               cpu: 100m
               memory: 128Mi
-            limits:                          # 封顶：防止异常流量打爆节点，也是 CPU 节流/OOM 观测的前提
-              cpu: 500m
-              memory: 512Mi                  # 2026-08-21 压测事故：负载下应用内存峰值实测 286MB，256Mi 会 OOM，放宽到 2×峰值
+            # 2026-08-22 移除 limits：压测期 CPU 节流/组件重启排查中，放开封顶观测真实峰值（requests 保留，KEDA 触发器分母）
           readinessProbe:                   # 就绪探针：Pod 就绪才收流量，promote 切流的前提
             tcpSocket:                      # bookinfo 镜像无统一就绪端点，TCP 探活与镜像解耦
               port: 9080
