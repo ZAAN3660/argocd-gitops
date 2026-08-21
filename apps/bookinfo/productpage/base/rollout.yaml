@@ -13,7 +13,7 @@ metadata:
   labels:
     app: productpage
 spec:
-  replicas: 2                               # 2026-08-21 压测结论：单副本 Flask 在 ~50-100 QPS 饱和（P50 从 10ms 爆炸到 14.6s），2 副本才吃得下 100 QPS；与 KEDA minReplicaCount 对齐
+  replicas: 4                               # 2026-08-21 压测：故障延迟5s结束后请求成批涌入，单副本接受队列被打爆（70% 503）。4副本可吃下100QPS的突发到达
   revisionHistoryLimit: 2                   # 保留 2 个历史 ReplicaSet，够一次回滚
   selector:
     matchLabels:
