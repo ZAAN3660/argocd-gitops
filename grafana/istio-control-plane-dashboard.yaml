@@ -1,4 +1,5 @@
 apiVersion: v1
+kind: ConfigMap
 data:
   istio-control-plane-dashboard.json: |
     {
@@ -13,8 +14,8 @@ data:
                 "y": 0
              },
              "id": 1,
-             "panels": [ ],
-             "title": "Deployed Versions",
+             "panels": [],
+             "title": "部署版本",
              "type": "row"
           },
           {
@@ -22,7 +23,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Version number of each running instance",
+             "description": "- **是什么**：集群中 istiod 的构建版本。\n- **怎么读**：正常只有一个版本；升级期间新旧短暂并存，升级完成后消失。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -42,7 +43,7 @@ data:
              "interval": "5s",
              "options": {
                 "legend": {
-                   "calcs": [ ],
+                   "calcs": [],
                    "displayMode": "list"
                 }
              },
@@ -57,7 +58,7 @@ data:
                    "legendFormat": "Version ({{tag}})"
                 }
              ],
-             "title": "Pilot Versions",
+             "title": "istiod 版本",
              "type": "timeseries"
           },
           {
@@ -69,8 +70,8 @@ data:
                 "y": 1
              },
              "id": 3,
-             "panels": [ ],
-             "title": "Resource Usage",
+             "panels": [],
+             "title": "资源占用",
              "type": "row"
           },
           {
@@ -78,7 +79,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Memory usage of each running instance",
+             "description": "- **是什么**：istiod 进程内存（容器工作集 + Go 堆/栈）。\n- **怎么读**：工作集长期逼近 limit 有 OOM 风险；堆缓慢上涨常见于高频配置变更。\n- **异常特征**：曲线阶梯式上涨不回落。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -141,7 +142,7 @@ data:
                    "legendFormat": "Heap (Allocated) ({{pod}})"
                 }
              ],
-             "title": "Memory Usage",
+             "title": "内存占用",
              "type": "timeseries"
           },
           {
@@ -149,7 +150,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Details about memory allocations",
+             "description": "- **是什么**：Go 运行时的内存分配速率。\n- **怎么读**：突增伴随推送耗时升高，通常是配置变更或连接风暴；长期上升不回落疑似泄漏。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -214,7 +215,7 @@ data:
                    "legendFormat": "Objects ({{pod}})"
                 }
              ],
-             "title": "Memory Allocations",
+             "title": "内存分配速率",
              "type": "timeseries"
           },
           {
@@ -222,7 +223,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "CPU usage of each running instance",
+             "description": "- **是什么**：istiod 容器 CPU 消耗（核）。\n- **怎么读**：常态远低于 1 核；持续高且推送变慢时考虑增加 istiod 副本。\n- **异常特征**：与推送耗时同步恶化。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -260,7 +261,7 @@ data:
                    "legendFormat": "Container ({{pod}})"
                 }
              ],
-             "title": "CPU Usage",
+             "title": "CPU 使用",
              "type": "timeseries"
           },
           {
@@ -268,7 +269,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Goroutine count for each running instance",
+             "description": "- **是什么**：istiod 的 Go 协程数量。\n- **怎么读**：随负载波动正常；只涨不落是协程泄漏的典型信号。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -306,7 +307,7 @@ data:
                    "legendFormat": "Goroutines ({{pod}})"
                 }
              ],
-             "title": "Goroutines",
+             "title": "Goroutine 数量",
              "type": "timeseries"
           },
           {
@@ -318,8 +319,8 @@ data:
                 "y": 3
              },
              "id": 8,
-             "panels": [ ],
-             "title": "Push Information",
+             "panels": [],
+             "title": "配置下发（xDS 推送）",
              "type": "row"
           },
           {
@@ -485,7 +486,7 @@ data:
              "interval": "15s",
              "options": {
                 "legend": {
-                   "calcs": [ ],
+                   "calcs": [],
                    "displayMode": "list"
                 }
              },
@@ -500,15 +501,16 @@ data:
                    "legendFormat": "{{type}}"
                 }
              ],
-             "title": "XDS Pushes",
-             "type": "timeseries"
+             "title": "xDS 推送速率（按类型）",
+             "type": "timeseries",
+             "description": "- **是什么**：CDS/EDS/LDS/RDS/SDS 各类 xDS 的推送速率。\n- **怎么读**：改路由/规则触发 CDS/LDS/RDS，Pod 扩缩触发 EDS，证书轮换触发 SDS；改完配置看这里确认推送发生。"
           },
           {
              "datasource": {
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Size of each xDS push.\n",
+             "description": "- **是什么**：istiod 观察到的 K8s 事件、配置事件与推送触发源。\n- **怎么读**：平静期接近 0；风暴说明集群或配置在大幅变化。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -562,7 +564,7 @@ data:
                    "legendFormat": "Push {{type}}"
                 }
              ],
-             "title": "Events",
+             "title": "事件与推送触发源",
              "type": "timeseries"
           },
           {
@@ -570,7 +572,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Total number of XDS connections\n",
+             "description": "- **是什么**：与 istiod 保持 gRPC 长连接的代理（sidecar/网关）数量。\n- **怎么读**：应≈网格内代理总数（当前 11）；骤降=代理大面积断开，常与证书或网络问题有关。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -616,7 +618,7 @@ data:
                    "legendFormat": "Connections (server reported)"
                 }
              ],
-             "title": "Connections",
+             "title": "在线代理连接数",
              "type": "timeseries"
           },
           {
@@ -624,7 +626,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Number of push errors. Many of these are at least potentional fatal and should be explored in-depth via Istiod logs.\nNote: metrics here do not use rate() to avoid missing transition from \"No series\"; series are not reported if there are no errors at all.\n",
+             "description": "- **是什么**：xDS 被代理拒绝的次数与 istiod 内部错误。\n- **怎么读**：正常为 0；rejects>0 常见于 EnvoyFilter 写错或配置冲突，需结合 istiod 日志定位是哪个代理拒绝。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -670,7 +672,7 @@ data:
                    "legendFormat": "Internal Errors"
                 }
              ],
-             "title": "Push Errors",
+             "title": "推送错误",
              "type": "timeseries"
           },
           {
@@ -678,7 +680,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Count of active and pending proxies managed by each instance.\nPending is expected to converge to zero.\n",
+             "description": "- **是什么**：一次 xDS 推送从开始到完成的耗时分布（热力图，单位秒）。\n- **怎么读**：反映配置多快送达代理；P99 进入秒级就偏慢，会拖慢故障恢复（如扩缩容后的流量切换）。\n- **异常特征**：整体色带向上漂移。",
              "gridPos": {
                 "h": 10,
                 "w": 8,
@@ -717,7 +719,7 @@ data:
                    "legendFormat": "{{le}}"
                 }
              ],
-             "title": "Push Time",
+             "title": "推送耗时分布",
              "type": "heatmap"
           },
           {
@@ -725,7 +727,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Size of each xDS push.\n",
+             "description": "- **是什么**：单次推送的配置体量分布（热力图）。\n- **怎么读**：剧增说明个别代理被下发海量配置，典型场景是某服务 Endpoint 爆炸。",
              "gridPos": {
                 "h": 10,
                 "w": 8,
@@ -764,7 +766,7 @@ data:
                    "legendFormat": "{{le}}"
                 }
              ],
-             "title": "Push Size",
+             "title": "推送配置大小",
              "type": "heatmap"
           },
           {
@@ -776,8 +778,8 @@ data:
                 "y": 100
              },
              "id": 15,
-             "panels": [ ],
-             "title": "Webhooks",
+             "panels": [],
+             "title": "校验与注入",
              "type": "row"
           },
           {
@@ -785,7 +787,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Rate of XDS push operations, by type. This is incremented on a per-proxy basis.\n",
+             "description": "- **是什么**：istiod 对下发配置的校验通过/失败速率。\n- **怎么读**：failed>0 说明有配置被拒收（如无效 EnvoyFilter）；改完配置看这里确认是否被接受。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -805,7 +807,7 @@ data:
              "interval": "5s",
              "options": {
                 "legend": {
-                   "calcs": [ ],
+                   "calcs": [],
                    "displayMode": "list"
                 }
              },
@@ -828,7 +830,7 @@ data:
                    "legendFormat": "Failure"
                 }
              ],
-             "title": "Validation",
+             "title": "配置校验",
              "type": "timeseries"
           },
           {
@@ -836,7 +838,7 @@ data:
                 "type": "datasource",
                 "uid": "-- Mixed --"
              },
-             "description": "Size of each xDS push.\n",
+             "description": "- **是什么**：sidecar 注入成功/失败速率。\n- **怎么读**：failure>0 时新 Pod 起不来；常见原因：命名空间未打注入标签、Pod 注解与注入策略冲突。",
              "fieldConfig": {
                 "defaults": {
                    "custom": {
@@ -856,7 +858,7 @@ data:
              "interval": "5s",
              "options": {
                 "legend": {
-                   "calcs": [ ],
+                   "calcs": [],
                    "displayMode": "list"
                 }
              },
@@ -879,7 +881,7 @@ data:
                    "legendFormat": "Failure"
                 }
              ],
-             "title": "Injection",
+             "title": "Sidecar 注入",
              "type": "timeseries"
           }
        ],
@@ -899,10 +901,9 @@ data:
           "to": "now"
        },
        "timezone": "utc",
-       "title": "Istio Control Plane Dashboard",
+       "title": "Istio / 控制面",
        "uid": "1813f692a8e4ac77155348d4c7d2fba8"
     }
-kind: ConfigMap
 metadata:
   name: istio-control-plane-dashboard
   namespace: monitoring
