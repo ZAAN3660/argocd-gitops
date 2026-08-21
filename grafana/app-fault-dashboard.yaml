@@ -427,33 +427,7 @@
             ]
           },
           "unit": "reqps"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byRefId",
-              "options": "A"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "调用方（客户端）上报"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byRefId",
-              "options": "B"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "服务方（服务端）上报"
-              }
-            ]
-          }
-        ]
+        }
       },
       "gridPos": {
         "h": 8,
@@ -479,12 +453,12 @@
       "targets": [
         {
           "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
-          "legendFormat": "调用方5xx(source)",
+          "legendFormat": "调用方（客户端）上报",
           "refId": "A"
         },
         {
           "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
-          "legendFormat": "服务方5xx(destination)",
+          "legendFormat": "服务方（服务端）上报",
           "refId": "B"
         }
       ],
@@ -688,8 +662,7 @@
               }
             ]
           },
-          "unit": "ms",
-          "displayName": "{{reporter}} · {{destination_service_name}}"
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -718,7 +691,7 @@
       "targets": [
         {
           "expr": "(label_replace(label_replace(histogram_quantile(0.99, sum by (le, reporter, destination_service_name) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))), \"reporter\", \"服务方\", \"reporter\", \"destination\"), \"reporter\", \"调用方\", \"reporter\", \"source\")) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
-          "legendFormat": "P99·{{reporter}}",
+          "legendFormat": "{{reporter}} · {{destination_service_name}}",
           "refId": "A"
         }
       ],
@@ -763,8 +736,7 @@
               }
             ]
           },
-          "unit": "ms",
-          "displayName": "{{reporter}} · {{destination_service_name}}"
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -792,7 +764,7 @@
       "targets": [
         {
           "expr": "(label_replace(label_replace(histogram_quantile(0.50, sum by (le, reporter, destination_service_name) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))), \"reporter\", \"服务方\", \"reporter\", \"destination\"), \"reporter\", \"调用方\", \"reporter\", \"source\")) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
-          "legendFormat": "P50·{{reporter}}",
+          "legendFormat": "{{reporter}} · {{destination_service_name}}",
           "refId": "A"
         }
       ],
