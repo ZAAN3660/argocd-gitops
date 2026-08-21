@@ -106,7 +106,7 @@
       },
       "targets": [
         {
-          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])), 0.001)) or vector(0)",
           "legendFormat": "5xx%",
           "refId": "A"
         }
@@ -170,7 +170,7 @@
       },
       "targets": [
         {
-          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "expr": "(100 * sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])), 0.001)) or vector(0)",
           "legendFormat": "5xx%",
           "refId": "A"
         }
@@ -234,7 +234,7 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "失败 req/s",
           "refId": "A"
         }
@@ -294,7 +294,7 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_flags=~\"UO|UH\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags=~\"UO|UH\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "UO|UH req/s",
           "refId": "A"
         }
@@ -380,7 +380,7 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_flags, reporter) (rate(istio_requests_total{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_flags!=\"-\"}[$__rate_interval]))) or on() label_replace(label_replace(vector(0), \"response_flags\", \"无异常\", \"__name__\", \".*\"), \"reporter\", \"—\", \"__name__\", \".*\")",
+          "expr": "(sum by (response_flags, reporter) (rate(istio_requests_total{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags!=\"-\"}[$__rate_interval]))) or on() label_replace(label_replace(vector(0), \"response_flags\", \"无异常\", \"__name__\", \".*\"), \"reporter\", \"—\", \"__name__\", \".*\")",
           "legendFormat": "{{response_flags}}·{{reporter}}",
           "refId": "A"
         }
@@ -453,12 +453,12 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "调用方5xx(source)",
           "refId": "A"
         },
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "被调方5xx(destination)",
           "refId": "B"
         }
@@ -531,7 +531,7 @@
       },
       "targets": [
         {
-          "expr": "label_replace((sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\"), \"response_code\", \"无响应(0)\", \"response_code\", \"^0$\")",
+          "expr": "label_replace((sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\"), \"response_code\", \"无响应(0)\", \"response_code\", \"^0$\")",
           "legendFormat": "{{response_code}}",
           "refId": "A"
         }
@@ -604,7 +604,7 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_flags) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_flags\", \"无注入/限流\", \"__name__\", \".*\")",
+          "expr": "(sum by (response_flags) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_flags\", \"无注入/限流\", \"__name__\", \".*\")",
           "legendFormat": "{{response_flags}}",
           "refId": "A"
         }
@@ -1274,7 +1274,7 @@
           "refId": "A"
         },
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_code=\"429\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\", response_code=\"429\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "429@被调方",
           "refId": "B"
         }
@@ -1818,7 +1818,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.99, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.99, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
           "legendFormat": "P99·{{reporter}}",
           "refId": "A"
         }
@@ -1891,7 +1891,7 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.50, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.50, sum by (le, reporter) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=\"$namespace\", destination_service_name=~\"${svc:regex}\"}[$__rate_interval])))) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
           "legendFormat": "P50·{{reporter}}",
           "refId": "A"
         }
@@ -2644,25 +2644,31 @@
           "selected": true,
           "text": [
             "details",
+            "details-canary",
             "ratings",
-            "reviews",
-            "productpage"
+            "ratings-canary",
+            "productpage",
+            "productpage-preview",
+            "reviews"
           ],
           "value": [
             "details",
+            "details-canary",
             "ratings",
-            "reviews",
-            "productpage"
+            "ratings-canary",
+            "productpage",
+            "productpage-preview",
+            "reviews"
           ]
         },
-        "description": "语义说明：canonical 服务名（canary/preview 后缀已归一化），选中一个即同时覆盖 stable 与 canary Pod。",
+        "description": "K8s服务名（含灰度变体）。灰度期间双账本服务名不对称：调用方账记\"所拨的服务\"、被调方账记\"Pod所属的服务\"，建议把一个服务及其 -canary/-preview 变体都勾上以覆盖双视角。",
         "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "svc",
         "options": [],
         "query": {
-          "query": "label_values(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"unknown\"}, destination_canonical_service)",
+          "query": "label_values(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_service_name!=\"unknown\"}, destination_service_name)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
