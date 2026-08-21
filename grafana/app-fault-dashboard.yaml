@@ -55,7 +55,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：每个应用在调用方视角的 5xx 率。\n- **怎么用**：谁冲到 100% 谁就是元凶；配合服务方视角图区分\"请求没到\"还是\"应用真报错\"。",
+      "description": "- **是什么**：每个应用在调用方视角的 5xx 率（含调用方侧被中止的请求）。\n- **怎么用**：谁冲到 100% 谁就是元凶；配合服务方视角图区分\"请求没到\"还是\"应用真报错\"。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -106,8 +106,8 @@
       },
       "targets": [
         {
-          "expr": "(100 * sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\"}[$__rate_interval])), 0.001)) or vector(0)",
-          "legendFormat": "{{destination_canonical_service}}",
+          "expr": "(100 * sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"source\", response_code=~\"5..\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) / clamp_min(sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"source\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")), 0.001)) or vector(0)",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
@@ -170,8 +170,8 @@
       },
       "targets": [
         {
-          "expr": "(100 * sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"destination\", response_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"destination\"}[$__rate_interval])), 0.001)) or vector(0)",
-          "legendFormat": "{{destination_canonical_service}}",
+          "expr": "(100 * sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"destination\", response_code=~\"5..\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")) / clamp_min(sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"destination\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\")), 0.001)) or vector(0)",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
@@ -234,8 +234,8 @@
       },
       "targets": [
         {
-          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_code=~\"4..|5..\"}[$__rate_interval]))) or vector(0)",
-          "legendFormat": "{{destination_canonical_service}}",
+          "expr": "(sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"source\", response_code=~\"4..|5..\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\"))) or vector(0)",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
@@ -294,8 +294,8 @@
       },
       "targets": [
         {
-          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_flags=~\"UO|UH\"}[$__rate_interval]))) or vector(0)",
-          "legendFormat": "{{destination_canonical_service}}",
+          "expr": "(sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"source\", response_flags=~\"UO|UH\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\"))) or vector(0)",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
@@ -320,7 +320,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：每个应用带异常标志（response_flags）的请求速率。\n- **怎么用**：异常集中在哪个应用一眼可见；具体标志类型看本行右侧两个面板。",
+      "description": "- **是什么**：每个应用带异常标志（response_flags）的请求速率。**已纳入调用方侧被中止的请求（命名空间 unknown）**。\n- **怎么用**：异常集中在哪个应用一眼可见；具体标志类型看本行右侧面板。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -380,8 +380,8 @@
       },
       "targets": [
         {
-          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_flags!=\"-\"}[$__rate_interval]))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无异常\", \"__name__\", \".*\")",
-          "legendFormat": "{{destination_canonical_service}}",
+          "expr": "(sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"source\", response_flags!=\"-\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\"))) or on() label_replace(vector(0), \"svc\", \"无异常\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
@@ -452,12 +452,12 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=~\"$namespace|unknown\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "调用方（客户端）上报",
           "refId": "A"
         },
         {
-          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=~\"$namespace|unknown\", response_code=~\"5..\"}[$__rate_interval]))) or vector(0)",
           "legendFormat": "服务方（服务端）上报",
           "refId": "B"
         }
@@ -543,7 +543,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：每个应用被注入（FI=故障/DI=延迟）或被限流（RL）命中的速率。\n- **怎么用**：注入实验时看哪个应用正在被注入。",
+      "description": "- **是什么**：每个应用被注入（FI=故障/DI=延迟）或被限流（RL）命中的速率。\n- **注意**：注入中止发生在调用方 sidecar，这类请求记的命名空间是 unknown、canonical 也是 unknown——所以本面板不按 canonical、按所拨的短名归属。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -603,8 +603,8 @@
       },
       "targets": [
         {
-          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"source\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无注入/限流\", \"__name__\", \".*\")",
-          "legendFormat": "{{destination_canonical_service}}",
+          "expr": "(sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"source\", response_flags=~\"FI|DI|RL\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\"))) or on() label_replace(vector(0), \"svc\", \"无注入/限流\", \"__name__\", \".*\")",
+          "legendFormat": "{{svc}}",
           "refId": "A"
         }
       ],
@@ -1368,7 +1368,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：EnvoyFilter 本地限流的拦截计数与上报数据里的 429。\n- **正常**：接近 0。\n- **异常**：限流拦截与 429 应同步抬升；差值=「限流前就失败」的请求。这是【服务方侧】的拒绝（429 记在服务方（服务端）上报数据里），与熔断（调用方侧拒绝）方向相反——对比看能分清拒绝发生在哪一侧。",
+      "description": "- **是什么**：本地限流（EnvoyFilter）的实际触发速率 + 每个应用被记下 429 的速率。\n- **注意**：RL 中止发生在调用方 sidecar（命名空间 unknown），429 面板同样纳入 unknown 归属。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1433,8 +1433,8 @@
           "refId": "A"
         },
         {
-          "expr": "(sum by (destination_canonical_service) (rate(istio_requests_total{destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\", reporter=\"destination\", response_code=\"429\"}[$__rate_interval]))) or vector(0)",
-          "legendFormat": "{{destination_canonical_service}}",
+          "expr": "(sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=~\"source|destination\", response_code=\"429\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\"))) or vector(0)",
+          "legendFormat": "{{svc}}",
           "refId": "B"
         }
       ],
@@ -2648,7 +2648,7 @@
       "id": 112,
       "title": "5xx速率·按服务（调用方视角）",
       "type": "timeseries",
-      "description": "- **是什么**：每个应用在调用方视角被记下 5xx 的速率。固定展示全部应用，用于 5xx 风暴时定位元凶。\n- **怎么用**：风暴时冲得最高的那条线就是问题应用——调用方 envoy 对它发起的请求在失败（熔断/连接池满/无健康上游），配合故障信号面板的 UO/UH/UC 确认失败原因。",
+      "description": "- **是什么**：每个应用在调用方视角被记下 5xx 的速率（含调用方侧被注入中止的 503）。固定展示全部应用，用于 5xx 风暴时定位元凶。\n- **怎么用**：风暴时冲得最高的那条线就是问题应用——调用方 envoy 对它发起的请求在失败（熔断/连接池满/无健康上游），配合故障信号面板的 UO/UH/UC 确认失败原因。",
       "targets": [
         {
           "datasource": {
@@ -2657,8 +2657,8 @@
           },
           "editorMode": "code",
           "refId": "A",
-          "expr": "sum by (destination_canonical_service) (rate(istio_requests_total{reporter=\"source\", response_code=~\"5..\", destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\"}[$__rate_interval]))",
-          "legendFormat": "{{destination_canonical_service}}"
+          "expr": "(sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"source\", response_code=~\"5..\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\"))) or vector(0)",
+          "legendFormat": "{{svc}}"
         }
       ]
     },
@@ -2712,7 +2712,7 @@
       "id": 113,
       "title": "5xx速率·按服务（服务方视角）",
       "type": "timeseries",
-      "description": "- **是什么**：每个应用在服务方视角被记下 5xx 的速率（=应用自己真实返回了 5xx）。\n- **怎么用**：本面板与左图对比——两边同时冲高=应用本身在报错（500）；只有左图冲高=请求根本没到达应用（503 类），元凶是左图里冲高的目标应用。",
+      "description": "- **是什么**：每个应用在服务方视角被记下 5xx 的速率（=应用自己真实返回了 5xx，注入中止的请求到不了服务方，不在这里）。\n- **怎么用**：本面板与左图对比——两边同时冲高=应用本身在报错（500）；只有左图冲高=请求根本没到达应用（503 类），元凶是左图里冲高的目标应用。",
       "targets": [
         {
           "datasource": {
@@ -2721,8 +2721,8 @@
           },
           "editorMode": "code",
           "refId": "A",
-          "expr": "sum by (destination_canonical_service) (rate(istio_requests_total{reporter=\"destination\", response_code=~\"5..\", destination_workload_namespace=~\"$namespace\", destination_canonical_service!=\"\"}[$__rate_interval]))",
-          "legendFormat": "{{destination_canonical_service}}"
+          "expr": "(sum by (svc) (label_replace(label_replace(rate(istio_requests_total{destination_workload_namespace=~\"$namespace|unknown\", destination_service_name!=\"unknown\", reporter=\"destination\", response_code=~\"5..\"}[$__rate_interval]), \"svc\", \"$1\", \"destination_service_name\", \"^(.*)$\"), \"svc\", \"$1\", \"svc\", \"^(.*)-(canary|preview|v[0-9]+)$\"))) or vector(0)",
+          "legendFormat": "{{svc}}"
         }
       ]
     },
