@@ -629,7 +629,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：每个服务「最慢 1% 请求」的延迟，按 调用方上报 vs 服务方上报 两条线对比。\n- **正常**：同一服务两条线接近=延迟就是该服务本身的速度。\n- **异常**：哪条线的延迟明显抬高，出问题的就是它——调用方线高=延迟发生在调用方侧（delay 注入/重试开销，差值≈注入量）；服务方线高=服务真的变慢。\n- **灰度注意**：灰度期间服务方线显示的是 Pod 所属服务名（如 details-canary），与调用方线（details）配对看。",
+      "description": "- **是什么**：每个服务的 P99 延迟差值 = 调用方视角 − 服务方视角（差值视图）。\n- **正常**：接近 0=两侧看到的速度一致。\n- **异常**：正差值明显=延迟/重试开销发生在调用方侧（差值≈注入的延迟量）；负差值=服务方侧更慢。\n- **盲区**：若某服务两侧都慢（两侧一致抬高，差值≈0），这条线不会暴露它——这种情况要看延迟的绝对值，告诉我一声我可以把「服务方绝对值」加成姊妹面板。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -690,12 +690,12 @@
       },
       "targets": [
         {
-          "expr": "(label_replace(label_replace(histogram_quantile(0.99, sum by (le, reporter, destination_service_name) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))), \"reporter\", \"服务方\", \"reporter\", \"destination\"), \"reporter\", \"调用方\", \"reporter\", \"source\")) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
-          "legendFormat": "{{reporter}} · {{destination_service_name}}",
+          "expr": "(histogram_quantile(0.99, sum by (destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) - histogram_quantile(0.99, sum by (destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
+          "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
       ],
-      "title": "P99 调用方 vs 服务方",
+      "title": "P99 调用方-服务方",
       "type": "timeseries"
     },
     {
@@ -703,7 +703,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：每个服务的「中位延迟」（一半请求比它快），按 调用方上报 vs 服务方上报 对比。\n- **正常**：P50 正常而 P99 拉高=只有少数请求被注入延迟/重试拖慢。\n- **异常**：P50 也拉高=全体请求都慢（服务真的变慢了）。哪条服务的线在抬，就是哪个服务出问题。",
+      "description": "- **是什么**：每个服务的 P50 延迟差值 = 调用方视角 − 服务方视角。\n- **正常**：接近 0。\n- **异常**：P50 也有明显正差值=全体请求都在调用方侧被拖慢；P50≈0 而 P99 正差值大=只有少数慢请求（重试/注入只打到一部分流量）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -763,12 +763,12 @@
       },
       "targets": [
         {
-          "expr": "(label_replace(label_replace(histogram_quantile(0.50, sum by (le, reporter, destination_service_name) (rate(istio_request_duration_milliseconds_bucket{reporter=~\"source|destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))), \"reporter\", \"服务方\", \"reporter\", \"destination\"), \"reporter\", \"调用方\", \"reporter\", \"source\")) or on() label_replace(vector(0), \"reporter\", \"无流量\", \"__name__\", \".*\")",
-          "legendFormat": "{{reporter}} · {{destination_service_name}}",
+          "expr": "(histogram_quantile(0.50, sum by (destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) - histogram_quantile(0.50, sum by (destination_canonical_service) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"destination_canonical_service\", \"无流量\", \"__name__\", \".*\")",
+          "legendFormat": "{{destination_canonical_service}}",
           "refId": "A"
         }
       ],
-      "title": "P50 调用方 vs 服务方",
+      "title": "P50 调用方-服务方",
       "type": "timeseries"
     },
     {
