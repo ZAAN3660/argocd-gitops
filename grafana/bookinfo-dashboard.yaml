@@ -420,14 +420,14 @@
       },
       "targets": [
         {
-          "expr": "(sum by (pod) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"pod\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(sum by (pod) (rate(istio_requests_total{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"pod\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
       "title": "QPS by Pod（灰度期间看新旧 Pod 流量切分）",
       "type": "timeseries",
-      "description": "- **是什么**：每个 Pod 收到的 QPS。\n- **怎么读**：灰度发布期间看新旧 Pod 的流量切分进度，核对是否符合预期权重。\n- **异常特征**：个别 Pod 流量恒为 0=端点异常或权重配置错误。"
+      "description": "- **是什么**：每个 Pod 收到的 QPS。\n- **怎么读**：灰度发布期间看新旧 Pod 的流量切分进度，核对是否符合预期权重。\n- **异常特征**：个别 Pod 流量恒为 0=端点异常或权重配置错误。\n- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——裸 pod 标签由发出指标的那一侧 sidecar 贴上：source 账上的 pod=调用方 Pod（你会在面板里看到 productpage 等上游），只有 destination 账上的 pod 才指向被选服务自己的 Pod。"
     },
     {
       "datasource": {
@@ -663,14 +663,14 @@
       },
       "targets": [
         {
-          "expr": "(histogram_quantile(0.99, sum by (le, pod) (rate(istio_request_duration_milliseconds_bucket{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"pod\", \"无数据\", \"__name__\", \".*\")",
+          "expr": "(histogram_quantile(0.99, sum by (le, pod) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_workload_namespace=\"$namespace\", destination_service=~\"$service\"}[$__rate_interval])))) or on() label_replace(vector(0), \"pod\", \"无数据\", \"__name__\", \".*\")",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
       "title": "P99 by Pod（定位慢 Pod）",
       "type": "timeseries",
-      "description": "- **是什么**：各 Pod 的 P99 延迟。\n- **怎么读**：定位「慢 Pod」——个别实例拖后腿的场景。\n- **异常特征**：单 Pod 明显慢=该实例资源争抢或宿主机问题，配合故障大盘 CPU 面板看。"
+      "description": "- **是什么**：各 Pod 的 P99 延迟。\n- **怎么读**：定位「慢 Pod」——个别实例拖后腿的场景。\n- **异常特征**：单 Pod 明显慢=该实例资源争抢或宿主机问题，配合故障大盘 CPU 面板看。\n- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——裸 pod 标签由发出指标的那一侧 sidecar 贴上：source 账上的 pod=调用方 Pod（你会在面板里看到 productpage 等上游），只有 destination 账上的 pod 才指向被选服务自己的 Pod。"
     },
     {
       "datasource": {
