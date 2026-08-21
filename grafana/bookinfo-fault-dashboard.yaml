@@ -5,14 +5,11 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
+  "id": 840129040195584,
   "links": [],
   "liveNow": false,
   "panels": [
     {
-      "id": 107,
-      "type": "row",
-      "title": "📖 使用说明",
       "collapsed": true,
       "gridPos": {
         "h": 1,
@@ -20,6 +17,7 @@
         "x": 0,
         "y": 0
       },
+      "id": 107,
       "panels": [
         {
           "gridPos": {
@@ -35,7 +33,9 @@
           },
           "type": "text"
         }
-      ]
+      ],
+      "title": "📖 使用说明",
+      "type": "row"
     },
     {
       "collapsed": false,
@@ -55,7 +55,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：调用方自己记录的 5xx 比例。\n- **怎么读**：>0 = 调用方发出的请求有失败。\n- **异常特征**：熔断、故障注入 abort、超时发生时升高。\n- **为什么**：这些错误发生在调用方 sidecar，只记在调用方账上——若本面板高而右侧「被调方视角」低，说明大量请求在半路死亡。",
+      "description": "- **是什么**：调用方自己记录的 5xx 比例。\n- **正常**：0。\n- **异常**：>0 且右侧「被调方视角」低=大量请求在半路死亡（这些错误发生在调用方 sidecar，只记在调用方账上）；熔断、故障注入 abort、超时发生时升高。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -119,7 +119,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：被调方实际收到的请求里 5xx 的占比。\n- **怎么读**：>0 = 被调方自己真的返回了错误。\n- **异常特征**：与左侧面板差距大 = 大量请求从没到达被调方（熔断/注入/超时把它们挡在了门口）。",
+      "description": "- **是什么**：被调方实际收到的请求里 5xx 的占比。\n- **正常**：0。\n- **异常**：>0=被调方自己真的返回了错误；与左侧差距大=大量请求没到被调方（熔断/注入/超时挡在门口）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -183,7 +183,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：调用方视角 4xx+5xx 失败请求总数（每秒）。\n- **怎么读**：突增 = 有故障正在发生。\n- **异常特征**：数值高但说不清原因时，去「🚨 故障信号」行看 response_flags 分布。",
+      "description": "- **是什么**：调用方视角 4xx+5xx 失败请求总数（每秒）。\n- **正常**：接近 0。\n- **异常**：突增=有故障正在发生；说不清原因时去「🚨 故障信号」行看 response_flags 分布。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -247,7 +247,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：被熔断挡下的请求速率：UO=熔断/队列溢出，UH=无健康上游。\n- **怎么读**：非 0 = 熔断正在拒绝流量。\n- **注意**：这常常是防御生效的信号而非坏事——关键看拒绝的同时下游是否保住了。",
+      "description": "- **是什么**：被熔断挡下的请求速率：UO=熔断/队列溢出，UH=无健康上游。\n- **正常**：0。\n- **异常**：非 0=熔断正在拒绝流量。注意：这常常是防御生效的信号而非坏事——关键看拒绝的同时下游是否保住了。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -320,7 +320,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：每类「非正常结局」的请求速率，按原因+视角堆叠。图例里 source=调用方账，destination=被调方账。\n- **怎么读**：先看出现了哪几种颜色（原因），再看来自哪个视角。\n- **异常特征**：出现 UO/UH/URX/NC = 依赖故障；FI/DI = 你的注入实验生效了。标志含义见顶部说明的速查表。",
+      "description": "- **是什么**：每类「非正常结局」的请求速率，按原因+视角堆叠（source=调用方账，destination=被调方账）。\n- **正常**：全部接近 0。\n- **异常**：UO/UH/URX/NC=依赖故障；FI/DI=你的注入实验生效。标志含义见顶部说明的速查表。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -393,7 +393,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：同一个 5xx 在两侧账本上各记了多少——本大盘最核心的诊断图。\n- **怎么读**：两条线分开 = 错误发生在半路（熔断/注入/超时，只进调用方账）；两条线重合 = 被调方自己真实返回了 5xx。\n- **异常特征**：做注入实验时你会看到调用方线抬升、被调方线不动。",
+      "description": "- **是什么**：同一个 5xx 在两侧账本上各记了多少——本大盘最核心的诊断图。\n- **正常**：两条线都接近 0。\n- **异常**：两条线分开=错误发生在半路（熔断/注入/超时，只进调用方账）；两条线重合=被调方自己真实返回了 5xx。注入实验时调用方线抬升、被调方线不动。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -471,7 +471,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：错误请求按 HTTP 状态码拆分（调用方视角，堆叠）。\n- **怎么读**：429=被本地限流拦截；503=上游不可用；500=应用内部出错；404=路由/版本问题。\n- **异常特征**：做限流压测时 429 柱会涨。",
+      "description": "- **是什么**：错误请求按 HTTP 状态码拆分（调用方视角，堆叠）。\n- **正常**：接近 0；\"无响应(0)\"=未收到响应的请求（断连/超时）。\n- **异常**：429=被本地限流拦截；503=上游不可用；500=应用内部出错；404=路由/版本问题。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -531,7 +531,7 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\")",
+          "expr": "label_replace((sum by (response_code) (rate(istio_requests_total{reporter=\"source\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"${svc:regex}\", response_code=~\"4..|5..\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\"), \"response_code\", \"无响应(0)\", \"response_code\", \"^0$\")",
           "legendFormat": "{{response_code}}",
           "refId": "A"
         }
@@ -544,7 +544,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：故障注入/限流是否真的触发了——做实验时优先盯这张图。\n- **怎么读**：注入 abort 时 FI 线抬升；注入 delay 时 DI 线抬升；压测超过限流阈值时 RL 线抬升。\n- **异常特征**：实验开始后对应线不动 = 注入配置没生效，先去查 VirtualService/EnvoyFilter。",
+      "description": "- **是什么**：故障注入/限流是否真的触发了——做实验时优先盯这张图。\n- **正常**：全部接近 0。\n- **异常**：实验开始后对应线不动=注入配置没生效（查 VirtualService/EnvoyFilter）；注入 abort 时 FI 抬升、delay 时 DI 抬升、压测超限流阈值时 RL 抬升。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -630,7 +630,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：调用方 sidecar 到所选服务的连接池：活跃连接 vs 活跃请求。\n- **怎么读**：两条线的差值可近似看成「空闲连接」（HTTP/1 较准；HTTP/2 多路复用下不成立，一个连接可扛多个请求）。\n- **异常特征**：连接数逼近 DestinationRule 里 connectionPool 上限时，右边「Pending 溢出」面板会开始拒绝请求。",
+      "description": "- **是什么**：调用方 sidecar 到所选服务的连接池：活跃连接 vs 活跃请求。\n- **正常**：随流量涨落；差值≈空闲连接（HTTP/1 较准；HTTP/2 多路复用下不成立）。\n- **异常**：连接数逼近 connectionPool 上限时，「Pending 溢出」面板开始拒绝请求。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -708,7 +708,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：Pending 队列：排队等待可用连接的请求数 + 因队列满被拒绝的速率。\n- **怎么读**：排队中 >0 = 连接池紧张、请求在等；溢出 >0 = 熔断开始拒绝新请求，故障已经升级。\n- **为什么**：连接池上限来自 DestinationRule 的 connectionPool.http.maxPendingRequests 等配置。",
+      "description": "- **是什么**：Pending 队列：排队等待可用连接的请求数 + 因队列满被拒绝的速率。\n- **正常**：排队 0、溢出 0（连接池够用）。\n- **异常**：排队>0=连接池紧张；溢出>0=熔断开始拒绝新请求、故障已升级。上限来自 DestinationRule 的 connectionPool.http.maxPendingRequests。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -786,7 +786,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：三类连接层故障速率：建连失败、建连超时、带活跃请求被销毁的连接。\n- **怎么读**：非零 = 网络/上游问题；「带请求销毁」突增通常伴随实例被驱逐或连接被熔断器切断。\n- **为什么**：这些是调用方 sidecar 视角的连接事件，先于应用层 5xx 出现。",
+      "description": "- **是什么**：三类连接层故障速率：建连失败、建连超时、带活跃请求被销毁的连接。\n- **正常**：接近 0。\n- **异常**：非零=网络/上游问题；「带请求销毁」突增通常伴随实例被驱逐或连接被熔断器切断。这是调用方 sidecar 视角的连接事件，先于应用层 5xx 出现。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -869,7 +869,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：被调方 Pod 的入站连接与正在处理的请求数（按 Pod）。\n- **怎么读**：做 delay 注入实验时活跃请求会明显堆积（请求滞留）；做 abort 实验时此图无感（请求根本没到）——「有感 vs 无感」恰好能帮你区分注入的是哪种故障。\n- **异常特征**：活跃请求堆积而上游 QPS 不涨 = 应用变慢或故障注入生效。",
+      "description": "- **是什么**：被调方 Pod 的入站连接与正在处理的请求数（按 Pod）。\n- **正常**：随流量起伏。\n- **异常**：活跃请求堆积而上游 QPS 不涨=应用变慢或故障注入生效。做 delay 注入时请求滞留堆积；做 abort 注入时无感（请求根本没到）——「有感 vs 无感」帮你区分注入的是哪种故障。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -960,7 +960,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：熔断器三种资源的实时打开数：连接（cx）/请求（rq）/排队（pending）。\n- **怎么读**：0=关闭（健康）；>0=熔断打开，正在拒绝。\n- **异常特征**：切到练手档（1 连接 / 连续 1 个 5xx 驱逐）做实验时，能看到这里瞬间跳变——这就是熔断生效的直接证据。\n- **为什么**：阈值来自 DestinationRule 的 connectionPool 配置。",
+      "description": "- **是什么**：熔断器三种资源的实时打开数：连接（cx）/请求（rq）/排队（pending）。\n- **正常**：全 0（熔断关闭=健康）。\n- **异常**：>0=熔断打开、正在拒绝。切到练手档（1 连接/连续 1 个 5xx 驱逐）实验时这里会瞬间跳变——熔断生效的直接证据。阈值来自 DestinationRule 的 connectionPool。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1043,7 +1043,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：异常驱逐（Outlier Detection）：当前被踢出的实例数 + 驱逐事件速率。\n- **怎么读**：「驱逐中」>0 = 有实例被判为异常并从负载均衡里摘除。\n- **异常特征**：配合重试面板看：驱逐发生时调用方会把流量切到其他实例，重试与驱逐曲线常同时出现。\n- **为什么**：阈值来自 DestinationRule 的 outlierDetection 配置。",
+      "description": "- **是什么**：异常驱逐（Outlier Detection）：当前被踢出的实例数 + 驱逐事件速率。\n- **正常**：驱逐中=0。\n- **异常**：>0=有实例被判为异常并从负载均衡摘除；配合重试面板看——驱逐时调用方把流量切到其他实例，重试与驱逐曲线常同时出现。阈值来自 DestinationRule 的 outlierDetection。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1121,7 +1121,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：四类重试/超时速率：发起重试、重试成功、重试溢出（预算被熔断砍掉）、上游超时。\n- **怎么读**：重试>0 = 上游在失败但被重试消化；重试溢出 = 重试预算耗尽；超时对应 VirtualService 的 timeout 配置。\n- **异常特征**：练手档熔断 + retries:3 的实验里，重试和溢出会互相放大（仓库注释里写过的那个坑）。",
+      "description": "- **是什么**：四类重试/超时速率：发起重试、重试成功、重试溢出（预算被熔断砍掉）、上游超时。\n- **正常**：全部接近 0。\n- **异常**：重试>0=上游在失败但被重试消化；重试溢出=预算耗尽；超时对应 VirtualService 的 timeout。练手档熔断+retries:3 实验里重试和溢出会互相放大。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1209,7 +1209,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：EnvoyFilter 本地限流的拦截计数与请求账本里的 429。\n- **怎么读**：两条线应同步抬升；限流拦截与 429 的差值为「限流前就失败」的请求。\n- **注意**：这是【被调方侧】的拒绝（429 记在被调方账上），与熔断（调用方侧拒绝）方向相反——对比看能分清拒绝发生在哪一侧。",
+      "description": "- **是什么**：EnvoyFilter 本地限流的拦截计数与请求账本里的 429。\n- **正常**：接近 0。\n- **异常**：限流拦截与 429 应同步抬升；差值=「限流前就失败」的请求。这是【被调方侧】的拒绝（429 记在被调方账上），与熔断（调用方侧拒绝）方向相反——对比看能分清拒绝发生在哪一侧。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1300,7 +1300,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：应用容器与 istio-proxy 各自的 CPU 消耗（核数）。\n- **怎么读**：delay 注入时应用 CPU 随请求滞留抬升；abort 注入时被调方应无变化（请求没到）。\n- **为什么**：CPU 数据来自 kubelet 的 cAdvisor，不经过 Istio，任何故障注入下都照常采集——这是「应用真实感受」的窗口。",
+      "description": "- **是什么**：应用容器与 istio-proxy 各自的 CPU 消耗（核数）。\n- **正常**：随负载起伏。CPU 数据来自 kubelet 的 cAdvisor，不经过 Istio——任何故障注入下都照常采集，是「应用真实感受」的窗口。\n- **异常**：delay 注入时应用 CPU 随请求滞留抬升；abort 注入时被调方应无变化（请求没到）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1373,7 +1373,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：各容器的内存 working set。\n- **怎么读**：持续上涨且不回落 = 疑似内存泄漏。\n- **异常特征**：配合下方「OOMKilled」面板：内存顶到 limit 时容器被杀，OOMKilled 会跳 1。istio-proxy 内存异常上涨是 Istio 侧故障的线索。",
+      "description": "- **是什么**：各容器的内存 working set。\n- **正常**：平稳。\n- **异常**：持续上涨不回落=疑似内存泄漏；顶到 limit 时容器被杀（联动 OOMKilled 面板）。istio-proxy 内存异常上涨是 Istio 侧故障线索。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1459,7 +1459,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：各容器累计重启次数（来自 kube-state-metrics）。\n- **怎么读**：曲线爬升 = 崩溃循环，是全大盘最高优先级的故障信号。\n- **异常特征**：重启的是应用容器 = 应用故障；重启的是 istio-proxy = 网格故障。\n- **为什么**：这是唯一能反映「崩溃类故障」的指标，其他面板只能看到请求层结果。",
+      "description": "- **是什么**：各容器累计重启次数（来自 kube-state-metrics）。\n- **正常**：0。\n- **异常**：曲线爬升=崩溃循环，全大盘最高优先级信号。重启的是应用容器=应用故障；istio-proxy=网格故障。这是唯一能反映「崩溃类故障」的指标。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1532,7 +1532,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：容器因内存超限被 OOM Killer 杀掉的次数。\n- **怎么读**：平时为 0；变 1 及以上 = 刚发生过内存故障（容器被重建后本值保持到 Pod 重建）。\n- **异常特征**：此面板跳变的同时，「容器重启次数」和「内存」面板必然有联动。",
+      "description": "- **是什么**：容器因内存超限被 OOM Killer 杀掉的次数。\n- **正常**：0（变 1 及以上=刚发生过内存故障，值保持到 Pod 重建）。\n- **异常**：跳变时「容器重启次数」和「内存」面板必然联动。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1592,7 +1592,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：Prometheus 是否还在成功抓取每个 Pod 的 sidecar（1=正常）。\n- **怎么读**：某条线掉到 0 = 该 Pod 的指标进入监控盲区，本大盘里它的曲线会失真或消失。\n- **异常特征**：up 掉 0 本身也是故障信号：先查 Pod 是否还活着，再查 PodMonitor。",
+      "description": "- **是什么**：Prometheus 是否还在成功抓取每个 Pod 的 sidecar（1=正常）。\n- **正常**：全部为 1。\n- **异常**：某条线掉到 0=该 Pod 进入监控盲区，大盘里它的曲线会失真或消失；先查 Pod 是否活着，再查 PodMonitor。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1671,7 +1671,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：所选服务的在线 Pod 数量变化。\n- **怎么读**：观察 KEDA 缩容与 Argo Rollouts 灰度期间的副本数波动；灰度发布时曲线可能短暂 +1（canary 上线）。\n- **异常特征**：掉到 0 = 服务全灭（此时去「🚨 故障信号」看 UH 应该同时在涨）。",
+      "description": "- **是什么**：所选服务的在线 Pod 数量变化。\n- **正常**：与副本数配置一致；灰度发布时可能短暂 +1（canary 上线）；KEDA 缩容时回落。\n- **异常**：掉到 0=服务全灭（此时「🚨 故障信号」的 UH 应同时在涨）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1757,7 +1757,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：最慢 1% 请求的延迟，两侧账本各一条线。\n- **怎么读**：调用方线明显高于被调方 = 延迟发生在调用方侧（delay 注入或重试开销），差值≈注入的延迟量；两条线接近 = 服务本身真的慢。\n- **异常特征**：做 delay 注入实验时，你会看到调用方 P99 突然抬升而被调方 P99 基本不动。",
+      "description": "- **是什么**：最慢 1% 请求的延迟，两侧账本各一条线。\n- **正常**：两条线接近=服务本身的速度就是如此。\n- **异常**：调用方线明显高于被调方=延迟发生在调用方侧（delay 注入或重试开销），差值≈注入的延迟量；被调方线本身抬高=服务真的慢。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1831,7 +1831,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "- **是什么**：中位延迟（一半请求比它快），两侧账本各一条线。\n- **怎么读**：与 P99 面板配合看：P50 正常而 P99 拉高 = 只有少数请求被注入延迟/重试拖慢；P50 也拉高 = 全体请求都慢（服务真的变慢了）。",
+      "description": "- **是什么**：中位延迟（一半请求比它快），两侧账本各一条线。\n- **正常**：P50 正常而 P99 拉高=只有少数请求被注入延迟/重试拖慢。\n- **异常**：P50 也拉高=全体请求都慢（服务真的变慢了）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1917,6 +1917,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：istiod 把最新配置推送到代理的耗时（P99，秒）。\n- **正常**：毫秒级；无推送时段为空。\n- **异常**：进入秒级=配置复杂化或 istiod 过载。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1924,9 +1925,9 @@
           },
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 1,
             "fillOpacity": 10,
             "lineInterpolation": "linear",
+            "lineWidth": 1,
             "showPoints": "never"
           },
           "unit": "s"
@@ -1935,13 +1936,11 @@
       },
       "gridPos": {
         "h": 5,
+        "w": 8,
         "x": 0,
-        "y": 67,
-        "w": 8
+        "y": 67
       },
       "id": 25,
-      "title": "xDS 推送耗时 P99（秒）",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -1967,13 +1966,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：istiod 把最新配置推送到代理的耗时（P99，秒）。\n- **怎么读**：常态毫秒级；无推送时段为空属正常。\n- **异常特征**：进入秒级=配置复杂化或 istiod 过载。"
+      "title": "xDS 推送耗时 P99（秒）",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：CDS/EDS/LDS/RDS/SDS 各类型 xDS 推送速率。\n- **正常**：改路由与规则→CDS/LDS/RDS，Pod 扩缩→EDS，证书轮换→SDS——有变更才有推送。\n- **异常**：EDS 无变更地持续高发=集群端点抖动。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1981,9 +1982,9 @@
           },
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 1,
             "fillOpacity": 10,
             "lineInterpolation": "linear",
+            "lineWidth": 1,
             "showPoints": "never"
           },
           "unit": "ops"
@@ -1992,13 +1993,11 @@
       },
       "gridPos": {
         "h": 5,
+        "w": 8,
         "x": 8,
-        "y": 67,
-        "w": 8
+        "y": 67
       },
       "id": 26,
-      "title": "xDS 推送速率（按类型）",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2024,13 +2023,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：CDS/EDS/LDS/RDS/SDS 各类型 xDS 推送速率。\n- **怎么读**：改路由与规则→CDS/LDS/RDS，Pod 扩缩→EDS，证书轮换→SDS。\n- **异常特征**：EDS 无变更地持续高发=集群端点抖动。"
+      "title": "xDS 推送速率（按类型）",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：Pod 创建时 sidecar 注入失败的速率。\n- **正常**：0。\n- **异常**：>0 时新 Pod 卡在无 sidecar 状态——常见原因：命名空间未打注入标签、注入策略与 Pod 注解冲突。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2038,9 +2039,9 @@
           },
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 1,
             "fillOpacity": 10,
             "lineInterpolation": "linear",
+            "lineWidth": 1,
             "showPoints": "never"
           },
           "unit": "ops"
@@ -2049,13 +2050,11 @@
       },
       "gridPos": {
         "h": 5,
+        "w": 8,
         "x": 16,
-        "y": 67,
-        "w": 8
+        "y": 67
       },
       "id": 27,
-      "title": "Sidecar 注入失败",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2081,13 +2080,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：Pod 创建时 sidecar 注入失败的速率。\n- **怎么读**：正常为 0；>0 时新 Pod 卡在无 sidecar 状态。\n- **异常特征**：常见原因——命名空间未打注入标签、注入策略与 Pod 注解冲突。"
+      "title": "Sidecar 注入失败",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：与 istiod 保持 gRPC 长连接的代理数量。\n- **正常**：≈全部 sidecar+网关数，随扩缩容同步增减。\n- **异常**：无扩缩容却骤降=代理大面积断开（常与证书或网络问题有关）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2095,9 +2096,9 @@
           },
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 1,
             "fillOpacity": 10,
             "lineInterpolation": "linear",
+            "lineWidth": 1,
             "showPoints": "never"
           },
           "unit": "short"
@@ -2106,13 +2107,11 @@
       },
       "gridPos": {
         "h": 5,
+        "w": 12,
         "x": 0,
-        "y": 72,
-        "w": 12
+        "y": 72
       },
       "id": 28,
-      "title": "在线代理数",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2138,13 +2137,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：与 istiod 保持 gRPC 长连接的代理数量。\n- **怎么读**：应≈全部 sidecar+网关数（当前 11），随扩缩容同步增减。\n- **异常特征**：无扩缩容却骤降=代理大面积断开。"
+      "title": "在线代理数",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：istiod 容器 CPU 消耗。\n- **正常**：远低于 1 核。\n- **异常**：与推送耗时一起恶化=过载，考虑增加副本。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2152,9 +2153,9 @@
           },
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 1,
             "fillOpacity": 10,
             "lineInterpolation": "linear",
+            "lineWidth": 1,
             "showPoints": "never"
           },
           "unit": "cpu"
@@ -2163,13 +2164,11 @@
       },
       "gridPos": {
         "h": 5,
+        "w": 12,
         "x": 12,
-        "y": 72,
-        "w": 12
+        "y": 72
       },
       "id": 29,
-      "title": "istiod CPU（核）",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2195,7 +2194,8 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：istiod 容器 CPU 消耗。\n- **怎么读**：常态远低于 1 核；与推送耗时一起恶化说明过载，考虑增加副本。"
+      "title": "istiod CPU（核）",
+      "type": "timeseries"
     },
     {
       "collapsed": false,
@@ -2215,6 +2215,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：入口网关观测到的 5xx 速率（含网关自生成与后端返回）。\n- **正常**：0。\n- **异常**：本面板有 5xx 而应用盘正常=入口链路/配置问题；两边都有=应用故障。503 伴随 UH 标志=上游无健康端点。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2222,13 +2223,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "reqps"
         },
@@ -2241,8 +2242,6 @@
         "y": 79
       },
       "id": 30,
-      "title": "入口5xx速率",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2268,13 +2267,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：入口网关观测到的 5xx 速率（含网关自生成与后端返回）。\n- **怎么读**：排查的第一问『是入口的问题还是应用的问题』——本面板有 5xx 而应用盘正常=入口链路/配置问题；两边都有=应用故障。\n- **异常特征**：503 伴随 UH 标志=上游无健康端点；与注入实验的 FI 标志区分。"
+      "title": "入口5xx速率",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关转发后从各后端观察到的 5xx 速率。\n- **正常**：0。\n- **异常**：某后端 5xx 突升→故障大盘选该服务下钻看根因。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2282,13 +2283,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "reqps"
         },
@@ -2301,8 +2302,6 @@
         "y": 79
       },
       "id": 31,
-      "title": "各后端5xx速率",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2328,13 +2327,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关转发后从各后端观察到的 5xx 速率。\n- **怎么读**：入口视角直接指出是哪个后端在出错，免去逐个服务排查。\n- **异常特征**：某后端 5xx 突升→故障大盘选该服务下钻看根因。"
+      "title": "各后端5xx速率",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关到各后端服务的活跃连接数（xds-grpc 是到 istiod 的管理连接，已剔除）。\n- **正常**：连接池水位，随流量涨落。\n- **异常**：为 0 而入口 QPS>0=所有请求都失败。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2342,13 +2343,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "short"
         },
@@ -2361,8 +2362,6 @@
         "y": 79
       },
       "id": 32,
-      "title": "上游池活跃连接",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2383,12 +2382,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\") or on() label_replace(vector(0), \"cluster\", \"无后端连接\", \"__name__\", \".*\")",
+          "expr": "label_replace(sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", cluster_name=~\"outbound.*\"}), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\") or on() label_replace(vector(0), \"cluster\", \"无后端连接\", \"__name__\", \".*\")",
           "legendFormat": "{{cluster}}",
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关到各后端服务的活跃连接数。\n- **怎么读**：连接池水位；骤降=后端不可达。\n- **异常特征**：为 0 而入口QPS>0=所有请求都失败。"
+      "title": "上游池活跃连接",
+      "type": "timeseries"
     },
     {
       "collapsed": false,
@@ -2408,6 +2408,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：各 ScaledObject 的触发器当前值（你们=Prometheus QPS）。\n- **正常**：压测期间随流量起伏。\n- **异常**：有流量但恒 0=扩缩链路断裂；流量升而触发值不动→看下一面板。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2415,13 +2416,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "none"
         },
@@ -2434,8 +2435,6 @@
         "y": 86
       },
       "id": 33,
-      "title": "KEDA触发指标值",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2461,13 +2460,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：各 ScaledObject 的触发器当前值（你们=Prometheus QPS）。\n- **怎么读**：压测期间应随流量起伏；有流量但恒 0=扩缩链路断裂。\n- **异常特征**：与流量大盘对照——流量升而触发值不动，看下一面板。"
+      "title": "KEDA触发指标值",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：KEDA 查询 Prometheus 失败的速率。\n- **正常**：0。\n- **异常**：上升=operator 连不上 Prometheus，扩缩决策失真（该扩容不扩容）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2475,13 +2476,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "ops"
         },
@@ -2494,8 +2495,6 @@
         "y": 86
       },
       "id": 34,
-      "title": "Scaler错误速率",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2521,13 +2520,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：KEDA 查询 Prometheus 失败的速率。\n- **怎么读**：正常为 0。\n- **异常特征**：上升=operator 连不上 Prometheus，扩缩决策失真（该扩容不扩容）。"
+      "title": "Scaler错误速率",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：KEDA operator 累计重启次数。\n- **正常**：0；重启窗口内扩缩暂停。\n- **异常**：频繁重启=leader election 丢失（历史上发生过 17 次）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2535,13 +2536,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "short"
         },
@@ -2554,8 +2555,6 @@
         "y": 86
       },
       "id": 35,
-      "title": "operator重启次数",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -2581,7 +2580,8 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：KEDA operator 累计重启次数。\n- **怎么读**：正常为 0；重启窗口内扩缩暂停。\n- **异常特征**：频繁重启=leader election 丢失，历史上发生过 17 次。"
+      "title": "operator重启次数",
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",
@@ -2655,6 +2655,7 @@
             "productpage"
           ]
         },
+        "description": "语义说明：canonical 服务名（canary/preview 后缀已归一化），选中一个即同时覆盖 stable 与 canary Pod。",
         "hide": 0,
         "includeAll": false,
         "multi": true,
@@ -2668,8 +2669,7 @@
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
-        "type": "query",
-        "description": "语义说明：canonical 服务名（canary/preview 后缀已归一化），选中一个即同时覆盖 stable 与 canary Pod。"
+        "type": "query"
       }
     ]
   },
@@ -2681,6 +2681,6 @@
   "timezone": "",
   "title": "Bookinfo / 故障监控",
   "uid": "bookinfo-fault-view",
-  "version": 1,
+  "version": 16,
   "weekStart": ""
 }

@@ -1,18 +1,6 @@
 {
-  "title": "Istio / 网关",
-  "uid": "istio-gateway-dashboard",
-  "tags": [
-    "istio",
-    "网关"
-  ],
   "editable": true,
-  "time": {
-    "from": "now-1h",
-    "to": "now"
-  },
-  "refresh": "5s",
-  "schemaVersion": 39,
-  "version": 1,
+  "id": 895063127334912,
   "panels": [
     {
       "collapsed": false,
@@ -32,12 +20,12 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关每秒处理的入口请求速率（网关视角，含网关自生成的响应）。\n- **正常**：随业务流量起伏。注：入口腿无直接计数（Istio 不在网关记 destination 视角），用网关→后端转发量近似——HTTP 1:1 转发，仅无路由请求略有出入。\n- **异常**：骤降=入口故障或后端全挂。",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "unit": "reqps",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -49,7 +37,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "reqps"
         },
         "overrides": []
       },
@@ -60,8 +49,6 @@
         "y": 1
       },
       "id": 1,
-      "title": "入口QPS",
-      "type": "stat",
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -83,21 +70,22 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关每秒处理的入口请求速率（网关视角，含网关自生成的响应）。\n- **怎么读**：入口腿无直接计数（Istio不在网关记 destination 视角），用网关→后端转发量近似——HTTP 1:1 转发，仅无路由请求略有出入。\n- **异常特征**：骤降=入口故障或后端全挂。"
+      "title": "入口QPS",
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：入口 5xx 占比。\n- **正常**：0。\n- **异常**：>0=入口处已能观测到故障——结合按响应码面板与后端面板定位。",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "unit": "percent",
-          "min": 0,
           "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -109,7 +97,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -120,8 +109,6 @@
         "y": 1
       },
       "id": 2,
-      "title": "入口5xx率",
-      "type": "stat",
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -143,19 +130,20 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：入口 5xx 占比。\n- **怎么读**：0=健康；本指标上升=入口处已能观测到故障。\n- **异常特征**：>0 时结合下面按响应码面板与后端面板定位。"
+      "title": "入口5xx率",
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：入口请求延迟 P99（毫秒），外部用户视角的尾部延迟。\n- **正常**：与后端 P99 接近。\n- **异常**：持续高=后端慢或网络问题；与后端 P99 对照可定位慢在哪一段（含你们的注入延迟实验效果）。",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "unit": "ms",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -167,7 +155,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -178,8 +167,6 @@
         "y": 1
       },
       "id": 3,
-      "title": "入口P99 (ms)",
-      "type": "stat",
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -201,19 +188,20 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：入口请求延迟 P99（毫秒）。\n- **怎么读**：外部用户视角的尾部延迟；含你们的注入延迟实验效果。\n- **异常特征**：持续高=后端慢或网络问题；与后端 P99 面板对照可定位慢在哪一段。"
+      "title": "入口P99 (ms)",
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关到所有后端服务的活跃连接总数。\n- **正常**：连接池水位，随流量涨落。\n- **异常**：为 0 而入口 QPS>0=所有请求都失败。",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "unit": "short",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -225,7 +213,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "short"
         },
         "overrides": []
       },
@@ -236,8 +225,6 @@
         "y": 1
       },
       "id": 4,
-      "title": "上游活跃连接",
-      "type": "stat",
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -259,7 +246,8 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关到所有后端服务的活跃连接总数。\n- **怎么读**：连接池水位，随流量涨落。\n- **异常特征**：为 0 而入口QPS>0=所有请求都失败。"
+      "title": "上游活跃连接",
+      "type": "stat"
     },
     {
       "collapsed": false,
@@ -279,6 +267,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：入口请求按响应码堆叠（含网关自生成响应，如无路由 404、上游不可用 503）。\n- **正常**：2xx 主体；\"无响应(0)\"=未收到响应的请求（客户端断连/超时），少量属正常。\n- **异常**：503+UH=上游无健康端点；429=触发限流；5xx 占比突升时先看后端面板是哪个服务，再看响应标志区分注入（FI）与真实故障。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -286,14 +275,14 @@
           },
           "custom": {
             "drawStyle": "bars",
+            "fillOpacity": 100,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 100,
+            "showPoints": "never",
             "stacking": {
-              "mode": "normal",
-              "group": "A"
-            },
-            "showPoints": "never"
+              "group": "A",
+              "mode": "normal"
+            }
           },
           "unit": "reqps"
         },
@@ -306,8 +295,6 @@
         "y": 6
       },
       "id": 5,
-      "title": "入口请求按响应码",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -328,18 +315,20 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (response_code) (rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval])) or on() label_replace(vector(0), \"response_code\", \"无流量\", \"__name__\", \".*\")",
+          "expr": "label_replace(sum by (response_code) (rate(istio_requests_total{reporter=\"source\", source_workload=\"istio-ingressgateway\", source_workload_namespace=\"istio-system\"}[$__rate_interval])) or on() label_replace(vector(0), \"response_code\", \"无流量\", \"__name__\", \".*\"), \"response_code\", \"无响应(0)\", \"response_code\", \"^0$\")",
           "legendFormat": "{{response_code}}",
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：入口请求按响应码堆叠（含网关自生成响应，如无路由 404、上游不可用 503）。\n- **怎么读**：503+UH=上游无健康端点；429=触发限流；302/304=重定向与缓存命中。\n- **异常特征**：5xx 占比突升——先看后端面板是哪个服务，再看响应标志区分注入（FI）与真实故障。"
+      "title": "入口请求按响应码",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：入口请求按协议（HTTP/gRPC）堆叠。\n- **正常**：构成稳定；实验 gRPC 服务时会看到 grpc 线。\n- **异常**：协议构成突变=上游服务或调用方式变更。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -347,14 +336,14 @@
           },
           "custom": {
             "drawStyle": "bars",
+            "fillOpacity": 100,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 100,
+            "showPoints": "never",
             "stacking": {
-              "mode": "normal",
-              "group": "A"
-            },
-            "showPoints": "never"
+              "group": "A",
+              "mode": "normal"
+            }
           },
           "unit": "reqps"
         },
@@ -367,8 +356,6 @@
         "y": 6
       },
       "id": 6,
-      "title": "入口请求按协议",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -394,7 +381,8 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：入口请求按协议（HTTP/gRPC）堆叠。\n- **怎么读**：协议构成画像；实验 gRPC 服务时会看到 grpc 线。\n- **异常特征**：无。"
+      "title": "入口请求按协议",
+      "type": "timeseries"
     },
     {
       "collapsed": false,
@@ -414,6 +402,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关转发给各后端服务的 QPS。\n- **正常**：入口流量的目的地分布（svc 格式=服务.命名空间）。\n- **异常**：某后端 QPS 异常升高=该服务成为热点。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -421,13 +410,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "reqps"
         },
@@ -440,8 +429,6 @@
         "y": 15
       },
       "id": 7,
-      "title": "各后端QPS",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -467,13 +454,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关转发给各后端服务的 QPS。\n- **怎么读**：入口流量的目的地分布；svc 格式为 服务.命名空间。\n- **异常特征**：某后端 QPS 异常升高=该服务成为热点。"
+      "title": "各后端QPS",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：各后端服务的 2xx 占比（网关视角）。\n- **正常**：接近 100%（3xx 不计入成功也不计入失败）。\n- **异常**：某后端成功率下跌→去故障大盘选该服务下钻。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -481,17 +470,17 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
-          "unit": "percent",
+          "max": 100,
           "min": 0,
-          "max": 100
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -502,8 +491,6 @@
         "y": 15
       },
       "id": 8,
-      "title": "各后端成功率（2xx）",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -529,13 +516,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：各后端服务的 2xx 占比（网关视角）。\n- **怎么读**：从入口维度看哪个后端在出错；3xx 不计入成功也不计入失败。\n- **异常特征**：某后端成功率下跌→去故障大盘选该服务下钻。"
+      "title": "各后端成功率（2xx）",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：各后端的 P99 延迟（网关视角）。\n- **正常**：与入口 P99 接近。\n- **异常**：入口慢而后端快=网络/排队开销；一致=后端就是慢。某后端 P99 突升=该服务变慢（注入延迟时这里立刻体现）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -543,13 +532,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "ms"
         },
@@ -562,8 +551,6 @@
         "y": 23
       },
       "id": 9,
-      "title": "各后端P99 (ms)",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -589,13 +576,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：各后端的 P99 延迟（网关视角）。\n- **怎么读**：与入口 P99 对照——入口慢而后端快=网络/排队开销；一致=后端就是慢。\n- **异常特征**：某后端 P99 突升=该服务变慢（实验注入延迟时这里会立刻体现）。"
+      "title": "各后端P99 (ms)",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关到各后端的活跃连接数（envoy 连接池；xds-grpc 是到 istiod 的管理连接，已剔除）。\n- **正常**：连接池水位稳定；mTLS 连接复用正常时连接数平稳。\n- **异常**：某后端连接数反复抖升抖降=连接被频繁重建（后端重启或健康检查失败）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -603,13 +592,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "short"
         },
@@ -622,8 +611,6 @@
         "y": 23
       },
       "id": 10,
-      "title": "上游池活跃连接（按后端）",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -644,12 +631,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\"}), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\") or on() label_replace(vector(0), \"cluster\", \"无后端连接\", \"__name__\", \".*\")",
+          "expr": "label_replace(sum by (cluster_name) (envoy_cluster_upstream_cx_active{namespace=\"istio-system\", pod=~\"istio-ingressgateway.*\", cluster_name=~\"outbound.*\"}), \"cluster\", \"$2\", \"cluster_name\", \"outbound\\\\|(\\\\d+)\\\\|\\\\|(.+)\") or on() label_replace(vector(0), \"cluster\", \"无后端连接\", \"__name__\", \".*\")",
           "legendFormat": "{{cluster}}",
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关到各后端的活跃连接数（envoy 连接池）。\n- **怎么读**：连接池水位分布；mTLS 连接复用正常时连接数应稳定。\n- **异常特征**：某后端连接数反复抖升抖降=连接被频繁重建（后端重启或健康检查失败）。"
+      "title": "上游池活跃连接（按后端）",
+      "type": "timeseries"
     },
     {
       "collapsed": false,
@@ -657,7 +645,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 57
       },
       "id": 103,
       "panels": [],
@@ -669,6 +657,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关 envoy 进程的 CPU 消耗（两个副本之和）。\n- **正常**：远低于核心数；压测时看网关是否成为瓶颈。\n- **异常**：持续>1 核且延迟同步恶化=考虑扩容或优化路由配置。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -676,13 +665,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "cpu"
         },
@@ -692,11 +681,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 32
+        "y": 58
       },
       "id": 11,
-      "title": "网关CPU（核）",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -722,13 +709,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关 envoy 进程的 CPU 消耗。\n- **怎么读**：两个副本之和；压测时看网关是否成为瓶颈。\n- **异常特征**：CPU 持续>1核且延迟同步恶化=考虑扩容或优化路由配置。"
+      "title": "网关CPU（核）",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关 envoy 进程内存（工作集）。\n- **正常**：随连接数与配置体量缓慢波动。\n- **异常**：持续上涨不回落=疑似内存泄漏，观察长周期趋势。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -736,13 +725,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "bytes"
         },
@@ -752,11 +741,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 32
+        "y": 58
       },
       "id": 12,
-      "title": "网关内存",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -782,13 +769,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关 envoy 进程内存（工作集）。\n- **怎么读**：正常随连接数与配置体量缓慢波动。\n- **异常特征**：持续上涨不回落=疑似内存泄漏，观察长周期趋势。"
+      "title": "网关内存",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关 Pod 累计重启次数。\n- **正常**：0。\n- **异常**：频繁重启时入口会出现短暂全挂（重启窗口）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -796,13 +785,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           },
           "unit": "short"
         },
@@ -812,11 +801,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 40
+        "y": 66
       },
       "id": 13,
-      "title": "网关Pod重启次数",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -842,7 +829,8 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关 Pod 累计重启次数。\n- **怎么读**：正常为 0；重启=网关自身不稳定。\n- **异常特征**：频繁重启时入口会出现短暂全挂（重启窗口）。"
+      "title": "网关Pod重启次数",
+      "type": "timeseries"
     },
     {
       "collapsed": false,
@@ -850,7 +838,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 31
       },
       "id": 104,
       "panels": [],
@@ -862,6 +850,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关到各后端的新连接建立速率。\n- **正常**：很低（连接复用）。\n- **异常**：陡升=连接被频繁重建；与连接失败面板对照——重连风暴=后端健康检查失败或配置推送。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -869,13 +858,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           }
         },
         "overrides": []
@@ -884,11 +873,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 50
+        "y": 32
       },
       "id": 14,
-      "title": "连接建立速率（按后端）",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -914,13 +901,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关到各后端的新连接建立速率。\n- **怎么读**：正常很低（连接复用）；陡升=连接被频繁重建。\n- **异常特征**：与连接失败面板对照——重连风暴=后端健康检查失败或配置推送。"
+      "title": "连接建立速率（按后端）",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：网关已发给上游、尚未完成响应处理的在途请求数。\n- **正常**：≈QPS×平均耗时。\n- **异常**：高而不退=后端慢。注意边界：延迟故障注入的请求在故障过滤器里排队（尚未进入上游池），这里看不到——看 P99 与 DI 标志面板。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -928,13 +917,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           }
         },
         "overrides": []
@@ -943,11 +932,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 50
+        "y": 32
       },
       "id": 15,
-      "title": "上游在途请求",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -973,13 +960,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：网关已发给上游、尚未完成响应处理的在途请求数。\n- **怎么读**：健康时≈QPS×平均耗时。\n- **异常特征**：高而不退=后端慢。**边界**：延迟故障注入的请求在故障过滤器里排队（尚未进入上游池），这里看不到——看 P99 与 DI 标志面板。"
+      "title": "上游在途请求",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：等待可用上游连接的排队请求数。\n- **正常**：0（连接池够用）。\n- **异常**：持续排队=连接池太小或后端处理过慢。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -987,13 +976,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           }
         },
         "overrides": []
@@ -1002,11 +991,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 58
+        "y": 40
       },
       "id": 16,
-      "title": "上游排队中请求",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -1032,13 +1019,15 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：等待可用上游连接的排队请求数。\n- **怎么读**：正常为 0；>0=连接池已满，请求在等。\n- **异常特征**：持续排队=连接池太小或后端处理过慢（100QPS 压测下此面板为 0 说明池不是瓶颈）。"
+      "title": "上游排队中请求",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：连接池溢出（超出 pending 上限被拒绝）与被驱逐请求的速率。\n- **正常**：全 0。\n- **异常**：>0=连接池被击穿——扩容后端或调大连接池配置。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1046,13 +1035,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           }
         },
         "overrides": []
@@ -1061,11 +1050,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 58
+        "y": 40
       },
       "id": 17,
-      "title": "排队溢出与驱逐",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -1100,13 +1087,15 @@
           "refId": "B"
         }
       ],
-      "description": "- **是什么**：连接池溢出（超出 pending 上限被拒绝）与被驱逐请求的速率。\n- **怎么读**：正常全 0。\n- **异常特征**：>0=连接池被击穿——扩容后端或调大连接池配置。"
+      "title": "排队溢出与驱逐",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：连接建立失败/超时与请求超时速率。\n- **正常**：≈0。\n- **异常**：连接失败突升=后端不可达；请求超时突升=后端慢或 perTryTimeout 过短（VS 配了 2s/3 次重试，超时会放大为多倍请求量）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1114,13 +1103,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           }
         },
         "overrides": []
@@ -1129,11 +1118,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 66
+        "y": 48
       },
       "id": 18,
-      "title": "连接失败与超时",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -1186,13 +1173,15 @@
           "refId": "D"
         }
       ],
-      "description": "- **是什么**：连接建立失败/超时与请求超时速率。\n- **怎么读**：正常≈0。\n- **异常特征**：连接失败突升=后端不可达；请求超时突升=后端慢或 perTryTimeout 过短（你们 VS 配了 2s/3 次重试，超时会放大为多倍请求量）。"
+      "title": "连接失败与超时",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：被故障注入处理的请求速率（DI=延迟注入、FI=中止注入）。\n- **正常**：无注入实验时≈0。\n- **异常**：压注故障时核对注入是否按配置百分比生效；DI 速率高而入口 QPS 低=延迟把吞吐卡死（Little 法则：吞吐=并发÷平均延迟）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1200,13 +1189,13 @@
           },
           "custom": {
             "drawStyle": "line",
+            "fillOpacity": 10,
             "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 10,
+            "showPoints": "never",
             "stacking": {
               "mode": "none"
-            },
-            "showPoints": "never"
+            }
           }
         },
         "overrides": []
@@ -1215,11 +1204,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 66
+        "y": 48
       },
       "id": 19,
-      "title": "故障注入活动（DI/FI 标志）",
-      "type": "timeseries",
       "options": {
         "legend": {
           "calcs": [
@@ -1245,7 +1232,21 @@
           "refId": "A"
         }
       ],
-      "description": "- **是什么**：被故障注入处理的请求速率（DI=延迟注入、FI=中止注入）。\n- **怎么读**：压注故障时核对注入是否按配置百分比生效。\n- **异常特征**：DI 速率高而入口QPS 低=延迟把吞吐卡死（Little法则：吞吐=并发÷平均延迟）——这是 4.95 现象的本体。"
+      "title": "故障注入活动（DI/FI 标志）",
+      "type": "timeseries"
     }
-  ]
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [
+    "istio",
+    "网关"
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "Istio / 网关",
+  "uid": "istio-gateway-dashboard",
+  "version": 2
 }

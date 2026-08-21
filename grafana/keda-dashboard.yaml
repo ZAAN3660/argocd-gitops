@@ -1,952 +1,963 @@
-{
-  "title": "KEDA / 扩缩容",
-  "uid": "keda-scaling-dashboard",
-  "tags": [
-    "keda",
-    "扩缩容"
-  ],
-  "editable": true,
-  "time": {
-    "from": "now-3h",
-    "to": "now"
-  },
-  "refresh": "5s",
-  "schemaVersion": 39,
-  "version": 1,
-  "panels": [
+apiVersion: v1
+data:
+  keda-dashboard.json: |
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 100,
-      "panels": [],
-      "title": "🎯 触发与状态",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
+      "editable": true,
+      "id": 901341035732992,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
           },
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
+          "id": 100,
+          "panels": [],
+          "title": "🎯 触发与状态",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "- **是什么**：当前处于活跃状态的 scaler 数量（0/1 计）。\n- **正常**：压测时随流量变化；无流量时为 0。\n- **异常**：有流量却恒 0=扩缩链路断裂。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
               },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 1
-      },
-      "id": 1,
-      "title": "活跃Scaler数",
-      "type": "stat",
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(keda_scaler_active) or vector(0)",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：当前处于活跃状态的 scaler 数量（0/1 计）。\n- **怎么读**：0=全部触发条件未满足（如无流量）；压测时应随流量变化。\n- **异常特征**：有流量却恒 0=扩缩链路断裂。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
               },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 1
-      },
-      "id": 2,
-      "title": "ScaledObject总数",
-      "type": "stat",
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+              "unit": "none"
+            },
+            "overrides": []
           },
-          "expr": "count(keda_scaler_metrics_value)",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：KEDA 正在管理的 ScaledObject 数量。\n- **怎么读**：你们当前 dev/prod/staging 各 3 个，共 9。\n- **异常特征**：突然变少=ScaledObject 被删除或 operator 丢失缓存。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 1
           },
-          "unit": "short",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 1
-      },
-      "id": 3,
-      "title": "Scaler错误(近1h)",
-      "type": "stat",
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+              "expr": "sum(keda_scaler_active) or vector(0)",
+              "refId": "A"
+            }
           ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "targets": [
+          "title": "活跃Scaler数",
+          "type": "stat"
+        },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(keda_scaler_detail_errors_total[1h])) or vector(0)",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：最近 1 小时 scaler（触发器查询）失败次数。\n- **怎么读**：正常为 0。\n- **异常特征**：>0=operator 连不上 Prometheus 或触发器配置错误，此时扩缩决策会失真。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "unit": "s",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
+          "description": "- **是什么**：KEDA 正在管理的 ScaledObject 数量。\n- **正常**：dev/prod/staging 各 3 个，共 9。\n- **异常**：突然变少=ScaledObject 被删除或 operator 丢失缓存。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
               },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 1
-      },
-      "id": 4,
-      "title": "ScaleLoop耗时(最大)",
-      "type": "stat",
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max(keda_internal_scale_loop_latency_seconds) or vector(0)",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：一次完整扩缩循环的耗时上限。\n- **怎么读**：正常亚秒级；含 Prometheus 查询时间。\n- **异常特征**：进入秒级=查询变慢或 scaler 卡顿，扩缩响应会滞后。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "none"
             },
-            "showPoints": "never"
+            "overrides": []
           },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 5
-      },
-      "id": 5,
-      "title": "触发指标值（按ScaledObject）",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 1
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(keda_scaler_metrics_value)",
+              "refId": "A"
+            }
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "title": "ScaledObject总数",
+          "type": "stat"
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "keda_scaler_metrics_value",
-          "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：各 ScaledObject 的触发器当前值（你们是 Prometheus 触发器=QPS）。\n- **怎么读**：压测时随流量起伏；与触发阈值对比可预判扩缩。\n- **异常特征**：流量存在但恒 0=operator 查询 Prometheus 失败（看错误面板）。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+          "description": "- **是什么**：最近 1 小时 scaler（触发器查询）失败次数。\n- **正常**：0。\n- **异常**：>0=operator 连不上 Prometheus 或触发器配置错误，扩缩决策失真。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
             },
-            "showPoints": "never"
+            "overrides": []
           },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 5
-      },
-      "id": 6,
-      "title": "Scaler错误速率",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 1
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(increase(keda_scaler_detail_errors_total[1h])) or vector(0)",
+              "refId": "A"
+            }
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "title": "Scaler错误(近1h)",
+          "type": "stat"
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (exported_namespace, scaledObject) (rate(keda_scaler_detail_errors_total[$__rate_interval])) or on() label_replace(vector(0), \"scaledObject\", \"无错误\", \"__name__\", \".*\")",
-          "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：各 ScaledObject 的触发器查询失败速率。\n- **怎么读**：正常为 0。\n- **异常特征**：上升=operator 连不上 Prometheus（本集群历史上出现过查询超时），扩缩决策退化为不扩缩。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+          "description": "- **是什么**：一次完整扩缩循环的耗时上限。\n- **正常**：亚秒级（含 Prometheus 查询时间）。\n- **异常**：进入秒级=查询变慢或 scaler 卡顿，扩缩响应滞后。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "s"
             },
-            "showPoints": "never"
+            "overrides": []
           },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 13
-      },
-      "id": 7,
-      "title": "ScaledObject错误速率",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 1
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "max(keda_internal_scale_loop_latency_seconds) or vector(0)",
+              "refId": "A"
+            }
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "title": "ScaleLoop耗时(最大)",
+          "type": "stat"
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (exported_namespace, scaledObject) (rate(keda_scaled_object_errors_total[$__rate_interval])) or on() label_replace(vector(0), \"scaledObject\", \"无错误\", \"__name__\", \".*\")",
-          "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：各 ScaledObject 的 reconcile 错误速率。\n- **怎么读**：正常为 0。\n- **异常特征**：上升=ScaledObject 定义问题或目标对象异常。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+          "description": "- **是什么**：各 ScaledObject 的触发器当前值（你们是 Prometheus 触发器=QPS）。\n- **正常**：压测时随流量起伏；与触发阈值对比可预判扩缩。\n- **异常**：流量存在但恒 0=operator 查询 Prometheus 失败（看错误面板）。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "none"
             },
-            "showPoints": "never"
+            "overrides": []
           },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 13
-      },
-      "id": 8,
-      "title": "operator查询延迟P99",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 5
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(keda_scaler_http_request_duration_seconds_bucket[$__rate_interval]))) or vector(0)",
-          "legendFormat": "P99",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：operator 查询 Prometheus 的延迟 P99。\n- **怎么读**：触发查询的性能基线；压测时扩缩决策频率取决于它。\n- **异常特征**：进入秒级=Prometheus 侧慢，结合 Scaler 错误面板判断是否已超时。"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 21
-      },
-      "id": 101,
-      "panels": [],
-      "title": "📈 副本与扩缩",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+          "id": 5,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
             },
-            "showPoints": "never"
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 22
-      },
-      "id": 9,
-      "title": "各Rollout就绪副本",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "keda_scaler_metrics_value",
+              "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
+              "refId": "A"
+            }
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "title": "触发指标值（按ScaledObject）",
+          "type": "timeseries"
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (namespace, owner_name) (kube_replicaset_status_ready_replicas{owner_kind=\"Rollout\"}) or on() label_replace(vector(0), \"owner_name\", \"无副本\", \"__name__\", \".*\")",
-          "legendFormat": "{{namespace}}/{{owner_name}}",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：各 Rollout（Argo Rollouts）当前就绪副本数。\n- **怎么读**：KEDA 通过 HPA 改 Rollout 副本，这里看结果；与下一面板期望值对比=扩缩进度。\n- **异常特征**：期望>就绪持续很久=Pod 起不来（镜像/资源/配额）。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+          "description": "- **是什么**：各 ScaledObject 的触发器查询失败速率。\n- **正常**：0。\n- **异常**：上升=operator 连不上 Prometheus，扩缩决策退化为不扩缩。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "ops"
             },
-            "showPoints": "never"
+            "overrides": []
           },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 22
-      },
-      "id": 10,
-      "title": "各Rollout期望副本",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 5
           },
-          "expr": "sum by (namespace, owner_name) (kube_replicaset_spec_replicas{owner_kind=\"Rollout\"}) or on() label_replace(vector(0), \"owner_name\", \"无副本\", \"__name__\", \".*\")",
-          "legendFormat": "{{namespace}}/{{owner_name}}",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：各 Rollout 的期望副本数（KEDA 决策的结果）。\n- **怎么读**：随触发值起伏；压测时看扩缩是否及时发生。\n- **异常特征**：触发值已超阈值但期望值不动=KEDA 或 HPA 链路故障。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
             },
-            "showPoints": "never"
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 30
-      },
-      "id": 11,
-      "title": "ScaleLoop耗时",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (exported_namespace, scaledObject) (rate(keda_scaler_detail_errors_total[$__rate_interval])) or on() label_replace(vector(0), \"scaledObject\", \"无错误\", \"__name__\", \".*\")",
+              "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
+              "refId": "A"
+            }
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "title": "Scaler错误速率",
+          "type": "timeseries"
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "keda_internal_scale_loop_latency_seconds",
-          "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：各 ScaledObject 每次扩缩循环的耗时。\n- **怎么读**：正常亚秒级。\n- **异常特征**：突升=查询阻塞，扩缩决策延迟。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "bars",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 100,
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
+          "description": "- **是什么**：各 ScaledObject 的 reconcile 错误速率。\n- **正常**：0。\n- **异常**：上升=ScaledObject 定义问题或目标对象异常。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "ops"
             },
-            "showPoints": "never"
+            "overrides": []
           },
-          "unit": "none",
-          "min": 0,
-          "max": 1
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 30
-      },
-      "id": 12,
-      "title": "Scaler活跃状态",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 13
           },
-          "expr": "keda_scaler_active",
-          "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：各 scaler 是否处于活跃状态（0/1）。\n- **怎么读**：活跃=触发条件满足、KEDA 正在驱动扩缩。\n- **异常特征**：无。"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 38
-      },
-      "id": 102,
-      "panels": [],
-      "title": "🖥️ operator自身",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+          "id": 7,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
             },
-            "showPoints": "never"
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 39
-      },
-      "id": 13,
-      "title": "operator重启次数",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (exported_namespace, scaledObject) (rate(keda_scaled_object_errors_total[$__rate_interval])) or on() label_replace(vector(0), \"scaledObject\", \"无错误\", \"__name__\", \".*\")",
+              "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
+              "refId": "A"
+            }
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "title": "ScaledObject错误速率",
+          "type": "timeseries"
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "kube_pod_container_status_restarts_total{namespace=\"keda\", pod=~\"keda-operator.*\", container=\"keda-operator\"} or on() label_replace(vector(0), \"pod\", \"无重启\", \"__name__\", \".*\")",
-          "legendFormat": "{{pod}}",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：KEDA operator 累计重启次数。\n- **怎么读**：正常为 0；重启窗口内扩缩暂停。\n- **异常特征**：频繁重启=leader election 丢失（本集群历史上 17 次，多为退出码 1）。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+          "description": "- **是什么**：operator 查询 Prometheus 的延迟 P99。\n- **正常**：毫秒级，是扩缩决策频率的基线。\n- **异常**：进入秒级=Prometheus 侧慢，结合 Scaler 错误面板判断是否已超时。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "s"
             },
-            "showPoints": "never"
+            "overrides": []
           },
-          "unit": "cpu"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 39
-      },
-      "id": 14,
-      "title": "operator CPU",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 13
           },
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"keda\", pod=~\"keda-operator.*\", container=\"keda-operator\"}[$__rate_interval])) or vector(0)",
-          "legendFormat": "operator CPU",
-          "refId": "A"
-        }
-      ],
-      "description": "- **是什么**：operator 的 CPU 消耗。\n- **怎么读**：常态远低于限制（1核）。\n- **异常特征**：持续逼近限制=被限流，可能触发 leader election 丢失。"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "stacking": {
-              "mode": "none"
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
             },
-            "showPoints": "never"
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 39
-      },
-      "id": 15,
-      "title": "operator内存",
-      "type": "timeseries",
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "histogram_quantile(0.99, sum by (le) (rate(keda_scaler_http_request_duration_seconds_bucket[$__rate_interval]))) or vector(0)",
+              "legendFormat": "P99",
+              "refId": "A"
+            }
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "title": "operator查询延迟P99",
+          "type": "timeseries"
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 21
+          },
+          "id": 101,
+          "panels": [],
+          "title": "📈 副本与扩缩",
+          "type": "row"
+        },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"keda\", pod=~\"keda-operator.*\", container=\"keda-operator\"}) or vector(0)",
-          "legendFormat": "operator内存",
-          "refId": "A"
+          "description": "- **是什么**：各 Rollout（Argo Rollouts）当前就绪副本数。\n- **正常**：与期望值一致（KEDA 通过 HPA 改 Rollout 副本，这里看结果）。\n- **异常**：期望>就绪持续很久=Pod 起不来（镜像/资源/配额）。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 22
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (namespace, owner_name) (kube_replicaset_status_ready_replicas{owner_kind=\"Rollout\"}) or on() label_replace(vector(0), \"owner_name\", \"无副本\", \"__name__\", \".*\")",
+              "legendFormat": "{{namespace}}/{{owner_name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "各Rollout就绪副本",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "- **是什么**：各 Rollout 的期望副本数（KEDA 决策的结果）。\n- **正常**：随触发值起伏；压测时扩缩及时发生。\n- **异常**：触发值已超阈值但期望值不动=KEDA 或 HPA 链路故障。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 22
+          },
+          "id": 10,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (namespace, owner_name) (kube_replicaset_spec_replicas{owner_kind=\"Rollout\"}) or on() label_replace(vector(0), \"owner_name\", \"无副本\", \"__name__\", \".*\")",
+              "legendFormat": "{{namespace}}/{{owner_name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "各Rollout期望副本",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "- **是什么**：各 ScaledObject 每次扩缩循环的耗时。\n- **正常**：亚秒级。\n- **异常**：突升=查询阻塞，扩缩决策延迟。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 30
+          },
+          "id": 11,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "keda_internal_scale_loop_latency_seconds",
+              "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
+              "refId": "A"
+            }
+          ],
+          "title": "ScaleLoop耗时",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "- **是什么**：各 scaler 是否处于活跃状态（0/1）。\n- **正常**：活跃=触发条件满足、KEDA 正在驱动扩缩。\n- **异常**：无。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "bars",
+                "fillOpacity": 100,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "group": "A",
+                  "mode": "normal"
+                }
+              },
+              "max": 1,
+              "min": 0,
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 30
+          },
+          "id": 12,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "keda_scaler_active",
+              "legendFormat": "{{exported_namespace}}/{{scaledObject}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Scaler活跃状态",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 38
+          },
+          "id": 102,
+          "panels": [],
+          "title": "🖥️ operator自身",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "- **是什么**：KEDA operator 累计重启次数。\n- **正常**：0；重启窗口内扩缩暂停。\n- **异常**：频繁重启=leader election 丢失（历史上 17 次，多为退出码 1）。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 39
+          },
+          "id": 13,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "kube_pod_container_status_restarts_total{namespace=\"keda\", pod=~\"keda-operator.*\", container=\"keda-operator\"} or on() label_replace(vector(0), \"pod\", \"无重启\", \"__name__\", \".*\")",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ],
+          "title": "operator重启次数",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "- **是什么**：operator 的 CPU 消耗。\n- **正常**：远低于限制（1 核）。\n- **异常**：持续逼近限制=被限流，可能触发 leader election 丢失。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "cpu"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 39
+          },
+          "id": 14,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"keda\", pod=~\"keda-operator.*\", container=\"keda-operator\"}[$__rate_interval])) or vector(0)",
+              "legendFormat": "operator CPU",
+              "refId": "A"
+            }
+          ],
+          "title": "operator CPU",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "- **是什么**：operator 内存工作集。\n- **正常**：数百 MB 内。\n- **异常**：逼近 1000Mi 限制=OOM 风险。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 39
+          },
+          "id": 15,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"keda\", pod=~\"keda-operator.*\", container=\"keda-operator\"}) or vector(0)",
+              "legendFormat": "operator内存",
+              "refId": "A"
+            }
+          ],
+          "title": "operator内存",
+          "type": "timeseries"
         }
       ],
-      "description": "- **是什么**：operator 内存工作集。\n- **怎么读**：正常数百 MB 内。\n- **异常特征**：逼近 1000Mi 限制=OOM 风险。"
+      "refresh": "5s",
+      "schemaVersion": 39,
+      "tags": [
+        "keda",
+        "扩缩容"
+      ],
+      "time": {
+        "from": "now-3h",
+        "to": "now"
+      },
+      "title": "KEDA / 扩缩容",
+      "uid": "keda-scaling-dashboard",
+      "version": 1
     }
-  ]
-}
+metadata:
+  name: keda-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+kind: ConfigMap
+

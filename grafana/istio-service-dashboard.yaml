@@ -1,10 +1,4 @@
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: istio-service-dashboard
-  namespace: monitoring
-  labels:
-    grafana_dashboard: "1"          # Grafana sidecar 靠此标签自动把 ConfigMap 加载为 dashboard
 data:
   istio-service-dashboard.json: |
     {
@@ -27,6 +21,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
+      "id": 877637794897920,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -83,6 +78,7 @@ data:
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：服务被请求的总速率（调用方视角，qrep 变量可切 source/destination）。\n- **正常**：与自建流量大盘 QPS 同口径。\n- **异常**：为 0=没有调用方在访问该服务（或 qrep 切到了无来源标签的视角）。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -155,14 +151,14 @@ data:
             }
           ],
           "title": "调用方请求量",
-          "type": "stat",
-          "description": "- **是什么**：服务被请求的总速率（调用方视角，qrep 变量可切 source/destination）。\n- **怎么读**：与自建流量大盘 QPS 同口径；为 0 说明没有调用方在访问该服务。"
+          "type": "stat"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：非 5xx 请求占比（调用方视角）。\n- **正常**：接近 100%。\n- **异常**：明显低于被调方成功率=有请求死在半路（含调用方侧熔断、注入）。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -231,14 +227,14 @@ data:
             }
           ],
           "title": "调用方成功率（非5xx）",
-          "type": "stat",
-          "description": "- **是什么**：非 5xx 请求占比（调用方视角）。\n- **怎么读**：包含调用方侧失败（熔断、注入）；明显低于被调方成功率=有请求死在半路。"
+          "type": "stat"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：请求延迟 P50/P90/P99（调用方视角）。\n- **正常**：与自建流量大盘延迟面板同口径。\n- **异常**：对比被调方延迟——调用方明显高=慢在链路/调用方侧。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -353,14 +349,14 @@ data:
             }
           ],
           "title": "调用方请求延迟（P50/P90/P99）",
-          "type": "timeseries",
-          "description": "- **是什么**：请求延迟 P50/P90/P99（调用方视角）。\n- **怎么读**：与自建流量大盘延迟面板同口径；对比被调方延迟可定位慢在哪一侧。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：TCP 入站接收字节速率。\n- **正常**：HTTP 服务通常为 0。\n- **异常**：TCP 型服务（数据库等）主要看这里。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -434,14 +430,14 @@ data:
             }
           ],
           "title": "TCP 接收字节速率",
-          "type": "stat",
-          "description": "- **是什么**：TCP 入站接收字节速率。\n- **怎么读**：HTTP 服务通常为 0；TCP 型服务（数据库等）主要看这里。"
+          "type": "stat"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：服务实际处理的请求速率（被调方视角）。\n- **正常**：与调用方请求量接近。\n- **异常**：差值大=大量请求死在半路。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -514,14 +510,14 @@ data:
             }
           ],
           "title": "被调方请求量",
-          "type": "stat",
-          "description": "- **是什么**：服务实际处理的请求速率（被调方视角）。\n- **怎么读**：只统计真正到达服务的请求；与调用方请求量的差值=死在半路的请求。"
+          "type": "stat"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：非 5xx 请求占比（被调方视角）。\n- **正常**：接近 100%，只反映服务自身的错误。\n- **异常**：与调用方成功率的差距=调用方侧防御造成的失败。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -590,14 +586,14 @@ data:
             }
           ],
           "title": "被调方成功率（非5xx）",
-          "type": "stat",
-          "description": "- **是什么**：非 5xx 请求占比（被调方视角）。\n- **怎么读**：只反映服务自身的错误；与调用方成功率对比——两者差距=调用方侧防御造成的失败。"
+          "type": "stat"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：服务端处理延迟 P50/P90/P99。\n- **正常**：接近\"纯净的服务耗时\"。\n- **异常**：对比调用方延迟可知网络/排队开销。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -712,14 +708,14 @@ data:
             }
           ],
           "title": "被调方请求延迟（P50/P90/P99）",
-          "type": "timeseries",
-          "description": "- **是什么**：服务端处理延迟 P50/P90/P99。\n- **怎么读**：接近\"纯净的服务耗时\"；对比调用方延迟可知网络/排队开销。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：TCP 出站发送字节速率。\n- **正常**：与接收字节对照可看 TCP 服务的响应数据量。\n- **异常**：异常暴涨=响应体膨胀。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -793,8 +789,7 @@ data:
             }
           ],
           "title": "TCP 发送字节速率",
-          "type": "stat",
-          "description": "- **是什么**：TCP 出站发送字节速率。\n- **怎么读**：与接收字节对照可看 TCP 服务的响应数据量。"
+          "type": "stat"
         },
         {
           "collapsed": false,
@@ -849,6 +844,7 @@ data:
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：每个调用方工作负载发出的请求量，按响应码拆分（🔐=mTLS 连接）。\n- **正常**：来源构成稳定。\n- **异常**：某个来源的高 5xx 占比=该调用方的问题（如错误的重试风暴）。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -974,14 +970,14 @@ data:
             }
           ],
           "title": "入站请求（按来源与响应码）",
-          "type": "timeseries",
-          "description": "- **是什么**：每个调用方工作负载发出的请求量，按响应码拆分（🔐=mTLS 连接）。\n- **怎么读**：定位\"是谁在打你、打出了什么响应码\"。\n- **异常特征**：某个来源的高 5xx 占比=该调用方的问题（如错误的重试风暴）。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：按调用方工作负载拆分的成功率。\n- **正常**：各来源接近。\n- **异常**：个别来源显著低=劣化来自该调用方而非全局。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1109,15 +1105,14 @@ data:
             }
           ],
           "title": "入站成功率（按来源）",
-          "type": "timeseries",
-          "description": "- **是什么**：按调用方工作负载拆分的成功率。\n- **怎么读**：判断劣化是全局还是个别调用方引起。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "- **是什么**：按调用方拆分的请求延迟分位数。\n- **怎么读**：慢请求来自所有来源=服务自身问题；只来自个别来源=该调用方特性（大请求/长链路）。",
+          "description": "- **是什么**：按调用方拆分的请求延迟分位数。\n- **正常**：各来源接近。\n- **异常**：慢只来自个别来源=该调用方特性（大请求/长链路）；所有来源都慢=服务自身问题。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1329,6 +1324,7 @@ data:
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：按调用方拆分的请求体大小分布。\n- **正常**：各来源接近。\n- **异常**：个别来源请求体异常大→下游处理变慢、网络压力大。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1533,14 +1529,14 @@ data:
             }
           ],
           "title": "入站请求大小（按来源）",
-          "type": "timeseries",
-          "description": "- **是什么**：按调用方拆分的请求体大小分布。\n- **怎么读**：个别来源请求体异常大→下游处理变慢、网络压力大。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：按调用方拆分的响应体大小分布。\n- **正常**：稳定。\n- **异常**：服务返回的数据量随某调用方异常膨胀=行为变化。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1745,14 +1741,14 @@ data:
             }
           ],
           "title": "响应大小（按来源）",
-          "type": "timeseries",
-          "description": "- **是什么**：按调用方拆分的响应体大小分布。\n- **怎么读**：服务返回的数据量是否随调用方异常膨胀。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：按来源工作负载拆分的 TCP 入站接收字节速率。\n- **正常**：TCP 服务定位流量来源。\n- **异常**：某来源突增=异常调用。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1857,14 +1853,14 @@ data:
             }
           ],
           "title": "TCP 入站接收字节（按来源）",
-          "type": "timeseries",
-          "description": "- **是什么**：按来源工作负载拆分的 TCP 入站接收字节速率。\n- **怎么读**：TCP 服务定位流量来源。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：按来源工作负载拆分的 TCP 入站发送字节速率。\n- **正常**：与接收字节对照看该来源的读写比例。\n- **异常**：读写比例突变=行为变化。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1968,8 +1964,7 @@ data:
             }
           ],
           "title": "TCP 入站发送字节（按来源）",
-          "type": "timeseries",
-          "description": "- **是什么**：按来源工作负载拆分的 TCP 入站发送字节速率。\n- **怎么读**：与接收字节对照看该来源的读写比例。"
+          "type": "timeseries"
         },
         {
           "collapsed": false,
@@ -2024,6 +2019,7 @@ data:
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：服务内各工作负载（版本）收到的请求量，按响应码拆分。\n- **正常**：灰度发布时对比 stable/canary 的流量分配。\n- **异常**：某版本高错误码占比=该版本有问题。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2149,14 +2145,14 @@ data:
             }
           ],
           "title": "入站请求（按工作负载与响应码）",
-          "type": "timeseries",
-          "description": "- **是什么**：服务内各工作负载（版本）收到的请求量，按响应码拆分。\n- **怎么读**：灰度发布时对比 stable/canary 的流量分配与错误。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：各版本工作负载的成功率。\n- **正常**：新旧版本接近。\n- **异常**：新版本成功率低=版本问题而非全局故障。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2284,15 +2280,14 @@ data:
             }
           ],
           "title": "入站成功率（按工作负载）",
-          "type": "timeseries",
-          "description": "- **是什么**：各版本工作负载的成功率。\n- **怎么读**：灰度时判断新版本是否引入错误——新版本成功率低=版本问题而非全局故障。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "- **是什么**：各版本工作负载的延迟分位数。\n- **怎么读**：灰度时对比新旧版本性能。",
+          "description": "- **是什么**：各版本工作负载的延迟分位数。\n- **正常**：新旧版本接近。\n- **异常**：新版本明显慢=性能退化。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2504,6 +2499,7 @@ data:
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：按工作负载拆分的请求体大小分布。\n- **正常**：灰度时观察新版本收到的请求体大小是否有变化。\n- **异常**：差异显著=调用方对不同版本的行为不同。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2708,14 +2704,14 @@ data:
             }
           ],
           "title": "入站请求大小（按工作负载）",
-          "type": "timeseries",
-          "description": "- **是什么**：按工作负载拆分的请求体大小分布。\n- **怎么读**：灰度时观察新版本收到的请求体大小是否有变化。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：按工作负载拆分的响应体大小分布。\n- **正常**：新旧版本接近。\n- **异常**：新旧版本返回数据量差异（如新版本多返回字段）会体现在这里。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2920,14 +2916,14 @@ data:
             }
           ],
           "title": "响应大小（按工作负载）",
-          "type": "timeseries",
-          "description": "- **是什么**：按工作负载拆分的响应体大小分布。\n- **怎么读**：新旧版本返回数据量差异（如新版本多返回字段）会体现在这里。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：按服务工作负载拆分的 TCP 入站接收字节速率。\n- **正常**：灰度时对比各版本接收的 TCP 流量。\n- **异常**：某版本异常=版本行为差异。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3032,14 +3028,14 @@ data:
             }
           ],
           "title": "TCP 入站接收字节（按工作负载）",
-          "type": "timeseries",
-          "description": "- **是什么**：按服务工作负载拆分的 TCP 入站接收字节速率。\n- **怎么读**：灰度时对比各版本接收的 TCP 流量。"
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "description": "- **是什么**：按服务工作负载拆分的 TCP 入站发送字节速率。\n- **正常**：灰度时对比各版本返回的数据量。\n- **异常**：某版本异常=版本行为差异。",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3143,8 +3139,7 @@ data:
             }
           ],
           "title": "TCP 入站发送字节（按工作负载）",
-          "type": "timeseries",
-          "description": "- **是什么**：按服务工作负载拆分的 TCP 入站发送字节速率。\n- **怎么读**：灰度时对比各版本返回的数据量。"
+          "type": "timeseries"
         }
       ],
       "refresh": "1m",
@@ -3419,7 +3414,14 @@ data:
       },
       "timezone": "",
       "title": "Istio / 服务",
+      "uid": "istio-service-dashboard",
       "version": 1,
-      "weekStart": "",
-      "uid": "istio-service-dashboard"
+      "weekStart": ""
     }
+metadata:
+  name: istio-service-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+kind: ConfigMap
+

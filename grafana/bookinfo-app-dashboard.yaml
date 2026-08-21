@@ -5,7 +5,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
+  "id": 831650757906432,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -27,6 +27,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：所选服务的当前请求速率（每秒）。\n- **正常**：跟随压测/流量负载起伏；口径随 $reporter 切换——source=调用方的体验，destination=服务的真实处理量。\n- **异常**：注入故障后骤降=故障生效；无操作地归零=流量源中断。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -75,14 +76,14 @@
         }
       ],
       "title": "QPS（当前）",
-      "type": "stat",
-      "description": "- **是什么**：所选服务的当前请求速率（每秒）。\n- **怎么读**：口径随 $reporter 切换——source=调用方的体验，destination=服务的真实处理量。\n- **异常特征**：注入故障后骤降=故障生效；无操作地归零=流量源中断。"
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：2xx 响应占比（%）。\n- **正常**：稳定接近 100%（3xx 不算成功也不算失败）。\n- **异常**：低于 100% 即有非 2xx 响应——下钻 id32（响应码）与 id33（原因标志）定位；source 视角额外包含调用方侧失败（熔断/注入）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -141,14 +142,14 @@
         }
       ],
       "title": "成功率（2xx）",
-      "type": "stat",
-      "description": "- **是什么**：2xx 响应占比（%）。\n- **怎么读**：与故障大盘的「5xx 双视角」互补；source 视角包含调用方侧失败（熔断/注入）。\n- **异常特征**：低于 100% 即有非 2xx 响应，下钻 id32（响应码）与 id33（原因标志）定位。"
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：P99 延迟（毫秒），最慢 1% 请求的耗时。\n- **正常**：与流量起伏弱相关，保持平稳。\n- **异常**：与 QPS 无关地持续升高=依赖变慢或资源瓶颈；尾部延迟对长尾问题比均值敏感得多。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -197,14 +198,14 @@
         }
       ],
       "title": "P99 延迟",
-      "type": "stat",
-      "description": "- **是什么**：P99 延迟（毫秒），最慢 1% 请求的耗时。\n- **怎么读**：尾部延迟，比平均值对长尾问题敏感得多。\n- **异常特征**：与 QPS 无关地持续升高=依赖变慢或资源瓶颈。"
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：5xx 响应占比（%）。\n- **正常**：0 或接近 0。\n- **异常**：>0 即异常——先看 id32 定位 5xx 响应码，再看 id33 定位根因（超时/熔断/断连）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -261,8 +262,7 @@
         }
       ],
       "title": "5xx 错误率",
-      "type": "stat",
-      "description": "- **是什么**：5xx 响应占比（%）。\n- **怎么读**：服务层错误的最直接信号。\n- **异常特征**：>0 即异常——先看 id32 定位 5xx 响应码，再看 id33 定位根因（超时/熔断/断连）。"
+      "type": "stat"
     },
     {
       "collapsed": false,
@@ -282,6 +282,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：所选服务的 QPS，两条口径——按服务名与按工作负载名。\n- **正常**：两条线基本重合；source 视角最准（能看见全部调用），destination 为真相兜底（服务实际处理量）。\n- **异常**：两条线明显分叉=有请求死在半路（熔断/注入/超时）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -353,14 +354,14 @@
         }
       ],
       "title": "QPS by Service（source 视角最准；workload 为真相兜底）",
-      "type": "timeseries",
-      "description": "- **是什么**：所选服务的 QPS，两条口径——按服务名与按工作负载名。\n- **怎么读**：source 视角最准（能看见全部调用）；destination 为真相兜底（服务实际处理量）。\n- **异常特征**：两条线明显分叉=有请求死在半路（熔断/注入/超时）。"
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：每个 Pod 收到的 QPS（固定被调方视角——裸 pod 标签在 source 账上是调用方 Pod，只有 destination 账上才指向本服务的 Pod）。\n- **正常**：各 Pod 流量大致均衡；灰度期间新旧 Pod 按预期权重切分。\n- **异常**：个别 Pod 流量恒为 0=端点异常或权重配置错误。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -426,14 +427,14 @@
         }
       ],
       "title": "QPS by Pod（灰度期间看新旧 Pod 流量切分）",
-      "type": "timeseries",
-      "description": "- **是什么**：每个 Pod 收到的 QPS。\n- **怎么读**：灰度发布期间看新旧 Pod 的流量切分进度，核对是否符合预期权重。\n- **异常特征**：个别 Pod 流量恒为 0=端点异常或权重配置错误。\n- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——裸 pod 标签由发出指标的那一侧 sidecar 贴上：source 账上的 pod=调用方 Pod（你会在面板里看到 productpage 等上游），只有 destination 账上的 pod 才指向被选服务自己的 Pod。"
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：请求量按响应码堆叠。\n- **正常**：2xx 占绝对主体；\"无响应(0)\"=未收到响应的请求（断连/超时），少量属正常。\n- **异常**：4xx 占比突升=调用方问题（错误 URL、认证失败）；5xx 占比突升=服务端问题；\"无响应(0)\"大幅上涨=请求大量半路死亡。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -493,14 +494,13 @@
       },
       "targets": [
         {
-          "expr": "(sum by (response_code) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\")",
+          "expr": "label_replace((sum by (response_code) (rate(istio_requests_total{reporter=\"$reporter\", destination_workload_namespace=\"$namespace\", destination_canonical_service=~\"$service\"}[$__rate_interval]))) or on() label_replace(vector(0), \"response_code\", \"无错误\", \"__name__\", \".*\"), \"response_code\", \"无响应(0)\", \"response_code\", \"^0$\")",
           "legendFormat": "{{response_code}}",
           "refId": "A"
         }
       ],
       "title": "请求量 by 响应码（堆叠）",
-      "type": "timeseries",
-      "description": "- **是什么**：请求量按响应码堆叠。\n- **怎么读**：一眼看出响应码构成变化（2xx/3xx/4xx/5xx 各占多少）。\n- **异常特征**：4xx 占比突升=调用方问题（错误 URL、认证失败、越权）；5xx 占比突升=服务端问题。"
+      "type": "timeseries"
     },
     {
       "collapsed": false,
@@ -520,6 +520,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：延迟分位数趋势（P50/P95/P99 三条线）。\n- **正常**：三线间距稳定——P50 看典型体验、P95 看次尾、P99 看最差 1%。\n- **异常**：P99 与 P50 同步抬升=整体变慢；仅 P99 抬升=个别慢请求（GC、锁、下游抖动）；三线间距拉大=长尾恶化。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -596,14 +597,14 @@
         }
       ],
       "title": "P50 / P95 / P99 延迟趋势",
-      "type": "timeseries",
-      "description": "- **是什么**：延迟分位数趋势（P50/P95/P99 三条线）。\n- **怎么读**：P50 看典型体验、P95 看次尾、P99 看最差 1%；三者差距大=长尾严重。\n- **异常特征**：P99 与 P50 同步抬升=整体变慢；仅 P99 抬升=个别慢请求（GC、锁、下游抖动）。"
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：各 Pod 的 P99 延迟（固定被调方视角，同 id12）。\n- **正常**：各 Pod 的 P99 接近。\n- **异常**：单 Pod 明显慢=该实例资源争抢或宿主机问题，配合故障大盘 CPU 面板看。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -669,14 +670,14 @@
         }
       ],
       "title": "P99 by Pod（定位慢 Pod）",
-      "type": "timeseries",
-      "description": "- **是什么**：各 Pod 的 P99 延迟。\n- **怎么读**：定位「慢 Pod」——个别实例拖后腿的场景。\n- **异常特征**：单 Pod 明显慢=该实例资源争抢或宿主机问题，配合故障大盘 CPU 面板看。\n- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——裸 pod 标签由发出指标的那一侧 sidecar 贴上：source 账上的 pod=调用方 Pod（你会在面板里看到 productpage 等上游），只有 destination 账上的 pod 才指向被选服务自己的 Pod。"
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：延迟桶分布热力图（纵轴延迟、色深请求量）。\n- **正常**：色带集中、形状稳定。\n- **异常**：色带整体右移=全局变慢；出现第二条孤立色带=一批明显更慢的请求。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -742,8 +743,7 @@
         }
       ],
       "title": "延迟分布热力图",
-      "type": "heatmap",
-      "description": "- **是什么**：延迟桶分布热力图（纵轴延迟、色深请求量）。\n- **怎么读**：看延迟分布形状——色带越集中越健康。\n- **异常特征**：色带整体右移=全局变慢；出现第二条孤立色带=一批明显更慢的请求。"
+      "type": "heatmap"
     },
     {
       "collapsed": false,
@@ -763,6 +763,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：2xx 占比的时间趋势。\n- **正常**：贴近 100% 且平稳。\n- **异常**：阶梯式下跌=某个变更引入问题，对照 Argo CD 部署时间定位。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -832,14 +833,14 @@
         }
       ],
       "title": "成功率趋势（2xx 占比）",
-      "type": "timeseries",
-      "description": "- **是什么**：2xx 占比的时间趋势。\n- **怎么读**：与 id4（当前值）配套，看成功率的演变过程而非瞬时值。\n- **异常特征**：阶梯式下跌=某个变更引入问题，对照 Argo CD 部署时间定位。"
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：4xx 与 5xx 请求速率（两条线）。\n- **正常**：都接近 0。\n- **异常**：4xx 突升=调用方/网关配置问题；5xx 突升=服务故障——先分清责任侧。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -911,14 +912,14 @@
         }
       ],
       "title": "错误请求 QPS（4xx / 5xx）",
-      "type": "timeseries",
-      "description": "- **是什么**：4xx 与 5xx 请求速率（两条线）。\n- **怎么读**：4xx=客户端错误（请求本身有问题），5xx=服务端错误（服务或依赖出问题）——先分清责任侧。\n- **异常特征**：4xx 突升=调用方/网关配置问题；5xx 突升=服务故障。"
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：按 response_flags 拆分的异常请求速率。\n- **正常**：全部接近 0。\n- **异常**：哪个标志升起=哪类故障发生——DC=断连、UC=上游拒绝、UO=熔断拒绝、URX=重试耗尽、DI=注入延迟、FI=注入故障、UT=超时；与故障大盘的实验面板一一对应。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -984,8 +985,7 @@
         }
       ],
       "title": "异常响应标志（超时/熔断/连接失败等）",
-      "type": "timeseries",
-      "description": "- **是什么**：按 response_flags 拆分的异常请求速率。\n- **怎么读**：DC=断连、UC=上游拒绝、UO=熔断拒绝、URX=重试耗尽、DI=注入延迟、FI=注入故障、UT=超时。\n- **异常特征**：哪个标志升起=哪类故障发生，与故障大盘的实验面板一一对应。"
+      "type": "timeseries"
     },
     {
       "collapsed": false,
@@ -1005,6 +1005,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：灰度期间各版本（Pod Hash）收到的 QPS（固定被调方视角——hash 标签在调用方账上是来源 Pod 的 hash，只有被调方账指向被灰度服务自身）。\n- **正常**：流量按 Argo Rollouts 设定的权重在 stable/canary 间切分。\n- **异常**：切分比例与配置不符=canary 步进配置问题；某版本无流量=端点异常。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1071,14 +1072,14 @@
         }
       ],
       "title": "QPS by Pod Hash（Argo Rollouts 灰度对比）",
-      "type": "timeseries",
-      "description": "- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——版本 hash 标签只有在被调方账上才指向被灰度服务自身，调用方账上是来源 Pod 的 hash。"
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "- **是什么**：灰度期间各版本的 P99 延迟对比（固定被调方视角，同 id41）。\n- **正常**：新旧版本延迟接近。\n- **异常**：canary 明显高于 stable=新版本性能退化，考虑回滚。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1144,14 +1145,14 @@
         }
       ],
       "title": "P99 by Pod Hash（新旧版本延迟对比）",
-      "type": "timeseries",
-      "description": "- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——版本 hash 标签只有在被调方账上才指向被灰度服务自身，调用方账上是来源 Pod 的 hash。"
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：灰度期间各版本的成功率（2xx 占比）对比（固定被调方视角，同 id41）。\n- **正常**：新旧版本成功率都接近 100%。\n- **异常**：canary 低于 stable=新版本引入了错误（版本问题而非全局故障），应考虑回滚。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1225,8 +1226,7 @@
         }
       ],
       "title": "灰度成功率 by Pod Hash（新旧版本错误对比）",
-      "type": "timeseries",
-      "description": "- **是什么**：灰度期间各版本（Pod Hash）的成功率（2xx 占比）对比。\n- **怎么读**：直接回答「新版本是否引入了错误」——canary 成功率低于 stable 就应考虑回滚。\n- **异常特征**：canary 与 stable 成功率分叉=版本问题而非全局故障。\n- **视角说明**：固定被调方视角（不受 $reporter 下拉影响）——版本 hash 标签只有在被调方账上才指向被灰度服务自身，调用方账上是来源 Pod 的 hash。"
+      "type": "timeseries"
     },
     {
       "collapsed": false,
@@ -1246,6 +1246,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：请求的连接安全策略（mTLS 状态）分布（固定被调方视角——安全策略标签只在 destination 账上被可靠填充）。\n- **正常**：全为 mutual_tls——Istio 默认自动 mTLS，即使没有 PeerAuthentication，sidecar 间也是加密的；明文只出现在对端无 sidecar 的链路上。\n- **异常**：做 mTLS 策略实验后仍只有 none/unknown=策略未覆盖到该链路。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1315,14 +1316,14 @@
         }
       ],
       "title": "mTLS 覆盖率（加密 vs 明文）",
-      "type": "timeseries",
-      "description": "- **是什么**：请求的连接安全策略（mTLS 状态）分布。\n- **怎么读**：mutual_tls=sidecar 间双向 TLS 加密生效；none=明文；unknown=安全信息未记录。\n- **异常特征**：对某服务做完 mTLS 策略实验后仍只有 none/unknown=策略未覆盖到该链路。\n- **背景**：Istio 默认自动 mTLS——即使没有 PeerAuthentication，sidecar 间也是 mutual_tls；明文只出现在对端无 sidecar 的链路上。\n- **视角说明**：固定被调方视角——安全策略标签只在 destination 账上被可靠填充（实测：source 账全是 unknown）。"
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "- **是什么**：各调用方工作负载对本服务的请求量，按响应码堆叠（固定调用方视角——来源标签只存在于 source 账上，切 destination 时本面板为空）。\n- **正常**：来源构成稳定。\n- **异常**：某个来源高比例异常码=该调用方的问题（重试风暴、错误配置）。",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1392,8 +1393,7 @@
         }
       ],
       "title": "入站请求按来源（谁在打我）",
-      "type": "timeseries",
-      "description": "- **是什么**：各调用方工作负载对本服务的请求量，按响应码堆叠。\n- **怎么读**：直接回答「谁在打我、打出了什么响应码」。\n- **异常特征**：某个来源高比例异常码=该调用方的问题（重试风暴、错误配置）。\n- **视角说明**：固定调用方视角——来源标签只存在于 source 账上，切 destination 时本面板为空。"
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",
@@ -1492,6 +1492,7 @@
             "productpage"
           ]
         },
+        "description": "语义说明：列的是 canonical 服务名（Istio 已把 canary/preview 等灰度后缀归一化），选中一个名字即同时覆盖它的 stable 与 canary Pod。",
         "hide": 0,
         "includeAll": false,
         "multi": true,
@@ -1516,8 +1517,7 @@
         "regex": "/svc_fqdn=\"([^\"]+)\"/",
         "skipUrlSync": false,
         "sort": 1,
-        "type": "query",
-        "description": "语义说明：列的是 canonical 服务名（Istio 已把 canary/preview 等灰度后缀归一化），选中一个名字即同时覆盖它的 stable 与 canary Pod。"
+        "type": "query"
       }
     ]
   },
@@ -1529,6 +1529,6 @@
   "timezone": "",
   "title": "Bookinfo / 流量总览",
   "uid": "bookinfo-app-view",
-  "version": 1,
+  "version": 10,
   "weekStart": ""
 }
