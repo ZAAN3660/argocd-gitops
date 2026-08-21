@@ -1424,9 +1424,9 @@
       },
       {
         "current": {
-          "selected": false,
+          "value": "dev",
           "text": "dev",
-          "value": "dev"
+          "selected": true
         },
         "hide": 0,
         "includeAll": false,
@@ -1440,7 +1440,7 @@
           }
         ],
         "query": {
-          "query": "label_values(kube_service_info, namespace)",
+          "query": "label_values(istio_requests_total{destination_workload_namespace!=\"unknown\"}, destination_workload_namespace)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
