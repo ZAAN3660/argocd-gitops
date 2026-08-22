@@ -1,7 +1,3 @@
-# v5（写实化：资源名与应用名一致，不再用占位名+overlay patch 改名）
-# 灰度发布总指挥：Rollout = 带 canary 策略的 Deployment，发布时由
-# Argo Rollouts 控制器动态改 VirtualService 路由权重完成切流。
-# Service 名保持不变（官方短名 details，镜像硬编码的 DNS 名不能变）。
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
