@@ -6,10 +6,10 @@ metadata:
     app: details
 spec:
   replicas: 1                               # 与 KEDA minReplicaCount 对齐；灰度中 stable+canary 合计不超过它
-  revisionHistoryLimit: 2                   # 保留 2 个历史 ReplicaSet，够一次回滚
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: details                          # 只认自己的 Pod
+      app: details
   template:
     metadata:
       labels:
@@ -25,15 +25,14 @@ spec:
         - name: details
           image: docker.io/istio/examples-bookinfo-details-v1:1.16.2
           ports:
-            - name: http                    # 端口名：Service targetPort、PodMonitor 的 port 引用都靠它
-              containerPort: 9080           # bookinfo 统一端口
+            - name: http
+              containerPort: 9080
           resources:
             requests:                       # KEDA CPU/内存触发器的"使用率"分母，缺了触发器不生效
               cpu: 100m
               memory: 128Mi
-            # 2026-08-22 移除 limits：压测期 CPU 节流/组件重启排查中，放开封顶观测真实峰值（requests 保留，KEDA 触发器分母）
-          readinessProbe:                   # 就绪探针：Pod 就绪才收流量，灰度切流的前提
-            tcpSocket:                      # bookinfo 镜像无统一就绪端点，TCP 探活与镜像解耦
+          readinessProbe:
+            tcpSocket:
               port: 9080
             initialDelaySeconds: 5
             periodSeconds: 5

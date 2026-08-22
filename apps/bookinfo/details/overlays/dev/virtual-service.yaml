@@ -8,25 +8,24 @@ spec:
   # http 列表是一组"路由规则"：请求按顺序自上而下匹配，命中第一条即停止
   http:
     # ---------- 第 1 条：故障路由 ----------
-    # - name: details-fault-route
-    #   match:
-    #     - sourceLabels: {app: productpage}  # 来自 productpage 应用的请求命中路由
-    #   fault:
-    #     delay:                              # 注入延迟故障
-    #       percentage: { value: 50 }         # 命中本路由的请求中 50% 会被 delay
-    #       fixedDelay: 3s                    # 调用方的 sidecar 延迟 3s 后，再转发给下游
-    #     abort:                              # 注入终止故障                   
-    #       percentage: { value: 10 }         # 命中本路由的请求中 10% 会被 abort
-    #       httpStatus: 503                   # 调用方的 sidecar 直接回 503，不转发给下游
-    #   route:
-    #     - destination: { host: details, port: { number: 9080 } }
+    - name: details-fault-route
+      match:
+        - sourceLabels: {app: productpage}  # 来自 productpage 应用的请求命中路由
+      fault:
+        delay:                              # 注入延迟故障
+          percentage: { value: 50 }         # 命中本路由的请求中 50% 会被 delay
+          fixedDelay: 3s                    # 调用方的 sidecar 延迟 3s 后，再转发给下游
+        abort:                              # 注入终止故障                   
+          percentage: { value: 10 }         # 命中本路由的请求中 10% 会被 abort
+          httpStatus: 503                   # 调用方的 sidecar 直接回 503，不转发给下游
+      route:
+        - destination: { host: details, port: { number: 9080 } }
     # ---------- 第 2 条：正常路由 ----------
     - name: details-route
-      timeout: 15s
+      timeout: 3s                   # 默认情况下，超时是禁用的
       retries:
-        attempts: 3               
-        perTryTimeout: 2s
-        retryOn: gateway-error,connect-failure,refused-stream
+        attempts: 2               
+        perTryTimeout: 0.5s
       route:
         - destination:
             host: details
