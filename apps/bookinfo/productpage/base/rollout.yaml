@@ -13,7 +13,7 @@ metadata:
   labels:
     app: productpage
 spec:
-  replicas: 1                               # 与 KEDA minReplicaCount 对齐；蓝绿切换窗口内 蓝+绿 合计会短暂翻倍
+  replicas: 2                               # 与 KEDA minReplicaCount 对齐；蓝绿切换窗口内 蓝+绿 合计会短暂翻倍
   revisionHistoryLimit: 2                   # 保留 2 个历史 ReplicaSet，够一次回滚
   selector:
     matchLabels:

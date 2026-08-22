@@ -46,6 +46,7 @@ spec:
         # maxRequestsPerConnection 设置单个连接上可处理的最大请求数，到上限就主动关闭
         # 连接，迫使 Envoy 走"建立连接"分支
         maxRequestsPerConnection: 0     # 0 = 不限制
+    # ------------------------------ 异常检测 ------------------------------
     outlierDetection:
       # 连续 N 个 5xx 错误就认为上游主机异常，驱逐该实例。任何非 5xx 响应都会重置计数
       consecutive5xxErrors: 100
