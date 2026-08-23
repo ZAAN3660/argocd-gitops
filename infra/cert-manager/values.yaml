@@ -1,0 +1,8 @@
+# cert-manager v1.21.1 values
+# 关键：chart 默认 crds.enabled=false——CRD 文件在 templates/crd-*.yaml 里被条件包裹，
+# 默认不渲染。GitOps 直装（非 helm install）没有安装前单独建 CRD 的步骤，
+# 必须显式开启，否则 webhook 证书等 cert-manager.io/v1 资源无处安放
+# （依赖方 opentelemetry-operator 会报 "cert-manager.io/v1 找不到"）。
+crds:
+  enabled: true
+  keep: true
