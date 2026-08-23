@@ -1,7 +1,7 @@
 # config 应用域：config/ 目录清单的镜像，一层一 AppSet（与 infra-components 同构）。
 # 四个目录的归属：
 #  - config/istio                  → 本 AppSet（生成 istio-config）
-#  - config/opentelemetry-operator → observability-otel-agent AppSet（暂未并入，避免双写；并入时迁移 element 过来）
+#  - config/opentelemetry-operator → 本 AppSet（生成 opentelemetry-operator-config；集群级补权 RBAC 归安装层 infra）
 #  - config/argocd                 → bootstrap 根应用同步（自举），不重复管理
 #  - config/grafana                → 待 kustomization 化（dashboard 源文件非 k8s 资源），暂缓
 # 命名：App 名 = <组件词根>-config（config 层特化规则，区别于 infra 的"官方 chart 名"）。
@@ -23,6 +23,10 @@ spec:
             group: istio              # label 值：与 infra 的 istio-base/istiod/istio-gateway 归一为 istio
             path: config/istio
             namespace: istio-system
+          - component: opentelemetry-operator-config   # 同步 config/opentelemetry-operator：otel-agent CR（镜像 infra 宿主）
+            group: opentelemetry-operator              # label 值：与 infra 层同值，UI 过滤得跨层视图
+            path: config/opentelemetry-operator
+            namespace: monitoring
   template:
     metadata:
       name: '{{.component}}'

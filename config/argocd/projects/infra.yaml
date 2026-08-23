@@ -4,7 +4,7 @@ metadata:
   name: infra                                              # 平台基础组件域：metrics-server、KEDA、cert-manager、istio、opentelemetry-operator、argo-rollouts
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"                     # 与 bookinfo/observability project 同规则：应用时最先建，prune 时最后删
+    argocd.argoproj.io/sync-wave: "-1"                     # 与 bookinfo project 同规则：应用时最先建，prune 时最后删
 spec:
   description: 平台基础组件（服务网格、证书、弹性伸缩、可观测性采集、指标服务器）
   sourceRepos:

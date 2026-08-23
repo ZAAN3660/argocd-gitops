@@ -7,3 +7,7 @@ helmCharts:
     releaseName: opentelemetry-operator
     namespace: opentelemetry-operator
     valuesFile: values.yaml
+resources:
+  # otel-agent 补权 RBAC（集群级）：agent CR 在 config/opentelemetry-operator，但其 App 的
+  # project 为 default（无集群级白名单），集群级资源只能归安装层本 App 管理。
+  - otel-agent-rbac.yaml
