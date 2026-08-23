@@ -1,4 +1,3 @@
-# metrics-server 3.14.0 values
 args:
   - --kubelet-insecure-tls                    # kind 集群的 kubelet 证书不受信任，必须跳过校验才能采集
   - --kubelet-preferred-address-types=InternalIP

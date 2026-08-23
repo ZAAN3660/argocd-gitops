@@ -1,13 +1,9 @@
-# otel-operator 0.158.0（chart 0.122.0）：OpenTelemetry Operator。
-# X 方案：CRD 随 chart 走——chart 0.122.0 自带 4 个 CRD
-#（instrumentations/opampbridges/opentelemetrycollectors/targetallocators，
-#  位于 templates/admission-webhooks/ 模板内，helm 渲染时一并输出），无需额外落仓。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 helmCharts:
   - name: opentelemetry-operator
     repo: https://open-telemetry.github.io/opentelemetry-helm-charts
-    version: 0.122.0                    # 对齐接管前标签 helm.sh/chart=opentelemetry-operator-0.122.0
-    releaseName: opentelemetry-operator # 对齐接管前标签 app.kubernetes.io/instance=opentelemetry-operator
+    version: 0.122.0
+    releaseName: opentelemetry-operator
     namespace: opentelemetry-operator
     valuesFile: values.yaml

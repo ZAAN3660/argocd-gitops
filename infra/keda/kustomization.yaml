@@ -1,12 +1,8 @@
-# KEDA 2.20.2：事件驱动弹性伸缩。接管前为集群外安装（见 keda/README.md 历史），本应用收编。
-# X 方案：chart 自带 6 个 CRD（templates/crds/），随组件走，不拆库。
-# 监控：组件内不含 prometheus-operator 相关资源（values 全默认，不渲染 ServiceMonitor/PodMonitor），
-# 历史抓取链路见 keda/README.md。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 helmCharts:
   - name: keda
     repo: https://kedacore.github.io/charts
-    version: 2.20.2                    # 对齐接管前版本（helm.sh/chart=keda-2.20.2）
-    releaseName: keda                  # 对齐接管前标签 app.kubernetes.io/instance=keda
+    version: 2.20.2
+    releaseName: keda
     namespace: keda
