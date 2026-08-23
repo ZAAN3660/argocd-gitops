@@ -16,13 +16,14 @@
 
 前置：kind 集群和 Argo CD 已安装（Argo CD 的引导在仓库外完成）。
 
-1. 应用根应用（整个体系唯一的起点，只需手工执行一次）：
+1. 应用两个域的根应用（各域唯一起点，只需手工执行一次；先 infra 后业务——业务依赖平台组件的 CRD）：
 
    ```bash
-   kubectl apply -f bootstrap.yaml
+   kubectl apply -f infra/bootstrap.yaml
+   kubectl apply -f apps/bookinfo/bootstrap.yaml
    ```
 
-   之后的一切都由它自动展开：bootstrap 部署 `config/argocd/` 里的 project 和 AppSet，AppSet 再为每个组件生成 Application 并自动同步。
+   之后的一切都由它们自动展开：每个根应用部署自己域目录下的 project 和 AppSet（域根 `kustomization.yaml` 显式列表，bootstrap 自身与业务子目录不在其中），AppSet 再为每个组件/服务生成 Application 并自动同步。
 
 2. 打开 Argo CD UI，就能看到所有组件 App 依次同步。UI 里按 `component=<组件名>` 过滤，可得该组件跨层的完整视图。
 
@@ -38,6 +39,8 @@
 ### infra/ —— 安装层：集群里装了什么
 
 官方 chart 引用 + 安装形态参数（版本、命名、profile 等）。**只装不配**：这里不出现"装完之后组件怎么行为"的参数。
+
+> infra 域根还放着本域的 Argo CD self-config：`bootstrap.yaml`（根应用）、`project.yaml`（AppProject 权限边界）、`appsets/`（发散规则），随域自治。
 
 | 组件 | 干什么的 |
 |---|---|
@@ -58,12 +61,15 @@
 |---|---|
 | config/istio | 网格运行时配置（meshConfig，权威为 ConfigMap） |
 | config/opentelemetry-operator | otel collector / agent 的运行时行为 |
-| config/argocd | Argo CD 自身：project 权限边界 + AppSet 发散规则 |
 | config/grafana | Grafana 面板（实例在宿主机，只存面板定义） |
+
+> Argo CD 自身配置已随域拆分：infra 域在 `infra/` 根，业务域在 `apps/bookinfo/` 根（各自 bootstrap.yaml + project.yaml + appsets/）。
 
 ### apps/ —— 业务层：跑在平台之上的是什么
 
 bookinfo：Istio 官方示例应用（productpage / reviews / ratings / details 四个微服务）。
+
+每个业务域自持 Argo CD self-config：`apps/bookinfo/` 下的 `bootstrap.yaml`（根应用）、`project.yaml`（AppProject）、`appsets/`（环境发散规则）。新增业务域复制这一套即可。
 
 ## 组件版本
 
@@ -87,7 +93,7 @@ bookinfo：Istio 官方示例应用（productpage / reviews / ratings / details 
 
 1. 建 `infra/<组件名>/`：kustomization.yaml（helmCharts 引用）+ values.yaml（只放安装形态参数）。
 2. 如需运行时定制，建 `config/<组件名>/`。
-3. 在 `config/argocd/appsets/infra-components.yaml`（或 config-components.yaml）的组件清单里加一行。
+3. 在 `infra/appsets/infra-components.yaml`（或 config-components.yaml）的组件清单里加一行。
 4. 提交推送 → Argo CD 自动生成 App 并同步。
 
 ### 升级组件版本

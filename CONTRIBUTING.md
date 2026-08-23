@@ -47,9 +47,15 @@ config/ 目录名镜像 infra/ 组件名：同一组件两层目录同名。组�
 
 **Application label**：AppSet 生成的 Application 统一带 `component` label，值 = **组件词根**（istio 的 base/istiod/gateway 三 App 归一为 `istio`），infra 与 config 两层同词根同值。Argo CD UI 按 `component=<词根>` 过滤即得组件跨层完整视图。注意：此 label 只存在于 Application 对象上，不传播到其管理的 k8s 资源。
 
+**根应用**：名字 = `bootstrap-<域名>`（如 `bootstrap-infra`、`bootstrap-bookinfo`），文件固定放在域根、叫 `bootstrap.yaml`；根应用必须挂内置 `default` project（自定义 project 是它同步的产物，不能先给自己套约束）。
+
 ## 5. AppSet 归属
 
-一层一 AppSet：`config/argocd/appsets/infra-components.yaml` 是 infra/ 目录清单的镜像；`config/argocd/appsets/config-components.yaml` 是 config/ 的镜像（App 名规则特化为 `<组件词根>-config`）。
+Argo CD 自身配置随域存放：每个域根放 `bootstrap.yaml`（根应用，path 指向本域目录）和 `project.yaml`（AppProject），AppSet 放本域 `appsets/` 子目录。
+
+- 一层一 AppSet：`infra/appsets/infra-components.yaml` 是 infra/ 目录清单的镜像；`infra/appsets/config-components.yaml` 是 config/ 的镜像（App 名规则特化为 `<组件词根>-config`）；`apps/bookinfo/appsets/` 下一个服务一个 AppSet。
+- 域根必须有 `kustomization.yaml`，且只显式列出本域 project + AppSet：不能列 bootstrap.yaml 自身（根应用自引用 → 自管理告警、删除卡 finalizer），不能列业务子目录（根应用与业务 App 抢资源，违反资源单一归属铁律）。
+- 新增业务域：复制 `apps/bookinfo/` 的 self-config 四件套（bootstrap.yaml / project.yaml / kustomization.yaml / appsets/），改名字与路径。
 
 ## 6. 版本表是事实锚点
 
