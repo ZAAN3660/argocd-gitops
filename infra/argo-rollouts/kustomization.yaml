@@ -1,5 +1,6 @@
-# Argo CD 的 Application source 只认 git 仓库或 
-# repo，没有 sync 时从 URL 拉取 manifest 的路径
+# argo-rollouts v1.9.1 —— 无官方 helm chart，按 infra 例外表（官方静态清单落仓）处理：
+# install.yaml 是官方发布 v1.9.1 的原样清单（文件未做任何编辑），版本号以本注释为准。
+# 不选 helm 的原因：官方不发布 chart（社区 chart 滞后且非官方），静态清单与官方发布版一一对应。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:

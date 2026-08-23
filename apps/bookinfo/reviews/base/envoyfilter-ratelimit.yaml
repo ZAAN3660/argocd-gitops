@@ -5,7 +5,7 @@
 # 4/60s 官方演示 | 60/60s 日常安全 | 100000/60s 压测豁免；压测时临时调高
 # token_bucket 的 max_tokens 与 tokens_per_fill 即可。
 #
-# 两个关键边界（详见 docs/istio-resilience.md）：
+# 两个关键边界：
 # 1. 本地限流按 Envoy 实例独立计数：Pod 数越多总配额越高，不是全局精确限流；
 #    全局限流需部署官方 ratelimit 服务（ConfigMap 描述符 + EnvoyFilter 联动）。
 # 2. EnvoyFilter 只作用于同命名空间的 workload：本文件随应用 overlay 渲染进

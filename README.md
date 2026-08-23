@@ -14,7 +14,7 @@ apps/     业务层：跑在平台之上的是什么业务
 
 ```
 settings/         GitOps 自身配置（AppSet、Project、Argo CD 引导）
-grafana/ docs/    面板与操作记录
+grafana/        面板（dashboard 源文件）
 ```
 
 ## 分层判别标准
@@ -30,6 +30,13 @@ grafana/ docs/    面板与操作记录
 ## 目录命名规则
 
 命名用**官方全名**（如 `opentelemetry-operator` 而非 `otel-operator`）：缩写对新人不可读。例外仅限镜像路径等官方命名空间（如 `otel/opentelemetry-collector-contrib`）。
+
+**Application 名 = 官方 chart 名**，两条例外：
+
+- 官方名单词离开组件上下文无辨识度（`base`、`gateway`）→ 加组件域前缀：`istio-base`、`istio-gateway`。
+- 官方名已自含组件词根（`istiod`）→ 不加前缀，避免 `istio-istiod` 冗余。
+
+目录名 = 官方 chart 名（与 kustomization 的 helmCharts.name 对齐）；App 名 = 目录名，或目录名加域前缀（按上两条例外）。
 
 `config/` 目录名**镜像** `infra/` 组件名，同一组件在两层的目录同名：
 

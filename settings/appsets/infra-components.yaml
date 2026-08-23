@@ -1,5 +1,6 @@
 # infra 应用域：平台基础组件都是集群级资源，整个集群只装一次，不按环境发散。
-# 一个 AppSet 按组件枚举生成 8 个 Application，Application 名 = 组件裸名（无前缀/后缀）：
+# 一个 AppSet 按组件枚举生成 8 个 Application，Application 名 = 官方 chart 名，
+# 例外按 README 命名规则：泛化词加域前缀（istio-base / istio-gateway），官方名自含词根的不加（istiod）。
 # 与各组件 helm release 的 app.kubernetes.io/instance 标签天然对齐，接管认领零摩擦。
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet

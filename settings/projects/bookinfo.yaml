@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"                         # 同步波最低档：应用时最先建，prune 时最后删（prune 按 wave 逆序）
     # 只能约束 bootstrap 同一次同步内部的相对顺序，管不住 appset 控制器异步删应用的竞态；
-    # 删除 project 的根治方案是两阶段提交，见 docs/mechanisms.md 第 9 节
+    # 删除 project 的根治方案是两阶段提交
 spec:
   description: bookinfo 演示应用（后端）
   sourceRepos:
