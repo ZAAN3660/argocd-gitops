@@ -50,7 +50,7 @@ KEDA 已收编进 infra 应用域（X 方案：CRD 随 chart 走）：
 
 - **权威清单**：`infra/keda/`（kustomization.yaml + values.yaml + monitoring.yaml），由 Application `infra-keda-dev` 管理。
 - **指标开启方式变更**：上文的 kubectl patch 作废。现由 chart values `prometheus.operator.enabled: true` 声明式等价实现（operator 端口 + `--enable-prometheus-metrics=true`）。
-- **抓取配置迁移**：本仓库 `keda/servicemonitor.yaml` 已迁移至 `infra/keda/monitoring.yaml`（内容不变），原文件保留为历史备份。
+- **抓取配置迁移**：本仓库 `keda/servicemonitor.yaml` 已迁移至 `infra/keda/monitoring.yaml`（内容不变），原文件已删除（历史见 git）。
 - 升级 KEDA = 改 `infra/keda/kustomization.yaml` 里的 chart 版本号；X 方案下 CRD 随 chart 版本一起变，升级前注意核对新版本 CRD 变更。
 
 ## 踩坑记录
