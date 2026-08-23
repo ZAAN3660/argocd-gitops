@@ -1,6 +1,6 @@
 # istio base 1.30.3：全部 CRD + 集群级资源（webhook、VAP、RBAC）。
 # X 方案对 istio 的落法：沿用官方三步结构（base/istiod/gateway 三 chart 三应用），CRD 留在 base chart。
-# 无 values 文件：base 只装 CRD 与集群级资源，chart 默认即可。
+# values 只含两处安装形态声明：webhook failurePolicy 对齐运行时终态（见 values.yaml 注释）。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 helmCharts:
@@ -9,6 +9,7 @@ helmCharts:
     version: 1.30.3                    # 对齐接管前版本（operator.istio.io/version: 1.30.3）
     releaseName: istio                 # 对齐接管前标签 app.kubernetes.io/instance=istio
     namespace: istio-system
+    valuesFile: values.yaml
 # base chart 创建的 istio-system 命名空间必须带 istio.io/rev=default 标签：
 # gateway chart 的 Pod 模板 image 为字面量 auto，依赖 istiod 的 mutating webhook
 # 在 Pod 创建时替换成真实 proxyv2 镜像；webhook 的 namespaceSelector 要求

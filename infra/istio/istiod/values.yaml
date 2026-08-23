@@ -6,3 +6,7 @@ revisionTags:
 # mesh 运行时配置（proxyStatsMatcher / extensionProviders.otel 等）不在此：
 # 权威在 config/istio/istio-cm.yaml（配置层）。infra 层只装不配——chart 渲染默认 ConfigMap，
 # 运行时行为由配置层手工 apply 覆盖。此 values 只保留安装形态参数。
+# webhook 漂移对齐：chart 初装渲染 failurePolicy=Ignore，istiod 的 webhook controller
+# 就绪后自动改回 Fail——GitOps 下永久漂移。显式声明 Fail 与运行时终态一致（同 istio-base）。
+base:
+  validationFailurePolicy: Fail

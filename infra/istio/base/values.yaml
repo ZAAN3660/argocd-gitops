@@ -1,0 +1,7 @@
+# istio base 1.30.3 values
+base:
+  # chart 默认：初装渲染 failurePolicy=Ignore（fail-open），等 istiod 的 webhook controller
+  # 就绪后自动改回 Fail 并回填 caBundle。GitOps 直装下这个运行时改写造成永久漂移
+  # （Argo CD 每次 sync 设回 Ignore，controller 又改回 Fail）。
+  # 显式声明 Fail = 把运行时终态提前写进仓库，消除漂移。与 istiod 的 values 保持一致。
+  validationFailurePolicy: Fail
