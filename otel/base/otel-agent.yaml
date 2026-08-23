@@ -5,8 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   mode: daemonset
-  # operator 默认注入的 opentelemetry-collector-k8s 是 core-only 精简版，
-  # 不含 prometheus receiver / prometheusremotewrite exporter（见 CrashLoop 日志）
+  # 与 operator 默认镜像一致（contrib 含 prometheus* 组件），显式 pin 防 chart 升级时 tag 漂移
   image: otel/opentelemetry-collector-contrib:0.158.0
   config:
     receivers:

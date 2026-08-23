@@ -1,6 +1,9 @@
 manager:
   collectorImage:
-    repository: otel/opentelemetry-collector-k8s
+    # 有意偏离 chart 默认：core-only k8s 发行版缺 prometheus* 组件，注入含这些组件的 config 会 CrashLoop；
+    # 改 contrib 让"新 CR 不写 spec.image"这一默认状态本身安全
+    repository: otel/opentelemetry-collector-contrib
+    # tag 走 chart 默认（0.158.0，与 base CR 显式 image 一致）
 admissionWebhooks:
   certManager:
     enabled: true

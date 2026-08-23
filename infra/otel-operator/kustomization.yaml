@@ -1,4 +1,3 @@
-# 警告：operator 默认镜像为 core-only k8s 发行版（缺 prometheus*），新建 Collector CR 必须显式 spec.image
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 helmCharts:
