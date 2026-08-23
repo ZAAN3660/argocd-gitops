@@ -10,6 +10,6 @@ resources:
   - appsets/bookinfo-details.yaml       # 生成 bookinfo-details-<env>
   - appsets/bookinfo-ratings.yaml       # 生成 bookinfo-ratings-<env>
   - appsets/bookinfo-reviews.yaml       # 生成 bookinfo-reviews-<env>
-  - appsets/otel-agent.yaml               # 生成 observability-otel-agent-<env>
+  - appsets/observability-otel-agent.yaml  # 生成 observability-otel-agent（集群级 daemonset，不按环境发散）
   # infra 域：集群级组件整个集群只装一次，不按环境发散——一个 AppSet 按组件枚举 8 个 Application（裸名）
   - appsets/infra-components.yaml        # 生成 cert-manager / metrics-server / keda / argo-rollouts / istio-base / istiod / istio-gateway / otel-operator

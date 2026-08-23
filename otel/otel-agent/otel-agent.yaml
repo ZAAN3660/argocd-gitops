@@ -91,6 +91,6 @@ spec:
           exporters: [debug, otlphttp/tempo]
   env:
     - name: OTEL_RW_ENDPOINT
-      value: "PLACEHOLDER"        # 实际值由 overlay 覆盖
+      value: "http://host.docker.internal:9090/api/v1/write"   # 宿主机 Prometheus remote-write 端点
     - name: OTEL_TEMPO_ENDPOINT
-      value: "http://host.docker.internal:4318"   # 三环境共享宿主机 Tempo；需覆盖时 overlay 加同名 env
+      value: "http://host.docker.internal:4318"                 # 宿主机 Tempo（OTLP/HTTP）
