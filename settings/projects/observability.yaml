@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: observability                                          # 监控域边界：otel collector、exporter 等基础设施
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"                         # 与 bookinfo project 同规则：应用时最先建，prune 时最后删
+spec:
+  description: 可观测性基础设施（otel collector、exporter）
+  sourceRepos:
+    - 'https://github.com/ZAAN3660/argocd-gitops.git'
+  destinations:
+    - namespace: monitoring                                    # 监控组件统一落在 monitoring 命名空间
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+  # 注意：namespaceResourceWhitelist 整个不写 = 放行所有命名空间级资源（otel CR、Service、ConfigMap 等）
+  sourceNamespaces: []

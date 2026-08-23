@@ -1,0 +1,36 @@
+# otel-agent 的 AppSet：把 otel/overlays/<env> 按环境发散成 Application。
+# 结构仿 bookinfo 的 details AppSet，差异只在名字、路径与目标命名空间。
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: otel-agent
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            server: https://kubernetes.default.svc
+            namespace: monitoring
+  template:
+    metadata:
+      name: 'observability-otel-agent-{{.environment}}'
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: observability
+      source:
+        repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+        targetRevision: init
+        path: otel/overlays/{{.environment}}
+      destination:
+        server: '{{.server}}'
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
