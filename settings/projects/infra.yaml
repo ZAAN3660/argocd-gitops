@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: infra                                              # 平台基础组件域：metrics-server、KEDA、cert-manager、istio、otel-operator、argo-rollouts
+  name: infra                                              # 平台基础组件域：metrics-server、KEDA、cert-manager、istio、opentelemetry-operator、argo-rollouts
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "-1"                     # 与 bookinfo/observability project 同规则：应用时最先建，prune 时最后删
@@ -20,7 +20,7 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: argo-rollouts                              # argo-rollouts
       server: https://kubernetes.default.svc
-    - namespace: opentelemetry-operator                     # otel-operator
+    - namespace: opentelemetry-operator                     # opentelemetry-operator
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:                                # X 方案下 CRD 由组件 Application 直接部署，集群级白名单必须覆盖完整：
     - group: ''                                             # 否则 sync 会被 AppProject 权限直接拒绝

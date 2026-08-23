@@ -40,7 +40,7 @@ spec:
             namespace: istio-system
             wave: 0
           - component: otel-operator         # 依赖 cert-manager（wave -2）签发 webhook 证书
-            path: infra/otel-operator
+            path: infra/opentelemetry-operator
             namespace: opentelemetry-operator
             wave: -1
   template:
