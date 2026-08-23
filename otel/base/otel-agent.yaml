@@ -1,0 +1,62 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: otel-agent
+  namespace: monitoring
+spec:
+  mode: daemonset
+  config: |
+    receivers:
+      # 抓取集群内 exporter 的指标
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: node-exporter
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                # 只保留 app.kubernetes.io/name=prometheus-node-exporter 的 Pod
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: prometheus-node-exporter
+                # 只抓端口名为 metrics 的容器端口
+                - source_labels: [__meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: metrics
+
+            - job_name: kube-state-metrics
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: kube-state-metrics
+                - source_labels: [__meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: http-metrics
+
+      # 预留：以后应用 SDK 发 OTLP 数据（traces/metrics/logs）从这里进
+      otlp:
+        protocols:
+          grpc: {}
+
+    processors:
+      memory_limiter:
+        limit_mib: 512
+      batch: {}
+
+    exporters:
+      prometheusremotewrite:
+        endpoint: ${env:OTEL_RW_ENDPOINT}
+      debug:
+        verbosity: basic
+
+    service:
+      pipelines:
+        metrics:
+          receivers: [prometheus, otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug, prometheusremotewrite]
+  env:
+    - name: OTEL_RW_ENDPOINT
+      value: "PLACEHOLDER"        # 实际值由 overlay 覆盖
