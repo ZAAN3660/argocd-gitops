@@ -102,11 +102,6 @@ bookinfo：Istio 官方示例应用（productpage / reviews / ratings / details 
 
 Argo CD UI 看 App 状态（Synced / OutOfSync / Degraded）和 Diff；集群实际状态以仓库为准。
 
-## 仓库规约（写仓库的人看）
+## 仓库规约
 
-1. **三层分层，按内容来源判定**：期望状态由官方上游定义（chart/官方清单），我们只给参数 → infra/；由本仓库定义（运行时行为）→ config/；业务应用 → apps/。
-2. **infra 只装不配，config 只配不装**：装完之后"怎么行为"的参数一律归 config/（典型反例：istio 的 meshConfig）。
-3. **资源单一归属铁律**：一个集群资源只能归一个 App 管；冲突时由一方显式让出（如 `$patch: delete`）。
-4. **App 命名**：App 名 = 官方 chart 名；名单词无辨识度的加组件域前缀（istio-base、istio-gateway）；官方名已自含词根的加不加前缀避免冗余（istiod）。
-5. **component label**：AppSet 生成的 Application 统一带 `component=<组件词根>` label（istio 三 App 归一为 `istio`），供 UI 跨层过滤。label 只存在于 Application 对象，不传播到其管理的 k8s 资源。
-6. **例外可留，必须声明**：infra 层允许两种例外（无官方 chart 时静态清单落仓、chart values 无法表达的环境适配资源），文件头显式声明例外及原因。
+写仓库的人（改 infra/、config/、apps/ 之前）先读 [CONTRIBUTING.md](CONTRIBUTING.md)：分层铁律、命名规则、资源归属等约定都在那里。
