@@ -44,7 +44,7 @@ spec:
             path: infra/istio/istiod
             namespace: istio-system
             wave: -1
-          - component: istio-gateway         # gateway Pod 注入依赖 istiod 的 sidecar-injector；nodePort 写死见 patch-svc.yaml
+          - component: istio-gateway         # gateway Pod 注入依赖 istiod 的 sidecar-injector
             group: istio
             path: infra/istio/gateway
             namespace: istio-system

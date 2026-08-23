@@ -1,7 +1,6 @@
 # istio gateway 1.30.3：ingressgateway（kind 集群的网格入口）。
-# Service 不交给 chart 渲染（values service.type: "None"），由本目录 svc.yaml 提供：
-# 原因 = kustomize 的 patches 对 helmCharts 渲染的资源不生效，而 nodePort 必须写死
-#（chart 渲染会随机分配 nodePort，导致 kind 宿主机端口映射断链）。
+# Service 由 chart 渲染（values service.type: LoadBalancer），nodePort 自动分配；
+# kind 宿主机固定端口映射（30672/30474/30670）随之失效，外部访问改走 kubectl port-forward。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 helmCharts:
@@ -11,5 +10,3 @@ helmCharts:
     releaseName: istio
     namespace: istio-system
     valuesFile: values.yaml
-resources:
-  - svc.yaml

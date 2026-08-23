@@ -78,7 +78,7 @@ infra 下每个组件目录**只允许**出现：
 | 例外 | 触发条件 | 仓库实例 | 要求 |
 |---|---|---|---|
 | 官方静态清单落仓 | 组件无官方 helm chart | `infra/argo-rollouts/install.yaml` | 必须是官方原样清单，注明版本 |
-| 环境适配资源 | chart values 无法表达、但属于"怎么装"必要部分的资源 | `infra/istio/gateway/svc.yaml`（kind 写死 nodePort） | 文件头显式声明例外及原因 |
+| 环境适配资源 | chart values 无法表达、但属于"怎么装"必要部分的资源 | 当前无实例（原 `infra/istio/gateway/svc.yaml` 已删：kind 入口改为不依赖宿主机固定端口，外部访问走 port-forward） | 文件头显式声明例外及原因 |
 
 **归属规定**：运行时配置不属于 infra 层。istio 的 mesh 运行时配置权威在 `config/istio/istio-cm.yaml`（配置层）；infra 里出现任何"装完之后组件怎么行为"的参数都视为越界，应拨回配置层。
 
