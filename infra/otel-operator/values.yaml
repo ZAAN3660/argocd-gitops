@@ -1,7 +1,3 @@
-# opentelemetry-operator chart 0.122.0 values
 admissionWebhooks:
   certManager:
-    enabled: true      # 与接管前一致：webhook 证书由 cert-manager 自签 issuer 签发
-                       # （接管前已有 issuer.cert-manager.io/opentelemetry-operator-selfsigned-issuer，
-                       #   chart 默认命名规则生成的 issuer 名与之一致，接管平滑）
-# metrics.serviceMonitor 保持默认 false：opentelemetry-operator 自身指标抓取不在当前方案内
+    enabled: true
