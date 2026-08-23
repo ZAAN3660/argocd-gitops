@@ -21,7 +21,7 @@ spec:
       failureLimit: 3                       # 连续失败 3 次回滚，容忍短暂抖动
       provider:
         prometheus:
-          address: http://kube-prometheus-stack-prometheus.monitoring:9090
+          address: http://host.docker.internal:9090
           query: |
             sum(rate(istio_requests_total{rollouts_pod_template_hash="{{args.canary-hash}}", response_code=~"2..|3.."}[3m]))
             /
@@ -45,7 +45,7 @@ spec:
       failureLimit: 3
       provider:
         prometheus:
-          address: http://kube-prometheus-stack-prometheus.monitoring:9090
+          address: http://host.docker.internal:9090
           query: |
             histogram_quantile(0.99,
               sum(rate(istio_request_duration_milliseconds_bucket{rollouts_pod_template_hash="{{args.canary-hash}}"}[3m])) by (le)
@@ -67,7 +67,7 @@ spec:
       failureLimit: 3
       provider:
         prometheus:
-          address: http://kube-prometheus-stack-prometheus.monitoring:9090
+          address: http://host.docker.internal:9090
           query: |
             sum(rate(istio_requests_total{rollouts_pod_template_hash="{{args.canary-hash}}"}[3m]))
             or on() vector(0)
@@ -93,7 +93,7 @@ spec:
       failureLimit: 3
       provider:
         prometheus:
-          address: http://kube-prometheus-stack-prometheus.monitoring:9090
+          address: http://host.docker.internal:9090
           query: |
             histogram_quantile(0.99,
               sum(rate(istio_request_duration_milliseconds_bucket{

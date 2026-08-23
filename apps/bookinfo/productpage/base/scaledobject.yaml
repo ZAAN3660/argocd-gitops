@@ -38,7 +38,7 @@ spec:
     #     value: "75"
     - type: prometheus                      # 触发器 3：QPS 超阈值（网格指标，stable+canary 合计）
       metadata:
-        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
+        serverAddress: http://host.docker.internal:9090
         query: |
           sum(rate(istio_requests_total{destination_service=~"productpage.*", response_code=~"2..|3.."}[2m]))
         threshold: "100000"                     # 每秒成功请求超 10 扩容；演示值，生产按容量评估

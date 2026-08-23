@@ -10,7 +10,6 @@ resources:
   - service.yaml                                # 稳定通道（官方短名，镜像硬编码）
   - service-preview.yaml                        # 绿色通道（<短名>-preview，蓝绿发布）
   - scaledobject.yaml                           # KEDA 自动扩缩容
-  - podmonitor.yaml                             # 网格指标抓取
   - destination-rule.yaml                       # 熔断保护
   - envoyfilter-ratelimit.yaml                  # 本地限流
   - analysistemplates.yaml                      # 灰度分析模板

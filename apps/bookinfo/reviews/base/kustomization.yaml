@@ -13,6 +13,5 @@ resources:
   - reviews-v1.yaml                         # 版本 Rollout：无 trafficRouting，副本数金丝雀
   - reviews-v2.yaml                         # 版本 Rollout：同上
   - reviews-v3.yaml                         # 版本 Rollout：同上
-  - podmonitor.yaml                         # 网格指标抓取
   - envoyfilter-ratelimit.yaml              # 本地限流
   - analysistemplates.yaml                  # 分析模板

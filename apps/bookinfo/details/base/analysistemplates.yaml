@@ -1,7 +1,7 @@
 # v5（routing 应用拆分：分析模板每应用自持一份，就近管理）
 # 三个灰度分析模板：查询基于网格指标（sidecar 抓取），与 podinfo 的业务
 # 指标模板不同——bookinfo 镜像不暴露 /metrics，http_requests_total 这类
-# 应用指标不存在。hash 标签由 PodMonitor relabel 生成，用于区分
+# 应用指标不存在。hash 标签由 otel-agent relabel 生成，用于区分
 # stable/canary 两批 Pod。
 # 前提：模板与 Rollout 同命名空间（base 渲染进每个环境命名空间，天然满足）。
 # 阈值可按本服务 SLO 定制（当前为通用值）。
@@ -22,7 +22,7 @@ spec:
       failureLimit: 3                       # 连续失败 3 次回滚，容忍短暂抖动
       provider:
         prometheus:
-          address: http://kube-prometheus-stack-prometheus.monitoring:9090
+          address: http://host.docker.internal:9090
           query: |
             sum(rate(istio_requests_total{rollouts_pod_template_hash="{{args.canary-hash}}", response_code=~"2..|3.."}[3m]))
             /
@@ -46,7 +46,7 @@ spec:
       failureLimit: 3
       provider:
         prometheus:
-          address: http://kube-prometheus-stack-prometheus.monitoring:9090
+          address: http://host.docker.internal:9090
           query: |
             histogram_quantile(0.99,
               sum(rate(istio_request_duration_milliseconds_bucket{rollouts_pod_template_hash="{{args.canary-hash}}"}[3m])) by (le)
@@ -68,7 +68,7 @@ spec:
       failureLimit: 3
       provider:
         prometheus:
-          address: http://kube-prometheus-stack-prometheus.monitoring:9090
+          address: http://host.docker.internal:9090
           query: |
             sum(rate(istio_requests_total{rollouts_pod_template_hash="{{args.canary-hash}}"}[3m]))
             or on() vector(0)
