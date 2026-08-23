@@ -10,18 +10,10 @@ helmCharts:
     releaseName: istio                 # 对齐接管前标签 app.kubernetes.io/instance=istio
     namespace: istio-system
     valuesFile: values.yaml
-# base chart 创建的 istio-system 命名空间必须带 istio.io/rev=default 标签：
-# gateway chart 的 Pod 模板 image 为字面量 auto，依赖 istiod 的 mutating webhook
+# istio-system 命名空间的 istio.io/rev=default 标签不在这里打：
+# base chart 不渲染 Namespace 资源，针对 Namespace 的 patch 永远匹配不到目标（静默无效）。
+# ns 由 Argo CD CreateNamespace 创建，rev 标签由 AppSet 的 syncPolicy.managedNamespaceMetadata
+# 统一打上（config/argocd/appsets/infra-components.yaml）。
+# 因果链：gateway chart 的 Pod 模板 image 为字面量 auto，依赖 istiod 的 mutating webhook
 # 在 Pod 创建时替换成真实 proxyv2 镜像；webhook 的 namespaceSelector 要求
 # istio.io/rev in [default]，缺标签则注入被跳过、kubelet 直接拉 docker.io/library/auto。
-patches:
-  - target:
-      kind: Namespace
-      name: istio-system
-    patch: |-
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: istio-system
-        labels:
-          istio.io/rev: default

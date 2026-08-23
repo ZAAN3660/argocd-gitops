@@ -39,16 +39,19 @@ spec:
             path: infra/istio/base
             namespace: istio-system
             wave: -2
+            revLabel: default                 # 给 istio-system ns 打 istio.io/rev 标签（gateway 注入依赖）
           - component: istiod                # 接管前 istioctl 1.30.3 安装；meshConfig 权威在 config/istio/istio-cm.yaml，infra 只装不配
             group: istio
             path: infra/istio/istiod
             namespace: istio-system
             wave: -1
+            revLabel: default
           - component: istio-gateway         # gateway Pod 注入依赖 istiod 的 sidecar-injector
             group: istio
             path: infra/istio/gateway
             namespace: istio-system
             wave: 0
+            revLabel: default
           - component: opentelemetry-operator  # 依赖 cert-manager（wave -2）签发 webhook 证书
             group: opentelemetry-operator
             path: infra/opentelemetry-operator
@@ -86,6 +89,14 @@ spec:
         namespace: '{{.namespace}}'
       syncPolicy:
         # 接管期 v1：manual；全部验证后 v2 提交统一改 automated prune selfHeal
+        {{- if .revLabel }}
+        # istio 三组件：ns 由 CreateNamespace 创建（裸 ns），rev 标签在此补打。
+        # gateway chart 的 Pod 模板 image 为字面量 auto，缺标签则 sidecar 注入被跳过，
+        # kubelet 直接拉 docker.io/library/auto。其他组件不配此字段，块不渲染。
+        managedNamespaceMetadata:
+          labels:
+            istio.io/rev: '{{.revLabel}}'
+        {{- end }}
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
