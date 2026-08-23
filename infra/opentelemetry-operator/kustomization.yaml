@@ -2,9 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 helmCharts:
   - name: opentelemetry-operator
-    # chart 已 vendor 至 charts/opentelemetry-operator（v0.122.0）。不写 repo/version：
-    # 仓库内已有本地 chart 时 kustomize 跳过 helm pull，规避 repo-server helm4
-    # pull --untar 遇已存在目录报错的问题（ComparisonError）。
+    repo: https://open-telemetry.github.io/opentelemetry-helm-charts
+    version: 0.122.0
     releaseName: opentelemetry-operator
     namespace: opentelemetry-operator
     valuesFile: values.yaml
