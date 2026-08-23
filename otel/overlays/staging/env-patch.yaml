@@ -7,3 +7,5 @@ spec:
   env:
     - name: OTEL_RW_ENDPOINT
       value: http://host.docker.internal:9090/api/v1/write
+    - name: OTEL_TEMPO_ENDPOINT
+      value: http://host.docker.internal:4318

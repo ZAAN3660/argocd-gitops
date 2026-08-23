@@ -5,7 +5,10 @@ metadata:
   namespace: monitoring
 spec:
   mode: daemonset
-  config: |
+  # operator 默认注入的 opentelemetry-collector-k8s 是 core-only 精简版，
+  # 不含 prometheus receiver / prometheusremotewrite exporter（见 CrashLoop 日志）
+  image: otel/opentelemetry-collector-contrib:0.158.0
+  config:
     receivers:
       # 抓取集群内 exporter 的指标
       prometheus:
@@ -31,9 +34,31 @@ spec:
                 - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
                   action: keep
                   regex: kube-state-metrics
+                # 只抓 8080 (name: http) —— 集群资源指标；
+                # 8081 (name: metrics) 是 ksm 自身进程指标，不要抓错
                 - source_labels: [__meta_kubernetes_pod_container_port_name]
                   action: keep
-                  regex: http-metrics
+                  regex: http
+
+            - job_name: istio-proxy
+              # istio sidecar 指标：istio-agent 把 envoy stats 转发到 15020
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                # 只保留注入过 sidecar 的 Pod（网格内 Pod 都有该 label）
+                - source_labels: [__meta_kubernetes_pod_label_security_istio_io_tlsMode]
+                  action: keep
+                  regex: istio
+                # 只抓 istio-proxy 容器声明的 15020 端口（name: http-envoy-prom），
+                # 避免为每个容器端口各生成一份 target
+                - source_labels: [__meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: http-envoy-prom
+                - source_labels: [__meta_kubernetes_namespace]
+                  target_label: namespace
+                - source_labels: [__meta_kubernetes_pod_name]
+                  target_label: pod
+              metrics_path: /stats/prometheus
 
       # 预留：以后应用 SDK 发 OTLP 数据（traces/metrics/logs）从这里进
       otlp:
@@ -42,12 +67,16 @@ spec:
 
     processors:
       memory_limiter:
+        check_interval: 1s
         limit_mib: 512
       batch: {}
 
     exporters:
       prometheusremotewrite:
         endpoint: ${env:OTEL_RW_ENDPOINT}
+      # traces 落盘到宿主机 Tempo（OTLP/HTTP，端口 4318 已映射）
+      otlphttp/tempo:
+        endpoint: ${env:OTEL_TEMPO_ENDPOINT}
       debug:
         verbosity: basic
 
@@ -57,6 +86,12 @@ spec:
           receivers: [prometheus, otlp]
           processors: [memory_limiter, batch]
           exporters: [debug, prometheusremotewrite]
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug, otlphttp/tempo]
   env:
     - name: OTEL_RW_ENDPOINT
       value: "PLACEHOLDER"        # 实际值由 overlay 覆盖
+    - name: OTEL_TEMPO_ENDPOINT
+      value: "http://host.docker.internal:4318"   # 三环境共享宿主机 Tempo；需覆盖时 overlay 加同名 env
