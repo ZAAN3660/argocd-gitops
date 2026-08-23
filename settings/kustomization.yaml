@@ -11,12 +11,5 @@ resources:
   - appsets/ratings.yaml                  # 生成 bookinfo-ratings-<env>
   - appsets/reviews.yaml                  # 生成 bookinfo-reviews-<env>
   - appsets/otel-agent.yaml               # 生成 observability-otel-agent-<env>
-  # infra 域：一个组件一个 AppSet；istio 按官方结构拆 base/istiod/gateway 三个 AppSet
-  - appsets/infra-metrics-server.yaml     # 生成 infra-metrics-server-dev
-  - appsets/infra-keda.yaml               # 生成 infra-keda-dev
-  - appsets/infra-cert-manager.yaml       # 生成 infra-cert-manager-dev
-  - appsets/infra-istio-base.yaml         # 生成 infra-istio-base-dev（CRD 在 base chart）
-  - appsets/infra-istiod.yaml             # 生成 infra-istiod-dev
-  - appsets/infra-istio-gateway.yaml      # 生成 infra-istio-gateway-dev
-  - appsets/infra-otel-operator.yaml      # 生成 infra-otel-operator-dev
-  - appsets/infra-argo-rollouts.yaml      # 生成 infra-argo-rollouts-dev
+  # infra 域：集群级组件整个集群只装一次，不按环境发散——一个 AppSet 按组件枚举 8 个 Application（裸名）
+  - appsets/infra-components.yaml        # 生成 cert-manager / metrics-server / keda / argo-rollouts / istio-base / istiod / istio-gateway / otel-operator

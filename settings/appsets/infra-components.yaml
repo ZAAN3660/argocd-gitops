@@ -1,0 +1,78 @@
+# infra 应用域：平台基础组件都是集群级资源，整个集群只装一次，不按环境发散。
+# 一个 AppSet 按组件枚举生成 8 个 Application，Application 名 = 组件裸名（无前缀/后缀）：
+# 与各组件 helm release 的 app.kubernetes.io/instance 标签天然对齐，接管认领零摩擦。
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: infra-components
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - component: cert-manager          # 接管前 v1.21.1，releaseName 对齐现有标签 instance=cert-manager
+            path: infra/cert-manager
+            namespace: cert-manager
+            wave: -2
+          - component: metrics-server        # 接管前集群里不存在（kube-system 只有 coredns），GitOps 新装
+            path: infra/metrics-server
+            namespace: kube-system
+            wave: -2
+          - component: keda                  # 接管前 2.20.2
+            path: infra/keda
+            namespace: keda
+            wave: -2
+          - component: argo-rollouts         # 无官方 helm chart，静态落仓 install.yaml v1.9.1
+            path: infra/argo-rollouts
+            namespace: argo-rollouts
+            wave: -2
+          - component: istio-base            # CRD 必须先于 istiod 就绪
+            path: infra/istio/base
+            namespace: istio-system
+            wave: -2
+          - component: istiod                # 接管前 istioctl 1.30.3 安装，meshConfig 权威已转 values.yaml
+            path: infra/istio/istiod
+            namespace: istio-system
+            wave: -1
+          - component: istio-gateway         # gateway Pod 注入依赖 istiod 的 sidecar-injector；nodePort 写死见 patch-svc.yaml
+            path: infra/istio/gateway
+            namespace: istio-system
+            wave: 0
+          - component: otel-operator         # 依赖 cert-manager（wave -2）签发 webhook 证书
+            path: infra/otel-operator
+            namespace: opentelemetry-operator
+            wave: -1
+  template:
+    metadata:
+      name: '{{.component}}'
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{.wave}}'
+    spec:
+      project: infra
+      # caBundle 由 cert-manager / istiod / keda 等运行时回填，统一豁免避免"sync 清掉→控制器重写→漂移"死循环。
+      # 对无 webhook 的组件（metrics-server / argo-rollouts / istio-gateway）此豁免为空操作，换来模板零分支。
+      ignoreDifferences:
+        - group: admissionregistration.k8s.io
+          kind: MutatingWebhookConfiguration
+          jqPathExpressions:
+            - .webhooks[].clientConfig.caBundle
+        - group: admissionregistration.k8s.io
+          kind: ValidatingWebhookConfiguration
+          jqPathExpressions:
+            - .webhooks[].clientConfig.caBundle
+      source:
+        repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+        targetRevision: init
+        path: '{{.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        # 接管期 v1：manual；全部验证后 v2 提交统一改 automated prune selfHeal
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
