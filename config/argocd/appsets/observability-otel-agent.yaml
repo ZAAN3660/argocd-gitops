@@ -5,6 +5,9 @@
 # 集群级、每节点一份、整个集群只装一次，不随环境分发。
 # 生成 Application：observability-otel-agent（无环境后缀），带 component label
 #（值 = 宿主组件词根 opentelemetry-operator，与 infra 层同值，UI 过滤即得跨层视图）。
+#【迁移中】按"一层一 AppSet"规则并入 config-components（App 名将改
+# opentelemetry-operator-config、project 改 default）；本文件退役前已拆保险：
+# finalizer 与 automated 移除（防删除级联、防双主 selfHeal），收编完成后删除本文件。
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -21,8 +24,6 @@ spec:
       namespace: argocd
       labels:
         component: opentelemetry-operator
-      finalizers:
-        - resources-finalizer.argocd.argoproj.io
     spec:
       project: observability
       source:
@@ -32,9 +33,8 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: monitoring
+      # 迁移中：manual 冻结态（automated 已拆）。资源现状保持不动，
+      # 收编进 config-components 后本 App 即退役。
       syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
         syncOptions:
           - CreateNamespace=true
