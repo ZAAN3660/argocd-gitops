@@ -1,5 +1,6 @@
 # macOS
 .DS_Store
 
-# kustomize helmCharts 渲染缓存（kubectl kustomize --enable-helm 会在组件目录下生成 charts/）
-**/charts/
+# 注意：kustomize helmCharts 的 charts/ 目录已从渲染缓存转为仓库资产（vendor 进 git），
+# 不再忽略。本地用 kubectl kustomize --enable-helm 构建时，若组件目录已有 charts/<name>，
+# kustomize 会直接使用本地 chart，不会再生成额外的 name-version 缓存目录。
