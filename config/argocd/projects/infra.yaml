@@ -22,6 +22,8 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: opentelemetry-operator                     # opentelemetry-operator
       server: https://kubernetes.default.svc
+    - namespace: monitoring                                 # node exporter/ kube-state-metrics
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:                                # X 方案下 CRD 由组件 Application 直接部署，集群级白名单必须覆盖完整：
     - group: ''                                             # 否则 sync 会被 AppProject 权限直接拒绝
       kind: Namespace
