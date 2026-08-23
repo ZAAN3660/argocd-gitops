@@ -29,6 +29,8 @@ grafana/ docs/    面板与操作记录
 
 ## 目录命名规则
 
+命名用**官方全名**（如 `opentelemetry-operator` 而非 `otel-operator`）：缩写对新人不可读。例外仅限镜像路径等官方命名空间（如 `otel/opentelemetry-collector-contrib`）。
+
 `config/` 目录名**镜像** `infra/` 组件名，同一组件在两层的目录同名：
 
 | 组件 | 安装层 infra/ | 配置层 config/ |
