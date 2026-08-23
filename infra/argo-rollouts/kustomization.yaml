@@ -1,6 +1,10 @@
 # argo-rollouts v1.9.1：渐进式发布控制器（bookinfo 域的 Rollout 依赖它）。
-# 无官方 helm chart，官方标准安装物 = manifests/install.yaml（v1.9.1），静态落仓。
-# X 方案：5 个 CRD 随 install.yaml 走，不拆库。升级 = 替换本文件 + 核对 diff。
+# 无官方 helm chart；官方标准安装物 = manifests/install.yaml（v1.9.1），静态落仓。
+# 为何静态落仓而非“安装时从 URL 下载”：Argo CD 的 Application source 只认 git 仓库
+# 或 helm repo，没有 sync 时从 URL 拉取 manifest 的路径。仓库外下载 = 组件脱离
+# GitOps：漂移无法检测、回滚不可复现（URL 的 latest 会漂移）。落仓后升级 = 替换本
+# 文件看 diff，回滚 = git 改回旧版本。
+# X 方案：5 个 CRD 随 install.yaml 走，不拆库。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
