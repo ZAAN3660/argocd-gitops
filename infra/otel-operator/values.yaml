@@ -1,4 +1,13 @@
 # opentelemetry-operator chart 0.122.0 values
+# 官网安装命令里的 --set admissionWebhooks.autoGenerateCert.enabled=true 不落仓：
+# 模板仅在 certManager.enabled=false 时才评估 autoGenerateCert（见 operator-webhook.yaml
+# 渲染条件 not certManager.enabled），certManager 开启时该开关是纯冗余。
+manager:
+  collectorImage:
+    # 对齐接管前 args：--collector-image=otel/opentelemetry-collector-k8s:0.158.0
+    # chart 0.122.0 默认已是 ghcr.io/open-telemetry/... 源，不设会导致接管时 args 漂移、operator 重启
+    repository: otel/opentelemetry-collector-k8s
+    # tag 走 chart 默认 0.158.0，与接管前一致
 admissionWebhooks:
   certManager:
     enabled: true      # 与接管前一致：webhook 证书由 cert-manager 自签 issuer 签发
