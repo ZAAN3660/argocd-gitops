@@ -4,5 +4,5 @@ profile: stable        # 1.30 起 helm chart 的 profile 命名改为 stable（�
 revisionTags:
   - default            # 字符串列表（不是对象）：保留接管前的 istiod-revision-tag-default Service/webhook，防被 prune
 # mesh 运行时配置（proxyStatsMatcher / extensionProviders.otel 等）不在此：
-# 权威在 istio/istio-cm.yaml（配置层）。infra 层只装不配——chart 渲染默认 ConfigMap，
+# 权威在 config/istio/istio-cm.yaml（配置层）。infra 层只装不配——chart 渲染默认 ConfigMap，
 # 运行时行为由配置层手工 apply 覆盖。此 values 只保留安装形态参数。

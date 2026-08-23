@@ -31,7 +31,7 @@ spec:
             path: infra/istio/base
             namespace: istio-system
             wave: -2
-          - component: istiod                # 接管前 istioctl 1.30.3 安装；meshConfig 权威在 istio/istio-cm.yaml，infra 只装不配
+          - component: istiod                # 接管前 istioctl 1.30.3 安装；meshConfig 权威在 config/istio/istio-cm.yaml，infra 只装不配
             path: infra/istio/istiod
             namespace: istio-system
             wave: -1

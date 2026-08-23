@@ -1,0 +1,8 @@
+# 配置层目录：目录名镜像 infra/opentelemetry-operator（agent 的宿主组件）。
+# 内容 = OpenTelemetry 的运行时行为配置：agent Collector CR + 补权 RBAC，
+# 期望状态由本仓库定义；operator 本体装在 infra/opentelemetry-operator。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - otel-agent.yaml
+  - otel-agent-rbac.yaml

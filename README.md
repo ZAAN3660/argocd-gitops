@@ -1,24 +1,49 @@
 # argocd-gitops
 
-## 仓库分层
+## 仓库分层（集群视角）
+
+三层，层名即顶层目录名：
 
 ```
-infra/            安装层：怎么装（被 settings/appsets 的 AppSet 消费，GitOps 看护）
-otel/otel-agent   安装层：集群级可观测性组件部署清单（observability 域，同样被 AppSet 消费）
-istio/            配置层：运行时配置权威（mesh 行为、tracing 出口），当前手工维护、无 GitOps 看护
-apps/             应用层：按环境分发的业务应用
+infra/    安装层：集群里装了什么平台组件（官方 chart + values，只装不配）
+config/   配置层：装好的组件行为被定制成什么样（期望状态由本仓库定义）
+apps/     业务层：跑在平台之上的是什么业务
+```
+
+不属于三层的目录：
+
+```
 settings/         GitOps 自身配置（AppSet、Project、Argo CD 引导）
 grafana/ docs/    面板与操作记录
 ```
 
-分层判别标准：**"谁在 apply 它"比"它写的是什么"更能分层**。被 Argo CD Application 消费的 = 安装层（因果链：git push → AppSet → Application → 集群，有看护）；手工 apply 的 = 配置层（因果链：人 → kubectl apply，无看护，漂移风险自负）。
+## 分层判别标准
+
+按**内容来源**定层，一问即答：
+
+- 期望状态由**官方上游定义**（官方 chart / 官方清单），我们只给参数 → **安装层**
+- 期望状态由**本仓库定义**（组件的运行时行为定制）→ **配置层**
+- 业务应用自身 → **业务层**
+
+分层不管"谁 apply"：看护方式（GitOps / 手工）是执行机制议题，与层归属无关。
+
+## 目录命名规则
+
+`config/` 目录名**镜像** `infra/` 组件名，同一组件在两层的目录同名：
+
+| 组件 | 安装层 infra/ | 配置层 config/ |
+|---|---|---|
+| istio | `infra/istio/` | `config/istio/` |
+| OpenTelemetry | `infra/opentelemetry-operator/` | `config/opentelemetry-operator/` |
+
+组件在安装层没有目录时（无官方安装物），配置层目录挂在其**宿主组件**名下：otel-agent 无独立安装物（官方只提供 Operator + CRD），运行时行为配置挂在 `config/opentelemetry-operator/`。
 
 ## infra 层约束（只装不配）
 
 infra 下每个组件目录**只允许**出现：
 
 1. **官方 chart 引用**：kustomization.yaml 的 `helmCharts`（repo + version + releaseName + namespace）。
-2. **values.yaml**：仅限**安装形态参数**——profile、版本对齐、镜像、命名、revision 标签等"以什么形态装进来"的决策。运行时代码行为参数（典型反例：istio 的 meshConfig）不写在这里。
+2. **values.yaml**：仅限**安装形态参数**——profile、版本对齐、镜像、命名、revision 标签等"以什么形态装进来"的决策。运行时行为参数（典型反例：istio 的 meshConfig）不写在这里。
 
 **两种允许的例外形式**：
 
@@ -27,4 +52,12 @@ infra 下每个组件目录**只允许**出现：
 | 官方静态清单落仓 | 组件无官方 helm chart | `infra/argo-rollouts/install.yaml` | 必须是官方原样清单，注明版本 |
 | 环境适配资源 | chart values 无法表达、但属于"怎么装"必要部分的资源 | `infra/istio/gateway/svc.yaml`（kind 写死 nodePort） | 文件头显式声明例外及原因 |
 
-**归属规定**：运行时配置不属于 infra 层。istio 的 mesh 运行时配置权威在 `istio/istio-cm.yaml`（配置层）；infra 里出现任何"装完之后组件怎么行为"的参数都视为越界，应拨回配置层。
+**归属规定**：运行时配置不属于 infra 层。istio 的 mesh 运行时配置权威在 `config/istio/istio-cm.yaml`（配置层）；infra 里出现任何"装完之后组件怎么行为"的参数都视为越界，应拨回配置层。
+
+## config 层约束
+
+config/ 只放组件的**运行时行为配置**——期望状态由本仓库定义的资源（CR 实例、ConfigMap 覆盖、策略资源）：
+
+1. 目录名镜像 infra/ 组件名（见上表）；组件无安装层目录时挂宿主组件名下。
+2. 每个文件头注释声明：镜像对象（集群中的哪个资源）、与安装层的关系、变更后的应用流程。
+3. config 层内容不含安装形态参数——"怎么装"的问题归 infra 层，此处只答"怎么行为"。

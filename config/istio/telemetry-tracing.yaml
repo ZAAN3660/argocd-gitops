@@ -1,5 +1,5 @@
 # =============================================================================
-# 文件: istio/telemetry-tracing.yaml
+# 文件: config/istio/telemetry-tracing.yaml
 # 用途: 全 mesh 开启 tracing，envoy 生成的 span 上报到 otel-agent-collector
 # 前置: meshConfig.extensionProviders 中已定义 name: otel（指向
 #       otel-agent-collector.monitoring.svc.cluster.local:4317）

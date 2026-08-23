@@ -1,6 +1,8 @@
-# observability 域：otel-agent 是 mode: daemonset 的集群级可观测性基础设施，
-# 每个节点一份、整个集群只装一次，不随环境分发（与 infra 组件同规则，但
-# 归属 observability 域，不并入 infra-components）。
+# observability 域：消费 config/opentelemetry-operator（配置层）——OpenTelemetry
+# 的运行时行为配置：mode: daemonset 的 Collector agent CR + 补权 RBAC。
+# agent 无独立安装物（官方只提供 Operator + CRD，operator 本体装在 infra/），
+# 期望状态由本仓库定义，归配置层；目录名镜像 infra/opentelemetry-operator（宿主组件）。
+# 集群级、每节点一份、整个集群只装一次，不随环境分发。
 # 生成 Application：observability-otel-agent（无环境后缀）
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
@@ -23,7 +25,7 @@ spec:
       source:
         repoURL: https://github.com/ZAAN3660/argocd-gitops.git
         targetRevision: init
-        path: otel/otel-agent
+        path: config/opentelemetry-operator
       destination:
         server: https://kubernetes.default.svc
         namespace: monitoring

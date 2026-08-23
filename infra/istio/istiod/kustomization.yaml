@@ -1,5 +1,5 @@
 # istiod 1.30.3：控制面。
-# mesh 运行时配置权威在 istio/istio-cm.yaml（配置层）：infra 层只装不配，
+# mesh 运行时配置权威在 config/istio/istio-cm.yaml（配置层）：infra 层只装不配，
 # values 只含安装形态参数（profile / revisionTags），不写 meshConfig。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
