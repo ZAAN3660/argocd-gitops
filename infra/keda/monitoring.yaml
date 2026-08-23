@@ -1,0 +1,35 @@
+# KEDA 指标抓取（自 keda/servicemonitor.yaml 迁移收编，2026-08-23）
+# 接管前由 kubectl apply 手动维护，现由 infra-keda-dev Application 管理。
+# 迁移后 keda/servicemonitor.yaml 保留为历史备份，日常权威以本文件为准。
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: keda-operator
+  namespace: keda
+  labels:
+    release: kube-prometheus-stack   # 必须带：stack 的 Prometheus 只认领带此标签的监控资源
+spec:
+  selector:
+    matchLabels:
+      app: keda-operator
+  podMetricsEndpoints:
+    - port: metrics                  # 字符串=按容器端口名匹配；8080/metrics 由 chart values 开启
+      interval: 15s
+      path: /metrics
+      # 注意：9666 是内部 gRPC metricsservice，不是 HTTP 指标端口，不要抓。
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: keda-metrics-apiserver
+  namespace: keda
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: keda-operator-metrics-apiserver
+  endpoints:
+    - port: metrics                     # apiserver 的 8080 指标端口
+      interval: 15s
+      path: /metrics

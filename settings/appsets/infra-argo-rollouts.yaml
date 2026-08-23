@@ -1,0 +1,38 @@
+# infra 应用域：argo-rollouts 的 AppSet。生成 Application：infra-argo-rollouts-dev
+# 落法说明：argo-rollouts 无官方 helm chart，官方唯一标准安装物是 manifests/install.yaml（v1.9.1），
+# 静态落仓为 infra/argo-rollouts/install.yaml（含 5 个 CRD + 组件），X 方案下 CRD 随组件走。
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: infra-argo-rollouts
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            server: https://kubernetes.default.svc
+            namespace: argo-rollouts
+  template:
+    metadata:
+      name: 'infra-argo-rollouts-{{.environment}}'
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        argocd.argoproj.io/sync-wave: "-2"
+    spec:
+      project: infra
+      source:
+        repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+        targetRevision: init
+        path: infra/argo-rollouts
+      destination:
+        server: '{{.server}}'
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        # 接管期 v1：manual；全部验证后 v2 提交统一改 automated prune selfHeal
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

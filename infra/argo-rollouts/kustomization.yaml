@@ -1,0 +1,7 @@
+# argo-rollouts v1.9.1：渐进式发布控制器（bookinfo 域的 Rollout 依赖它）。
+# 无官方 helm chart，官方标准安装物 = manifests/install.yaml（v1.9.1），静态落仓。
+# X 方案：5 个 CRD 随 install.yaml 走，不拆库。升级 = 替换本文件 + 核对 diff。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - install.yaml      # 官方 v1.9.1：5 CRD + SA + ClusterRole×5 + CRB + ConfigMap + Secret + Service + Deployment

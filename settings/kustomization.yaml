@@ -4,9 +4,19 @@ resources:
   # project 必须先于 appset 同步。否则，appset 引用的 project 会因不存在而导致应用无法 syncing
   - projects/bookinfo.yaml                # bookinfo 应用域边界
   - projects/observability.yaml           # 可观测性应用域边界
+  - projects/infra.yaml                   # 平台基础组件应用域边界（X 方案：CRD 随组件走）
   # 一个应用一个 AppSet：每个应用的环境清单独立维护
   - appsets/productpage.yaml              # 生成 bookinfo-productpage-<env>
   - appsets/details.yaml                  # 生成 bookinfo-details-<env>
   - appsets/ratings.yaml                  # 生成 bookinfo-ratings-<env>
   - appsets/reviews.yaml                  # 生成 bookinfo-reviews-<env>
   - appsets/otel-agent.yaml               # 生成 observability-otel-agent-<env>
+  # infra 域：一个组件一个 AppSet；istio 按官方结构拆 base/istiod/gateway 三个 AppSet
+  - appsets/infra-metrics-server.yaml     # 生成 infra-metrics-server-dev
+  - appsets/infra-keda.yaml               # 生成 infra-keda-dev
+  - appsets/infra-cert-manager.yaml       # 生成 infra-cert-manager-dev
+  - appsets/infra-istio-base.yaml         # 生成 infra-istio-base-dev（CRD 在 base chart）
+  - appsets/infra-istiod.yaml             # 生成 infra-istiod-dev
+  - appsets/infra-istio-gateway.yaml      # 生成 infra-istio-gateway-dev
+  - appsets/infra-otel-operator.yaml      # 生成 infra-otel-operator-dev
+  - appsets/infra-argo-rollouts.yaml      # 生成 infra-argo-rollouts-dev

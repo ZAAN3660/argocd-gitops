@@ -1,0 +1,46 @@
+# infra 应用域：otel-operator 的 AppSet。生成 Application：infra-otel-operator-dev
+# X 方案：CRD 随组件走——chart 0.122.0 自带 4 个 CRD（templates/admission-webhooks/ 模板内），无需拆库。
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: infra-otel-operator
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            server: https://kubernetes.default.svc
+            namespace: opentelemetry-operator
+  template:
+    metadata:
+      name: 'infra-otel-operator-{{.environment}}'
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"          # 依赖 cert-manager（wave -2）先就绪签发 webhook 证书
+    spec:
+      project: infra
+      ignoreDifferences:                            # webhook 证书由 cert-manager 签发，caBundle 运行时注入
+        - group: admissionregistration.k8s.io
+          kind: MutatingWebhookConfiguration
+          jqPathExpressions:
+            - .webhooks[].clientConfig.caBundle
+        - group: admissionregistration.k8s.io
+          kind: ValidatingWebhookConfiguration
+          jqPathExpressions:
+            - .webhooks[].clientConfig.caBundle
+      source:
+        repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+        targetRevision: init
+        path: infra/otel-operator
+      destination:
+        server: '{{.server}}'
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        # 接管期 v1：manual；全部验证后 v2 提交统一改 automated prune selfHeal
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

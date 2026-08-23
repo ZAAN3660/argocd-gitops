@@ -1,0 +1,11 @@
+# cert-manager v1.21.1：证书签发与 webhook 证书基础设施。
+# X 方案：CRD 随组件 chart 走（chart 自带 crds/ 目录 6 个 CRD）。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+helmCharts:
+  - name: cert-manager
+    repo: https://charts.jetstack.io
+    version: v1.21.1                   # 对齐接管前版本
+    releaseName: cert-manager          # 对齐接管前标签 app.kubernetes.io/instance=cert-manager
+    namespace: cert-manager
+    valuesFile: values.yaml

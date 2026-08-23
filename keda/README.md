@@ -44,6 +44,15 @@ kubectl apply -f keda/servicemonitor.yaml
 | `keda_internal_scale_loop_latency_seconds` | 单次扩缩循环耗时 |
 | `keda_scaler_http_request_duration_seconds` | operator → Prometheus 查询延迟直方图 |
 
+## 2026-08-23 接管说明（GitOps 化）
+
+KEDA 已收编进 infra 应用域（X 方案：CRD 随 chart 走）：
+
+- **权威清单**：`infra/keda/`（kustomization.yaml + values.yaml + monitoring.yaml），由 Application `infra-keda-dev` 管理。
+- **指标开启方式变更**：上文的 kubectl patch 作废。现由 chart values `prometheus.operator.enabled: true` 声明式等价实现（operator 端口 + `--enable-prometheus-metrics=true`）。
+- **抓取配置迁移**：本仓库 `keda/servicemonitor.yaml` 已迁移至 `infra/keda/monitoring.yaml`（内容不变），原文件保留为历史备份。
+- 升级 KEDA = 改 `infra/keda/kustomization.yaml` 里的 chart 版本号；X 方案下 CRD 随 chart 版本一起变，升级前注意核对新版本 CRD 变更。
+
 ## 踩坑记录
 
 1. **9666 抓不到指标**：那是 gRPC 内部服务端口，HTTP 请求必然 EOF；指标在 8080。

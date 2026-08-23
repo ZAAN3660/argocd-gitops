@@ -1,0 +1,38 @@
+# infra 应用域：istio ingressgateway（数据面入口）的 AppSet。生成 Application：infra-istio-gateway-dev
+# 接管说明：Service 的 nodePort 必须写死（patch-svc.yaml）——kind 集群宿主机端口映射指向这些端口，
+# chart 渲染若重新随机分配，kind 的 80/443 入口会断链。
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: infra-istio-gateway
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            server: https://kubernetes.default.svc
+            namespace: istio-system
+  template:
+    metadata:
+      name: 'infra-istio-gateway-{{.environment}}'
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"           # 最后：gateway Pod 注入依赖 istiod 的 sidecar-injector（wave -1）
+    spec:
+      project: infra
+      source:
+        repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+        targetRevision: init
+        path: infra/istio/gateway
+      destination:
+        server: '{{.server}}'
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        # 接管期 v1：manual；全部验证后 v2 提交统一改 automated prune selfHeal
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

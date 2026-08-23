@@ -1,2 +1,5 @@
 # macOS
 .DS_Store
+
+# kustomize helmCharts 渲染缓存（kubectl kustomize --enable-helm 会在组件目录下生成 charts/）
+**/charts/

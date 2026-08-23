@@ -1,0 +1,8 @@
+# KEDA 2.20.2 values
+prometheus:
+  operator:
+    enabled: true          # 等价于接管前 README 里的 kubectl patch：给 operator 加 8080/metrics 端口
+                           # 和 --enable-prometheus-metrics=true（接管前手动 patch 已因重装丢失，借此声明式恢复）
+    # 注意：chart 自带的 ServiceMonitor/PodMonitor 保持默认关闭（enabled: false），
+    # 抓取继续由 monitoring.yaml 提供（其 label release=kube-prometheus-stack 与 Prometheus 栈的
+    # ServiceMonitorSelector 匹配，chart 生成的标签对不上，不能换用）。

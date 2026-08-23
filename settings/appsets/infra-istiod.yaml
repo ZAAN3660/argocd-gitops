@@ -1,0 +1,47 @@
+# infra 应用域：istiod（控制面）的 AppSet。生成 Application：infra-istiod-dev
+# 接管说明：接管前 istiod 1.30.3 由 istioctl 装（手工维护 istio/istio-cm.yaml 的 meshConfig）。
+# 接管后 meshConfig 权威转移到本仓库 infra/istio/istiod/values.yaml，istio/ 目录文件降级为历史备份。
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: infra-istiod
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            server: https://kubernetes.default.svc
+            namespace: istio-system
+  template:
+    metadata:
+      name: 'infra-istiod-{{.environment}}'
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"          # 在 base（CRD/webhook，wave -2）之后
+    spec:
+      project: infra
+      ignoreDifferences:
+        - group: admissionregistration.k8s.io       # sidecar-injector 等 webhook 的 caBundle 由 chart 内自签证书渲染，
+          kind: MutatingWebhookConfiguration        # 接管后与现状值不同属预期；豁免可避免接管首 diff 误报
+          jqPathExpressions:
+            - .webhooks[].clientConfig.caBundle
+        - group: admissionregistration.k8s.io
+          kind: ValidatingWebhookConfiguration
+          jqPathExpressions:
+            - .webhooks[].clientConfig.caBundle
+      source:
+        repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+        targetRevision: init
+        path: infra/istio/istiod
+      destination:
+        server: '{{.server}}'
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        # 接管期 v1：manual；全部验证后 v2 提交统一改 automated prune selfHeal
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

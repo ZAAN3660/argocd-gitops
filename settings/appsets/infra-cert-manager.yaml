@@ -1,0 +1,47 @@
+# infra 应用域：cert-manager 的 AppSet（X 方案：CRD 随组件 chart 走，不单独拆库）
+# 生成 Application：infra-cert-manager-dev
+# 接管说明：接管前为集群外安装（cert-manager v1.21.1），releaseName 对齐现有标签 instance=cert-manager。
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: infra-cert-manager
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            server: https://kubernetes.default.svc
+            namespace: cert-manager
+  template:
+    metadata:
+      name: 'infra-cert-manager-{{.environment}}'
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        argocd.argoproj.io/sync-wave: "-2"          # otel-operator（wave -1）依赖 cert-manager 签发 webhook 证书
+    spec:
+      project: infra
+      ignoreDifferences:                            # webhook caBundle 由 cainjector 运行时注入，必须豁免
+        - group: admissionregistration.k8s.io
+          kind: MutatingWebhookConfiguration
+          jqPathExpressions:
+            - .webhooks[].clientConfig.caBundle
+        - group: admissionregistration.k8s.io
+          kind: ValidatingWebhookConfiguration
+          jqPathExpressions:
+            - .webhooks[].clientConfig.caBundle
+      source:
+        repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+        targetRevision: init
+        path: infra/cert-manager
+      destination:
+        server: '{{.server}}'
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        # 接管期 v1：manual；全部验证后 v2 提交统一改 automated prune selfHeal
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

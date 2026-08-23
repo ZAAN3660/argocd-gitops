@@ -1,0 +1,42 @@
+# istio-ingressgateway Service —— 权威定义（接管 2026-08-23）
+# 来源：docs/istio-ingressgateway-svc.yaml 备份（接管前集群现状），补写 nodePort。
+# nodePort 为什么写死：kind 集群宿主机端口映射（kind 启动配置）指向 30672/30474/30670，
+# 若让 K8s 自动分配，接管后入口端口变化导致外部访问断链。
+# labels/selector 按接管前现状原样保留，保证接管 diff 干净。
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/name: istio-ingressgateway
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "istio-ingressgateway"
+    app.kubernetes.io/part-of: "istio"
+    app.kubernetes.io/version: "1.30.3"
+    helm.sh/chart: gateway-1.30.3
+    app: istio-ingressgateway
+    istio: ingressgateway
+    "istio.io/dataplane-mode": "none"
+  annotations: {}
+spec:
+  type: LoadBalancer
+  ports:
+    - name: status-port
+      port: 15021
+      protocol: TCP
+      targetPort: 15021
+      nodePort: 30672
+    - name: http2
+      port: 80
+      protocol: TCP
+      targetPort: 80
+      nodePort: 30474
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 443
+      nodePort: 30670
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway

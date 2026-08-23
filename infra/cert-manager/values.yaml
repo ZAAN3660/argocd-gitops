@@ -1,0 +1,5 @@
+# cert-manager v1.21.1 values
+crds:
+  enabled: true      # 声明意图：CRD 随组件走（X 方案）。kustomize helmCharts 默认渲染 chart 的 crds/ 目录，
+                     # 此键主要约束 helm 安装路径（installCRDs 的等价键），写上是双保险。
+installCRDs: true    # 等价键（deprecated），同上。

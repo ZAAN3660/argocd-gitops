@@ -1,0 +1,8 @@
+# istio gateway 1.30.3 values
+profile: stable              # 与 istiod 同：1.30 起 profile 体系改为 stable
+name: istio-ingressgateway   # 关键：chart 的 Deployment 名默认取 releaseName（=istio），
+                             # 接管前名字是 istio-ingressgateway，必须显式写死才能对齐
+service:
+  type: "None"               # 让 chart 不渲染 Service；Service 由本目录 svc.yaml 提供
+                             #（nodePort 必须写死，chart 无此字段且 kustomize patch 对 helm 渲染资源无效）
+# autoscaling.enabled 保持 chart 默认 true：接管前已有 HPA（min1/max5/80%），一致。
