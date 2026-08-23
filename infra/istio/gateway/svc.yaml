@@ -1,4 +1,8 @@
 # istio-ingressgateway Service —— 权威定义（接管 2026-08-23）
+# 约束例外声明：本文件是 infra 层唯一既非 chart 又非 values 的文件。
+# 它属于"怎么装"的必要部分（kind 上装 gateway 必须写死 nodePort 对齐宿主机端口映射，
+# chart values 无 per-port nodePort 字段，kustomize patch 对 helm 渲染资源无效），
+# 是安装所需的环境适配资源，不是运行时配置，故保留在本目录。
 # 来源：docs/istio-ingressgateway-svc.yaml 备份（接管前集群现状），补写 nodePort。
 # nodePort 为什么写死：kind 集群宿主机端口映射（kind 启动配置）指向 30672/30474/30670，
 # 若让 K8s 自动分配，接管后入口端口变化导致外部访问断链。
