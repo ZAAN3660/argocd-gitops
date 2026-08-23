@@ -11,3 +11,5 @@ resources:
   - appsets/bookinfo-reviews.yaml       # 生成 bookinfo-reviews-<env>
   # infra 域：集群级组件整个集群只装一次，不按环境发散——一个 AppSet 按组件枚举 8 个 Application（命名规则见 README）
   - appsets/infra-components.yaml        # 生成 cert-manager / metrics-server / keda / argo-rollouts / istio-base / istiod / istio-gateway / opentelemetry-operator
+  # config 域：配置层（istio meshConfig / otel-agent 等），一层一 App（同构 infra-components）
+  - appsets/config-components.yaml       # 生成 istio-config / opentelemetry-operator-config
