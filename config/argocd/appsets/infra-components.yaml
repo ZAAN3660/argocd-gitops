@@ -54,6 +54,16 @@ spec:
             path: infra/opentelemetry-operator
             namespace: opentelemetry-operator
             wave: -1
+          - component: node-exporter        # 接管前集群里不存在（otel-agent 空抓），GitOps 新装；抓取契约见 infra/node-exporter 注释
+            group: monitoring               # 与 kube-state-metrics 归一为 monitoring，UI 按 component=monitoring 过滤
+            path: infra/node-exporter
+            namespace: monitoring
+            wave: -2
+          - component: kube-state-metrics   # 同上；otel-agent 按 label + 端口名 http(8080) 抓取，chart 默认值不得改
+            group: monitoring
+            path: infra/kube-state-metrics
+            namespace: monitoring
+            wave: -2
   template:
     metadata:
       name: '{{.component}}'

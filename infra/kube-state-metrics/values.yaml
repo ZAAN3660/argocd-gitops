@@ -1,0 +1,4 @@
+# 集群不装 kube-prometheus-stack（无 prometheus-operator CRD），ServiceMonitor 渲染了也没人消费，
+# 显式关闭避免多余资源；指标出口由 otel-agent 的 prometheus receiver 直接抓取。
+serviceMonitor:
+  enabled: false

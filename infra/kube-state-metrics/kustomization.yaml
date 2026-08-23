@@ -1,0 +1,14 @@
+# kube-state-metrics 8.4.0（app 2.20.0）：集群资源状态指标出口（deployment/statefulset/节点等）。
+# 接管前集群里不存在（与 node-exporter 同批补装）。
+# 抓取契约：otel-agent 按 pod label app.kubernetes.io/name=kube-state-metrics + 容器端口名 http（8080）抓取；
+# 8081(name: metrics) 是 ksm 自身进程指标，otel relabel 已显式排除，chart 默认端口命名不得改动。
+# 另注：8.x 新增 kubeRBACProxy 安全代理，默认关闭（kubeRBACProxy.enabled: false），保持直连抓取形态。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+helmCharts:
+  - name: kube-state-metrics
+    repo: https://prometheus-community.github.io/helm-charts
+    version: 8.4.0
+    releaseName: kube-state-metrics
+    namespace: monitoring
+    valuesFile: values.yaml
