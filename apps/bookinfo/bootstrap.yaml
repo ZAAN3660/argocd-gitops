@@ -1,0 +1,25 @@
+# bookinfo 业务域根应用：apps/bookinfo/ 目录的唯一起点，手工 apply 一次。
+# path 指向 apps/bookinfo/，但实际只同步 project + AppSet——同目录 kustomization.yaml 显式列出资源，
+# bootstrap.yaml 自身和四个服务子目录（productpage/ 等）都不在列表里（见 kustomization.yaml 注释）。
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bootstrap-bookinfo
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default                          # 根应用只能用内置 default：自定义 project 尚未同步，不能先给自己套约束
+  source:
+    repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+    targetRevision: init
+    path: apps/bookinfo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

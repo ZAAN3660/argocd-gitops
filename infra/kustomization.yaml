@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# 本文件是 bootstrap-infra 根应用（path: infra）渲染的唯一入口，显式列表的三条铁律：
+# 1. 不列 bootstrap.yaml 自身 → 根应用不自引用（自引用会导致自管理告警、删除时 finalizer 卡死）
+# 2. 不列组件子目录（cert-manager/ 等）→ 根应用不抢组件 App 的资源，
+#    组件清单归 infra-components AppSet 生成的 Application 独有（CONTRIBUTING 资源单一归属铁律）
+# 3. project 排在 appset 前，且 project 自带 sync-wave -1 → 同一次 sync 内先建 project 再建 appset
+resources:
+  - project.yaml                           # infra 域权限边界（AppProject infra）
+  - appsets/infra-components.yaml          # 生成 8 个集群级组件 App（cert-manager / istiod / ...）
+  - appsets/config-components.yaml         # 生成 2 个配置层 App（istio-config / opentelemetry-operator-config）
