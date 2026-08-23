@@ -1,3 +1,0 @@
-# istio base 1.30.3 values
-# 无自定义：base 只装 CRD 与集群级资源，默认即可。
-# profile 机制：base 图表默认 profile=default（zzz_profile.yaml），无需覆盖。
