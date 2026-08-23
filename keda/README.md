@@ -1,8 +1,11 @@
 # KEDA 监控接入说明
 
 > 记录 KEDA 指标抓取的完整链路与踩过的坑，便于重建与排查。
+>
+> **历史文档**：2026-08-23 接管后，监控抓取资源（PodMonitor/ServiceMonitor）已从仓库移除，
+> KEDA 组件内不含 prometheus-operator 相关资源。下表与踩坑记录仅作排查参考。
 
-## 抓取链路
+## 抓取链路（历史，2026-08-23 接管后已移除）
 
 | 组件 | 指标端口 | 抓取方式 | 备注 |
 |---|---|---|---|
@@ -31,9 +34,10 @@ kubectl patch deploy keda-operator -n keda --type=json \
 kubectl apply -f keda/servicemonitor.yaml
 ```
 
-> 若将来 KEDA 改为 helm/gitops 管理，用等价方式替换：`prometheus.operator.enabled=true`（chart 会自动加端口和 ServiceMonitor）。
+> 本段 kubectl patch 均作废（2026-08-23 接管后移除）：KEDA 组件内不再含 prometheus-operator
+> 相关资源，chart values 恢复默认。
 
-## 关键指标速查
+## 关键指标速查（历史参考）
 
 | 指标 | 含义 |
 |---|---|
@@ -48,9 +52,9 @@ kubectl apply -f keda/servicemonitor.yaml
 
 KEDA 已收编进 infra 应用域（X 方案：CRD 随 chart 走）：
 
-- **权威清单**：`infra/keda/`（kustomization.yaml + values.yaml + monitoring.yaml），由 Application `infra-keda-dev` 管理。
-- **指标开启方式变更**：上文的 kubectl patch 作废。现由 chart values `prometheus.operator.enabled: true` 声明式等价实现（operator 端口 + `--enable-prometheus-metrics=true`）。
-- **抓取配置迁移**：本仓库 `keda/servicemonitor.yaml` 已迁移至 `infra/keda/monitoring.yaml`（内容不变），原文件已删除（历史见 git）。
+- **权威清单**：`infra/keda/kustomization.yaml`，由 Application `infra-keda-dev` 管理。
+- **指标开启方式变更**：上文的 kubectl patch 作废；chart values 恢复默认（`prometheus.operator` 不启用），operator 的 8080 指标与端口随之关闭。
+- **抓取配置移除**：`keda/servicemonitor.yaml` 与 `infra/keda/monitoring.yaml` 均已删除（历史见 git），组件内不再含 PodMonitor/ServiceMonitor。
 - 升级 KEDA = 改 `infra/keda/kustomization.yaml` 里的 chart 版本号；X 方案下 CRD 随 chart 版本一起变，升级前注意核对新版本 CRD 变更。
 
 ## 踩坑记录
