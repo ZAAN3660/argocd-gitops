@@ -17,6 +17,20 @@ apps/     业务层：跑在平台之上的是什么业务
 bootstrap.yaml   根应用：整个体系的唯一起点（手工 apply 一次），不属于三层
 ```
 
+## 组件版本清单
+
+集群内 GitOps 管理组件的实际版本（升级组件后必须同步更新此表；版本号即"集群里装的什么"的事实锚点）：
+
+| 组件 | 版本 | 出处 |
+|---|---|---|
+| cert-manager | v1.21.1 | `infra/cert-manager/kustomization.yaml` |
+| metrics-server | 3.14.0 | `infra/metrics-server/kustomization.yaml` |
+| keda | 2.20.2 | `infra/keda/kustomization.yaml` |
+| argo-rollouts | v1.9.1 | `infra/argo-rollouts/install.yaml`（官方静态清单，文件内无版本标记，出处为集群实查镜像） |
+| istio（base / istiod / gateway 三个 chart） | 1.30.3 | `infra/istio/{base,istiod,gateway}/kustomization.yaml` |
+| opentelemetry-operator | 0.122.0 | `infra/opentelemetry-operator/kustomization.yaml` |
+| Argo CD | v3.5.1 | 集群实查（argocd-server 镜像）。**不在 infra/ 里**：无安装层，由 bootstrap.yaml 手工引导安装，本仓库只管理其配置（config/argocd/），版本升级在仓库外维护 |
+
 ## 分层判别标准
 
 按**内容来源**定层，一问即答：
@@ -37,6 +51,9 @@ bootstrap.yaml   根应用：整个体系的唯一起点（手工 apply 一次�
 - 官方名已自含组件词根（`istiod`）→ 不加前缀，避免 `istio-istiod` 冗余。
 
 目录名 = 官方 chart 名（与 kustomization 的 helmCharts.name 对齐）；App 名 = 目录名，或目录名加域前缀（按上两条例外）。
+
+**Application label 规则**：AppSet 生成的 Application 统一带 `component` label，值 = **组件词根**（istio 的 base / istiod / gateway 三个 App 归一为 `istio`），infra 与 config 两层同词根同值。Argo CD UI 按 `component=<词根>` 过滤，即得该组件的跨层完整视图。注意：此 label 只存在于 Application 对象上（服务于 Argo CD 视图筛选），不传播到其管理的 k8s 资源。
+
 
 `config/` 目录名**镜像** `infra/` 组件名，同一组件在两层的目录同名：
 
@@ -72,3 +89,4 @@ config/ 只放组件的**运行时行为配置**——期望状态由本仓库�
 1. 目录名镜像 infra/ 组件名（见上表）；组件无安装层目录时挂宿主组件名下。
 2. 每个文件头注释声明：镜像对象（集群中的哪个资源）、与安装层的关系、变更后的应用流程。
 3. config 层内容不含安装形态参数——"怎么装"的问题归 infra 层，此处只答"怎么行为"。
+4. **AppSet 归属**：一层一 AppSet——`config/argocd/appsets/config-components.yaml` 是 config/ 目录清单的镜像（与 infra-components 同构）。config 层 App 名规则特化为 `<组件词根>-config`（如 istio-config），project 统一 default，sync 策略 automated prune selfHeal。当前归属：`config/istio` → config AppSet；`config/opentelemetry-operator` → observability-otel-agent AppSet（暂未并入）；`config/argocd` → bootstrap 根应用（自举）；`config/grafana` → 待 kustomization 化后加入。**资源单一归属铁律**：一个资源只能归一个 App 管——`istio-system/istio` ConfigMap 由 infra 侧 `$patch: delete` 让出，归 istio-config 独有。

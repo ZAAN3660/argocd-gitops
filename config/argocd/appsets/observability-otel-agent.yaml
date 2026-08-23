@@ -3,7 +3,8 @@
 # agent 无独立安装物（官方只提供 Operator + CRD，operator 本体装在 infra/），
 # 期望状态由本仓库定义，归配置层；目录名镜像 infra/opentelemetry-operator（宿主组件）。
 # 集群级、每节点一份、整个集群只装一次，不随环境分发。
-# 生成 Application：observability-otel-agent（无环境后缀）
+# 生成 Application：observability-otel-agent（无环境后缀），带 component label
+#（值 = 宿主组件词根 opentelemetry-operator，与 infra 层同值，UI 过滤即得跨层视图）。
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -18,6 +19,8 @@ spec:
     metadata:
       name: 'observability-otel-agent'
       namespace: argocd
+      labels:
+        component: opentelemetry-operator
       finalizers:
         - resources-finalizer.argocd.argoproj.io
     spec:

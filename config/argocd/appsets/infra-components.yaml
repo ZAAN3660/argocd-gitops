@@ -2,6 +2,8 @@
 # 一个 AppSet 按组件枚举生成 8 个 Application，Application 名 = 官方 chart 名，
 # 例外按 README 命名规则：泛化词加域前缀（istio-base / istio-gateway），官方名自含词根的不加（istiod）。
 # 与各组件 helm release 的 app.kubernetes.io/instance 标签天然对齐，接管认领零摩擦。
+# 每个 Application 带 component label（值取 group 字段，istio 三个 App 归一为 istio），
+# 与 config 层 AppSet 的 label 同词根同值，UI 按 component=<词根> 过滤得跨层完整视图。
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -13,34 +15,42 @@ spec:
     - list:
         elements:
           - component: cert-manager          # 接管前 v1.21.1，releaseName 对齐现有标签 instance=cert-manager
+            group: cert-manager
             path: infra/cert-manager
             namespace: cert-manager
             wave: -2
           - component: metrics-server        # 接管前集群里不存在（kube-system 只有 coredns），GitOps 新装
+            group: metrics-server
             path: infra/metrics-server
             namespace: kube-system
             wave: -2
           - component: keda                  # 接管前 2.20.2
+            group: keda
             path: infra/keda
             namespace: keda
             wave: -2
           - component: argo-rollouts         # 无官方 helm chart，静态落仓 install.yaml v1.9.1
+            group: argo-rollouts
             path: infra/argo-rollouts
             namespace: argo-rollouts
             wave: -2
           - component: istio-base            # CRD 必须先于 istiod 就绪
+            group: istio
             path: infra/istio/base
             namespace: istio-system
             wave: -2
           - component: istiod                # 接管前 istioctl 1.30.3 安装；meshConfig 权威在 config/istio/istio-cm.yaml，infra 只装不配
+            group: istio
             path: infra/istio/istiod
             namespace: istio-system
             wave: -1
           - component: istio-gateway         # gateway Pod 注入依赖 istiod 的 sidecar-injector；nodePort 写死见 patch-svc.yaml
+            group: istio
             path: infra/istio/gateway
             namespace: istio-system
             wave: 0
           - component: opentelemetry-operator  # 依赖 cert-manager（wave -2）签发 webhook 证书
+            group: opentelemetry-operator
             path: infra/opentelemetry-operator
             namespace: opentelemetry-operator
             wave: -1
@@ -48,6 +58,8 @@ spec:
     metadata:
       name: '{{.component}}'
       namespace: argocd
+      labels:
+        component: '{{.group}}'
       finalizers:
         - resources-finalizer.argocd.argoproj.io
       annotations:

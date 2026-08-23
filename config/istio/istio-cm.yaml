@@ -1,14 +1,14 @@
 # =============================================================================
 # 文件: config/istio/istio-cm.yaml
-# 用途: 集群 istio-system/istio ConfigMap 的【声明式镜像】（手工维护）
-# 注意: istio-system 不在任何 Argo CD AppSet 管理范围内，集群
-#       configmap 由手工维护，本文件是"期望状态"的唯一权威记录；
-#       历史版本与旧态备份以 git 历史为准。
-#
-# 本文件 = 当前期望状态，可直接 kubectl apply -f
+# 用途: 集群 istio-system/istio ConfigMap 的声明式权威副本（GitOps 管理）。
+# 同步者: config AppSet → Application istio-config（automated prune selfHeal），
+#         push 后自动收敛。infra 侧 istiod 已 $patch: delete 让出此 ConfigMap，
+#         单一归属（防双主）。历史版本与旧态备份以 git 历史为准。
 # =============================================================================
 #
 # ── 变更历史 ───────────────────────────────────────────────────────────────
+# 2026-08-23  由"手工 apply"迁移为 GitOps 管理：config AppSet/istio-config 接管，
+#             infra 侧 istiod kustomization 加 $patch: delete 让出单一归属。
 # 2026-08-23  加入 meshConfig.extensionProviders.otel：
 #             tracing 数据出口指向 otel-agent-collector.monitoring:4317，
 #             供 config/istio/telemetry-tracing.yaml 的 provider 引用（P0 traces 链路）。
@@ -17,11 +17,9 @@
 #             注意：defaultConfig 变更需重启业务 Pod 才生效。
 #
 # ── 应用流程（改本文件后） ─────────────────────────────────────────────────
-#   1) kubectl get cm istio -n istio-system -o yaml > istio-cm-before-<时间戳>.yaml
-#      （临时快照：apply 验证收敛后即删，勿长期留仓）
-#   2) kubectl apply -f config/istio/istio-cm.yaml
-#   3) istiod 热加载 meshConfig（约 1 分钟），注意观察 istiod 日志无 error
-#   4) 重启网格内业务 Pod（删除 Pod 让控制器重建）——tracing/统计类
+#   1) git push 即可（istio-config App automated selfHeal 自动收敛，无需手工 apply）
+#   2) istiod 热加载 meshConfig（约 1 分钟），注意观察 istiod 日志无 error
+#   3) 重启网格内业务 Pod（删除 Pod 让控制器重建）——tracing/统计类
 #      配置是 Pod 创建时渲染进 envoy 的，不重启不生效
 # =============================================================================
 apiVersion: v1

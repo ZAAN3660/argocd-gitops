@@ -1,0 +1,7 @@
+# config/istio：istio 运行时行为配置（权威层，infra 只装不配）。
+# 由 config AppSet 生成的 istio-config App 同步（automated prune selfHeal）。
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - istio-cm.yaml           # 镜像 istio-system/istio ConfigMap：mesh 运行时配置（单一归属，infra 侧已 $patch: delete 让出）
+  - telemetry-tracing.yaml  # 全 mesh tracing：envoy span → otel（依赖 istio-cm 的 extensionProviders.otel）
