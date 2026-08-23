@@ -1,14 +1,11 @@
 # =============================================================================
 # 文件: istio/istio-cm.yaml
 # 用途: 集群 istio-system/istio ConfigMap 的【声明式镜像】（手工维护）
-# 注意: istio-system 不在任何 Argo CD AppSet 管理范围内（见
-#       istio-cm-backup.yaml 头部说明），集群 configmap 由手工维护，
-#       本文件是"期望状态"的唯一权威记录。
+# 注意: istio-system 不在任何 Argo CD AppSet 管理范围内，集群
+#       configmap 由手工维护，本文件是"期望状态"的唯一权威记录；
+#       历史版本与旧态备份以 git 历史为准。
 #
-# ── 与 istio-cm-backup.yaml 的关系 ─────────────────────────────────────────
-#   istio-cm-backup.yaml  = 2026-08-21 修改 proxyStatsMatcher 前的原样备份
-#                           （回滚/文档用途，勿用于日常同步）
-#   本文件                = 当前期望状态，可直接 kubectl apply -f
+# 本文件 = 当前期望状态，可直接 kubectl apply -f
 # =============================================================================
 #
 # ── 变更历史 ───────────────────────────────────────────────────────────────
@@ -16,11 +13,12 @@
 #             tracing 数据出口指向 otel-agent-collector.monitoring:4317，
 #             供 istio/telemetry-tracing.yaml 的 provider 引用（P0 traces 链路）。
 # 2026-08-23  恢复 defaultConfig.proxyStatsMatcher.inclusionPrefixes（8-21 为
-#             故障大盘加的配置，因 istio 重装丢失；背景见 istio-cm-backup.yaml）。
+#             故障大盘加的配置，因 istio 重装丢失）。
 #             注意：defaultConfig 变更需重启业务 Pod 才生效。
 #
 # ── 应用流程（改本文件后） ─────────────────────────────────────────────────
 #   1) kubectl get cm istio -n istio-system -o yaml > istio-cm-before-<时间戳>.yaml
+#      （临时快照：apply 验证收敛后即删，勿长期留仓）
 #   2) kubectl apply -f istio/istio-cm.yaml
 #   3) istiod 热加载 meshConfig（约 1 分钟），注意观察 istiod 日志无 error
 #   4) 重启网格内业务 Pod（删除 Pod 让控制器重建）——tracing/统计类
