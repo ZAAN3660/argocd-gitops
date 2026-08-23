@@ -36,7 +36,7 @@ spec:
       finalizers:
         - resources-finalizer.argocd.argoproj.io
     spec:
-      project: default
+      project: infra
       source:
         repoURL: https://github.com/ZAAN3660/argocd-gitops.git
         targetRevision: init
