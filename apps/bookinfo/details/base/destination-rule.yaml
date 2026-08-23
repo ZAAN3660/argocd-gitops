@@ -1,43 +1,61 @@
-# v5（写实化：资源名与应用名一致，host 的命名空间段由 overlay patch 注入）
-# 熔断骨架：connectionPool 限制到上游的连接/请求并发，
-# outlierDetection 在实例连续返回 5xx 时把它驱逐出负载均衡池。
-# 取值是"压测豁免档"：准备压测/灰度发布期间，阈值放到实际打不穿的程度，
-# 避免熔断干扰。档位速查：官方演示档（1/1/1、5xx×1、驱逐 3m）| 日常安全档
-# （10/10/10、5xx×5、驱逐 30s）| 压测豁免档（本文件当前值）。
-# 压测结束后建议切回日常安全档（git 历史可查）。
-# host 写占位 FQDN：DestinationRule 的 host 是目标服务的全限定名，
-# 跨命名空间必须显式，由 overlay patch 换成 <短名>.<ns>.svc.cluster.local。
-# 注意：本 DR 只覆盖稳定通道短名；host 模式的金丝雀短名
-# （<短名>-canary）不受熔断保护，需要时复制本文档再改 host。
 apiVersion: networking.istio.io/v1
-kind: DestinationRule
+kind: DestinationRule                   # DR 配在服务方，执行在调用方
 metadata:
   name: details
 spec:
-  host: details.<namespace>.svc.cluster.local   # 占位：实际值由 overlay patch 注入
+  host: details
   trafficPolicy:
+    # ------------------------------ 负载均衡 ------------------------------
+    loadBalancer:
+        # 请求走到"建立连接"分支时，按此负载均衡策略选出一个上游主机，常用可选值：
+        #   ROUND_ROBIN    默认值，N 个主机每 N 次建连各轮到一次
+        #   LEAST_REQUEST  HTTP/1.1 下是“活跃连接少者”；HTTP/2 下是"活跃流少者"
+        #   RANDOM         每次建连独立随机选一个
+        #   PASSTHROUGH    透传原始目标地址（ServiceEntry/外部服务场景用）
+        simple: LEAST_REQUEST
+    # ------------------------------ 熔断器 ------------------------------
     connectionPool:
       tcp:
-        maxConnections: 1024                # 压测豁免：1024 条连接，单副本 Python 应用打不穿
+        # 每个调用方（sidecar / Gateway 实例）到目标服务的并发 TCP 连接数上限。
+        # 达到上限后：HTTP/1.1 请求先进 pending 队列等待空闲连接；
+        # pending 也满（http1MaxPendingRequests）→ 返回 503。
+        # HTTP/2 无 pending 概念，连接数满 → 直接 503。
+        maxConnections: 1024            # Envoy 默认值 1024
       http:
-        http1MaxPendingRequests: 1024       # 压测豁免：排队上限 1024
-        maxRequestsPerConnection: 0         # 0 = 连接不限复用次数（Envoy 默认语义）
+        # HTTP/1.1 一个连接同一时刻只能处理一个请求，在连接池满，且连接全忙时，新请求必
+        # 须在调用方（Envoy sidecar) 的 pending 队列里等待，直到有空闲连接或等待超时。
+        # 连接池满 + 队列满 = 直接拒（503）
+        http1MaxPendingRequests: 1024   # Envoy 默认值（同上，回滚）
+        # Envoy 的负载均衡（RANDOM/ROUND_ROBIN/LEAST_REQUEST）不是对每个请求做负载
+        # 均衡，是对"建立连接"这个动作做负载均衡，连接一旦建立，后续请求固定复用这条连接。
+        #
+        # Envoy 在请求（含失败重试）到达时，会跑一遍下面的决策链来决定是否建立新连接：
+        #   请求进来
+        #     ├─ 连接池已空 →→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→ 建立连接
+        #     └─ 连接池不空
+        #           ├─ 有空闲连接 →→→→→→→→→→→→→→→→→→→→→→→→→→ 复用连接
+        #           └─ 无空闲连接
+        #                ├─ 连接数 < maxConnections →→→→→→→ 建立连接
+        #                └─ 连接数 = maxConnections
+        #                     ├─ pending 未满 →→→→→→→→→→→→→ Pending
+        #                     └─ pending 已满 →→→→→→→→→→→→→ 503
+        #
+        # 这就引入一个问题：连接池里一直有空闲连接，请求就走不到"建立连接"这个分支，连接最
+        #                终会因 idle 超时（默认 1 小时）被关闭，新请求才轮到新 Pod
+        # 
+        # maxRequestsPerConnection 设置单个连接上可处理的最大请求数，到上限就主动关闭
+        # 连接，迫使 Envoy 走"建立连接"分支
+        maxRequestsPerConnection: 0     # 0 = 不限制
+    # ------------------------------ 异常检测 ------------------------------
     outlierDetection:
-      consecutive5xxErrors: 100             # 压测豁免：连续 100 次 5xx 才驱逐（≈不驱逐）
+      # 连续 N 个 5xx 错误就认为上游主机异常，驱逐该实例。任何非 5xx 响应都会重置计数
+      consecutive5xxErrors: 100
+      # 驱逐分析的时间窗口，错误率驱逐模式使用；consecutive5xxErrors 模式下不受影响
       interval: 10s
+      # 驱逐的最短时长；实际驱逐时长 = baseEjectionTime × 该实例累计被驱逐次数。第一次
+      # 30s，第二次 60s，第三次 90s……
       baseEjectionTime: 30s
+      # 驱逐的最大时长：实际驱逐时长超过该值时，按该值驱逐，避免驱逐时间过长导致服务不可用
+      # maxEjectionTime: 300s     # Istio API 不暴露，Envoy 才有此概念
+      # 同一时刻允许被驱逐实例占总实例的最大百分比（默认仅 10%）
       maxEjectionPercent: 100
-
-# ============ 练手模板：官方演示档（注释保留，不生效） ============
-# 上方 trafficPolicy 是正式取值（压测豁免档：1024 连接/100 次 5xx，实际打不穿）。
-# 练手时把正式取值逐项换成演示档（一打就穿），提交走 GitOps，练完切回（git 历史可查）：
-#   maxConnections:          1024 → 1      # 并发连接超过 1 → 新连接被拒
-#   http1MaxPendingRequests: 1024 → 1      # 排队上限 1
-#   consecutive5xxErrors:    100  → 1      # 连续 1 次 5xx → 驱逐出负载均衡池
-#   baseEjectionTime:        30s  → 3m     # 熔断窗口：驱逐 3 分钟
-#   interval: 10s（不变）
-# 生效链：productpage 调 details 时，productpage 的 sidecar 读本 DR。
-# 陷阱：1) DR 是客户端侧配置，改的是调用方行为；2) 熔断 + 重试互相放大
-#   （正式 VS retries: 3，驱逐后重试可能打爆其他实例）；
-#   3) 本 DR 只覆盖稳定短名 details，金丝雀短名 details-canary 不受熔断
-#   保护，想对金丝雀通道练手：复制本文件把 host 改成 details-canary。

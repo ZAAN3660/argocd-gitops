@@ -1,10 +1,3 @@
-# v2（A/B 测试化：header 固定用户分流 + 权重分流）
-# reviews A/B 测试的流量契约（Istio 自上而下匹配，header 规则必须在前）：
-# 1. header 路由：end-user: tester 固定打到 v3——A/B 的"固定用户群"特征：
-#    测试用户永远看实验版本，不受权重影响，且 v3 红星肉眼可辨，方便验证分流。
-# 2. 权重路由：其余用户按三版本权重分流（dev 30/35/35）。
-# 版本之间的"发布"= 调权重（本文件）；版本内部更新 = Rollout 默认滚动。
-# 注意：header 规则与权重的组合里，tester 用户的流量不从权重池里扣除。
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
@@ -13,45 +6,7 @@ spec:
   hosts:
     - reviews
   http:
-    # ============ 练手模板：故障注入（注释保留，不生效） ============
-    # 启用：取消下面注释（保持本块位于 reviews-ab-route 之前——本块与
-    # ab-route 都带 match，但不同 header 条件互不遮蔽；必须保持在任何
-    # 无 match route 之前，否则被 reviews-route 吃掉）。
-    # 只有带 x-fault-injection: on 的请求被注入，注入目的地限定 v3（A/B
-    # 实验版），v1/v2 不受影响。
-    # delay 5s > 本文件 perTryTimeout 2s：注入会触发 productpage 侧
-    # 重试（attempts: 3）——观察"注入 → 超时 → 重试 → 二次超时"连锁。
-    # abort 503 会被 retries 吃掉一部分：实际报错次数 < 注入比例。
-    # - name: reviews-fault-route
-    #   match:
-    #     - headers:
-    #         x-fault-injection:
-    #           exact: "on"
-    #   fault:
-    #     delay:
-    #       percentage: { value: 50 }
-    #       fixedDelay: 5s
-    #     abort:
-    #       percentage: { value: 10 }
-    #       httpStatus: 503
-    #   route:
-    #     - destination: { host: reviews, subset: v3 }
-    - name: reviews-ab-route         # A/B 固定用户路由：必须排在权重路由之前
-      match:
-        - headers:
-            end-user:
-              exact: tester          # 测试用户标识：永远看实验版本 v3
-      timeout: 5s
-      retries:
-        attempts: 3
-        perTryTimeout: 2s
-        retryOn: gateway-error,connect-failure,refused-stream
-      route:
-        - destination:
-            host: reviews
-            subset: v3
-          weight: 100
-    - name: reviews-route            # 权重兜底路由
+    - name: reviews-route
       timeout: 5s
       retries:
         attempts: 3
@@ -61,18 +16,18 @@ spec:
         - destination:
             host: reviews
             subset: v1
-            # port:
-            #   number: 9080
+            port:
+              number: 9080
           weight: 30
         - destination:
             host: reviews
             subset: v2
-            # port:
-            #   number: 9080
+            port:
+              number: 9080
           weight: 35
         - destination:
             host: reviews
             subset: v3
-            # port:
-            #   number: 9080
+            port:
+              number: 9080
           weight: 35
