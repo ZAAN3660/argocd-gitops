@@ -7,14 +7,14 @@
 ```
 infra/    安装层：集群里装了什么平台组件（官方 chart + values，只装不配）
 config/   配置层：装好的组件行为被定制成什么样（期望状态由本仓库定义）
+         └── Argo CD 自身配置在 config/argocd/（原 settings/），Grafana 面板在 config/grafana/
 apps/     业务层：跑在平台之上的是什么业务
 ```
 
 不属于三层的目录：
 
 ```
-settings/         GitOps 自身配置（AppSet、Project、Argo CD 引导）
-grafana/        面板（dashboard 源文件）
+bootstrap.yaml   根应用：整个体系的唯一起点（手工 apply 一次），不属于三层
 ```
 
 ## 分层判别标准
@@ -44,8 +44,10 @@ grafana/        面板（dashboard 源文件）
 |---|---|---|
 | istio | `infra/istio/` | `config/istio/` |
 | OpenTelemetry | `infra/opentelemetry-operator/` | `config/opentelemetry-operator/` |
+| Argo CD | ——（无安装层，bootstrap.yaml 手工引导） | `config/argocd/`（原 settings/） |
+| Grafana | ——（实例在宿主机，不入集群） | `config/grafana/` |
 
-组件在安装层没有目录时（无官方安装物），配置层目录挂在其**宿主组件**名下：otel-agent 无独立安装物（官方只提供 Operator + CRD），运行时行为配置挂在 `config/opentelemetry-operator/`。
+组件在安装层没有目录时（无官方安装物），配置层目录挂在其**宿主组件**名下：otel-agent 无独立安装物（官方只提供 Operator + CRD），运行时行为配置挂在 `config/opentelemetry-operator/`。同一规则适用于 Argo CD 与 Grafana：两者均无本仓库安装层（Argo CD 由 bootstrap.yaml 手工引导，Grafana 实例在宿主机），配置层目录直接以组件官方名建立（宿主即自身）：`config/argocd/`、`config/grafana/`。
 
 ## infra 层约束（只装不配）
 

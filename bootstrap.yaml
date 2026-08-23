@@ -1,5 +1,5 @@
 # 根应用：整个 hub 体系的唯一起点，只 apply 到 hub 集群一次。
-# 它部署的不是业务，是 settings/ 里的 Argo CD 自身配置：
+# 它部署的不是业务，是 config/argocd/ 里的 Argo CD 自身配置：
 # project 定义权限边界，appset 定义发散规则，团队代码由后者再生成。
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -13,7 +13,7 @@ spec:
   source:
     repoURL: https://github.com/ZAAN3660/argocd-gitops.git # 配置仓库自身地址
     targetRevision: init                    # hub 跟随 main；团队应用发布靠 overlay 改动，不靠分支
-    path: settings                       # 只同步 Argo CD 自身配置目录，不碰 apps/ 业务代码
+    path: config/argocd                  # 只同步 Argo CD 自身配置目录，不碰 infra/ 与 apps/
   destination:
     server: https://kubernetes.default.svc  # 目标 = hub 集群自身，根应用不跨集群
     namespace: argocd

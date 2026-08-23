@@ -1,7 +1,7 @@
 # otel-agent OpenTelemetryCollector —— 镜像对象：monitoring 命名空间的 CR（daemonset 形态采集器）。
 # 与安装层的关系：本 CR 由 infra/opentelemetry-operator/ 安装的 operator controller 读取并落地为
 # DaemonSet；镜像与 operator 默认一致（contrib，含 prometheus* 组件）。
-# 应用流程：settings/appsets/observability-otel-agent.yaml 指向本目录，Argo CD 应用 CR 后
+# 应用流程：config/argocd/appsets/observability-otel-agent.yaml 指向本目录，Argo CD 应用 CR 后
 # operator 才渲染出 agent Pod。本文件是运行时行为定义（抓谁、发给谁），故属配置层而非安装层。
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
