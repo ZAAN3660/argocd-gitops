@@ -1,3 +1,30 @@
+# infra 域根应用：infra/ 目录的唯一起点，手工 apply 一次。
+# path 指向 infra/，但实际只同步 project + AppSet——因为同目录的 kustomization.yaml
+# 显式列出资源，bootstrap.yaml 自身和组件子目录都不在列表里（见 kustomization.yaml 注释）。
+# 它部署的不是组件，是 infra 域自身的 Argo CD 配置（project 权限边界 + AppSet 发散规则）。
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bootstrap-infra
+  namespace: argocd
+  finalizers:                              # 删除本应用前先级联清理它创建的资源，防止仓库移除后集群残留孤儿对象
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default                          # 根应用只能用内置 default：自定义 project 尚未同步，不能先给自己套约束
+  source:
+    repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+    targetRevision: init                    # hub 跟随 init 分支；组件发布靠 overlay 改动，不靠分支
+    path: infra
+  destination:
+    server: https://kubernetes.default.svc  # 目标 = hub 集群自身，根应用不跨集群
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true                           # 仓库里删除的清单同步时从集群删除，集群严格等于仓库
+      selfHeal: true                        # 集群侧手动改动视为漂移，自动恢复成仓库定义的状态
+    syncOptions:
+      - CreateNamespace=true
+---
 # infra 应用域：平台基础组件都是集群级资源，整个集群只装一次，不按环境发散。
 # 一个 AppSet 按组件枚举生成 8 个 Application，Application 名 = 官方 chart 名，
 # 例外按 README 命名规则：泛化词加域前缀（istio-base / istio-gateway），官方名自含词根的不加（istiod）。
@@ -99,3 +126,50 @@ spec:
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: infra                                              # 平台基础组件域：metrics-server、KEDA、cert-manager、istio、opentelemetry-operator、argo-rollouts
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"                     # 与 bookinfo project 同规则：应用时最先建，prune 时最后删
+spec:
+  description: 平台基础组件（服务网格、证书、弹性伸缩、可观测性采集、指标服务器）
+  sourceRepos:
+    - 'https://github.com/ZAAN3660/argocd-gitops.git'
+  destinations:                                            # (server, namespace) 白名单：本域组件各自的命名空间
+    - namespace: kube-system                                # metrics-server
+      server: https://kubernetes.default.svc
+    - namespace: keda                                       # KEDA
+      server: https://kubernetes.default.svc
+    - namespace: cert-manager                               # cert-manager
+      server: https://kubernetes.default.svc
+    - namespace: istio-system                               # istio base/istiod/gateway
+      server: https://kubernetes.default.svc
+    - namespace: argo-rollouts                              # argo-rollouts
+      server: https://kubernetes.default.svc
+    - namespace: opentelemetry-operator                     # opentelemetry-operator
+      server: https://kubernetes.default.svc
+    - namespace: monitoring                                 # node exporter/ kube-state-metrics
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:                                # X 方案下 CRD 由组件 Application 直接部署，集群级白名单必须覆盖完整：
+    - group: ''                                             # 否则 sync 会被 AppProject 权限直接拒绝
+      kind: Namespace
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+    - group: admissionregistration.k8s.io                   # istio 1.30 引入的稳定校验策略（base/istiod chart 均会渲染）
+      kind: ValidatingAdmissionPolicy
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionPolicyBinding
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: apiregistration.k8s.io                         # KEDA metrics-apiserver / metrics-server 都要注册聚合 API
+      kind: APIService
+  sourceNamespaces: []                                     # 空 = 不限制 Application 来源命名空间
