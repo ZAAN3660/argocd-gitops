@@ -6,10 +6,10 @@ resources:
   - projects/observability.yaml           # 可观测性应用域边界
   - projects/infra.yaml                   # 平台基础组件应用域边界（X 方案：CRD 随组件走）
   # 一个应用一个 AppSet：每个应用的环境清单独立维护
-  - appsets/productpage.yaml              # 生成 bookinfo-productpage-<env>
-  - appsets/details.yaml                  # 生成 bookinfo-details-<env>
-  - appsets/ratings.yaml                  # 生成 bookinfo-ratings-<env>
-  - appsets/reviews.yaml                  # 生成 bookinfo-reviews-<env>
+  - appsets/bookinfo-productpage.yaml   # 生成 bookinfo-productpage-<env>
+  - appsets/bookinfo-details.yaml       # 生成 bookinfo-details-<env>
+  - appsets/bookinfo-ratings.yaml       # 生成 bookinfo-ratings-<env>
+  - appsets/bookinfo-reviews.yaml       # 生成 bookinfo-reviews-<env>
   - appsets/otel-agent.yaml               # 生成 observability-otel-agent-<env>
   # infra 域：集群级组件整个集群只装一次，不按环境发散——一个 AppSet 按组件枚举 8 个 Application（裸名）
   - appsets/infra-components.yaml        # 生成 cert-manager / metrics-server / keda / argo-rollouts / istio-base / istiod / istio-gateway / otel-operator
