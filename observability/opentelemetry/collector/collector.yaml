@@ -268,8 +268,11 @@ spec:
       # access log 发往宿主机 Loki（Loki 3.0+ 原生 OTLP，路径 /otlp/v1/logs）
       otlphttp/loki:
         endpoint: http://host.docker.internal:3100/otlp           # 宿主机 Loki 3.x OTLP 接收
+      # debug 排障专用：verbosity=basic 会逐条打印每条数据（每 200ms 一批），且被自身
+      # filelog 采回 Loki 制造噪声——验收期已用它逐条肉眼确认过三信号管道，现降噪为
+      # normal（仅打印错误）。需要逐条观察时临时改回 basic 即可。
       debug:
-        verbosity: basic
+        verbosity: normal
 
     service:
       pipelines:
