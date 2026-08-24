@@ -2,12 +2,21 @@
 # sync-wave -999 = 同一次同步内的最低波：create 时最先建。
 # 删除顺序不由 wave 保证，由 finalizer 保证（官方 declarative-setup 语义：
 # 项目在没有任何 Application 引用它之前不会被删除）。
-# 落点：OTelCollector CR → monitoring；istio Telemetry CR → istio-system。
-# 注意：Service/OTelCollector CR 为命名空间级资源；但 collector/rbac.yaml 含
-#       ClusterRole + ClusterRoleBinding 两个集群级资源，必须在
-#       clusterResourceWhitelist 放行，否则整次 sync 被拒
-#       （SyncFailed: not permitted in project observability）。CRD 由 infra 域
-#       opentelemetry-operator Application 安装，不属本域。
+# ── 故障复盘（2026-08-24）──
+# 现象：Application opentelemetry-collector 永久 OutOfSync/Missing，monitoring 里没有任何
+#       collector 资源，operator 无从渲染 DaemonSet。
+# 根因链：本项目 clusterResourceWhitelist 最初只放行 Namespace；而 collector/rbac.yaml
+#       的 ClusterRole/ClusterRoleBinding 是集群级资源，Argo CD 校验时报
+#       SyncFailed: not permitted in project observability；sync 是原子操作，一条被拒 →
+#       同目录的 Service/SA/OTelCollector CR 全部不落地。
+# 修复：白名单补 rbac.authorization.k8s.io 的 ClusterRole/ClusterRoleBinding（见下）。
+# 排查口诀：App 显示 OutOfSync/Missing，先看 kubectl get app <名> -o yaml 的
+#       status.operationState.syncResult —— 每条资源都写着被拒原因，别先去 namespace 找 Pod。
+# 门禁模型：AppProject = destinations（目的地二元组）+ 资源类型白名单 双层门禁；
+#       集群级资源只看 clusterResourceWhitelist，命名空间级看 namespaceResourceWhitelist。
+# 注意：Service/OTelCollector CR 为命名空间级资源；collector/rbac.yaml 的 ClusterRole/
+#       ClusterRoleBinding 为集群级资源；CRD 由 infra 域 opentelemetry-operator
+#       Application 安装，不属本域。
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:

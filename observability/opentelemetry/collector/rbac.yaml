@@ -1,3 +1,8 @@
+# 注意：本文件含 ClusterRole/ClusterRoleBinding 两个集群级资源，所属 Application
+# （opentelemetry-collector）的 AppProject 是 observability；必须在 appproject.yaml 的
+# clusterResourceWhitelist 放行 rbac.authorization.k8s.io，否则整次 sync 被拒
+# （SyncFailed: not permitted in project observability）。曾因此整目录不落地，
+# 完整复盘见 appproject.yaml 头部“故障复盘”。
 # k8sattributes processor 的 RBAC 三件套 —— 镜像对象：CR 的 spec.serviceAccount 引用的身份。
 # 因果链：collector 日志 pipeline 里 k8sattributes 拿 pod 名去问 K8s API 要 label/annotation，
 # API 门禁（RBAC）只认 ServiceAccount，故 SA + ClusterRole + ClusterRoleBinding 缺一不可；
