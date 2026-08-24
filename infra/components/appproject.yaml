@@ -1,7 +1,7 @@
 # infra AppProject：平台基础组件域的权限边界，根应用 bootstrap-infra 的同步清单之一。
-# sync-wave -999 = 同一次同步内的最低波：create 时最先建（先于一切组件应用），
-# prune 按 wave 逆序时最后删（project 在，组件应用的 finalizer 才有权限可查）。
-# 边界：sync-wave 只约束根应用一次同步内部的相对顺序，管不住 AppSet 控制器异步删应用的竞态。
+# sync-wave -999 = 同一次同步内的最低波：create 时最先建（先于一切组件应用）。
+# 删除顺序不由 wave 保证，由 finalizer 保证（官方 declarative-setup 语义：
+# 项目在没有任何 Application 引用它之前不会被删除）。
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -9,6 +9,9 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "-999"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io                # 删除 AppProject 前先删净引用它的全部 Application
+                                                            # （Application 再级联删集群资源），保证 project 最后消失
 spec:
   description: 平台基础组件（服务网格、证书、弹性伸缩、可观测性采集、指标服务器）
   sourceRepos:

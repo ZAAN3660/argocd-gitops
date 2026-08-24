@@ -1,6 +1,7 @@
 # observability AppProject：可观测性数据面域的权限边界，根应用 bootstrap-otel 的同步清单之一。
-# sync-wave -999 = 同一次同步内的最低波：create 时最先建，prune 逆序时最后删。
-# 边界：sync-wave 只约束根应用一次同步内部的相对顺序，管不住 AppSet 控制器异步删应用的竞态。
+# sync-wave -999 = 同一次同步内的最低波：create 时最先建。
+# 删除顺序不由 wave 保证，由 finalizer 保证（官方 declarative-setup 语义：
+# 项目在没有任何 Application 引用它之前不会被删除）。
 # 落点：OTelCollector CR → monitoring；istio Telemetry CR → istio-system。
 # 注意：Service/OTelCollector CR 为命名空间级资源；但 collector/rbac.yaml 含
 #       ClusterRole + ClusterRoleBinding 两个集群级资源，必须在
@@ -14,6 +15,9 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "-999"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io                # 删除 AppProject 前先删净引用它的全部 Application，
+                                                            # 保证 project 最后消失
 spec:
   description: 可观测性数据面（OTel collector、istio telemetry 出口）
   sourceRepos:

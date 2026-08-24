@@ -1,15 +1,18 @@
 # bookinfo AppProject：业务域的权限边界，根应用 bootstrap-bookinfo 的同步清单之一。
-# sync-wave -1 = 同一次同步内的最低波：create 最先建、prune 逆序时最后删。
-# 边界：sync-wave 只约束根应用一次同步内部的相对顺序，管不住 AppSet 控制器异步删应用的竞态。
+# sync-wave -999 = 同一次同步内的最低波：create 最先建。
+# 删除顺序不由 wave 保证，由 finalizer 保证（官方 declarative-setup 语义：
+# 项目在没有任何 Application 引用它之前不会被删除）。
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: bookinfo                                             # project = 应用域/团队名；新增应用域/团队，就新增一个 project 文件
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-999"                     # 同步波最低档：create 时最先建，prune 时最后删（prune 按 wave 逆序）
-                                                             # 只能约束 bootstrap 同一次同步内部的相对顺序，管不住 appset 控制器异
-                                                             # 步删应用的竞态
+    argocd.argoproj.io/sync-wave: "-999"                     # 同步波最低档：create 时最先建；删除顺序由 finalizer 保证，
+                                                             # 不依赖 wave
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io                 # 删除 AppProject 前先删净引用它的全部 Application，
+                                                             # 保证 project 最后消失
 spec:
   description: bookinfo 业务域
   sourceRepos:
