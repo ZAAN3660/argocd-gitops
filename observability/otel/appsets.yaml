@@ -5,7 +5,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: otel-components
+  name: otel
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "-999"                     # 与 project 同波：先于它生成的组件 Application 建立
@@ -21,7 +21,7 @@ spec:
             path: observability/otel/collector
             namespace: monitoring
             wave: 0                                          # 依赖链起点：先于 telemetry 同步
-          - component: otel-telemetry                        # 同步 observability/otel/istio：istio-cm（meshConfig 权威）+ tracing + accesslog
+          - component: otel-istio                        # 同步 observability/otel/istio：istio-cm（meshConfig 权威）+ tracing + accesslog
             enabled: "true"
             path: observability/otel/istio
             namespace: istio-system

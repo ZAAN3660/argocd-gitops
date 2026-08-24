@@ -70,7 +70,7 @@ data:
 apiVersion: telemetry.istio.io/v1
 kind: Telemetry
 metadata:
-  name: telemetry-istio-tracing
+  name: tracing
   namespace: istio-system
 spec:
   tracing:
@@ -86,7 +86,7 @@ spec:
 apiVersion: telemetry.istio.io/v1
 kind: Telemetry
 metadata:
-  name: telemetry-istio-accesslog
+  name: accesslog
   namespace: istio-system
 spec:
   accessLogging:
