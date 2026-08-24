@@ -1,7 +1,10 @@
 # infra 应用域：平台基础组件都是集群级资源，整个集群只装一次，不按环境发散。
-# 一个 AppSet 按组件枚举生成 10 个 Application，Application 名 = 官方 chart 名，
-# 例外按 README 命名规则：泛化词加域前缀（istio-base / istio-gateway），官方名自含词根的不加（istiod）。
-# 与各组件 helm release 的 app.kubernetes.io/instance 标签天然对齐，接管认领零摩擦。
+# 一个 AppSet 按组件枚举生成 10 个 Application，Application 名 = infra-<组件名>
+# （K8s 对象名不允许 /，只能用 - 前缀在 ArgoCD UI 里做分层辨识）。
+# 集群内组件名与 Application 名解耦：由各组件 kustomization 的 helm releaseName 决定，
+# 改 Application 名不影响集群里的组件名（keda 还是 keda，不会变成 infra-keda）。
+# 组件名沿用 README 命名规则：泛化词加域前缀（istio-base / istio-gateway），官方名自含词根的不加（istiod）。
+# 各组件 helm release 的 app.kubernetes.io/instance 标签 = releaseName，与组件名同词根，接管认领零摩擦。
 # 每个 Application 带 component label（值取 group 字段，istio 三个 App 归一为 istio），
 # 与 config 层 AppSet 的 label 同词根同值，UI 按 component=<词根> 过滤得跨层完整视图。
 # 本文件位于根应用 path（infra/components）目录顶层，由 directory 模式直接同步。
@@ -16,9 +19,11 @@ spec:
   goTemplate: true
   generators:
     - list:
+        # v3.4.7 AppSet CRD 已移除 list generator 的 selector 过滤字段：写入会被 API server 静默丢弃，
+        # 造成本对象永久 OutOfSync + 自愈反复重试。enabled 仅为说明性标记；停用组件 = 删除对应 element。
         elements:
           - component: cert-manager          # 接管前 v1.21.1，releaseName 对齐现有标签 instance=cert-manager
-            enabled: "true"               # 不装改 false：AppSet 移除对应 Application（cascade 卸载），改回 true 自动恢复
+            enabled: "true"               # 说明性标记（v3.4.7 无 selector 过滤）；停用 = 删除本 element
             group: cert-manager
             path: infra/components/cert-manager
             namespace: cert-manager
@@ -77,10 +82,9 @@ spec:
             path: infra/components/kube-state-metrics
             namespace: monitoring
             wave: 0
-        selector: "{{.enabled}} != 'false'"   # 不装改 false：移除对应 Application（cascade 卸载），改回 true 自动恢复
   template:
     metadata:
-      name: '{{.component}}'
+      name: 'infra-{{.component}}'
       namespace: argocd
       labels:
         component: '{{.group}}'

@@ -14,6 +14,8 @@ spec:
   goTemplate: true
   generators:
     - list:
+        # v3.4.7 AppSet CRD 已移除 list generator 的 selector 过滤字段：写入会被 API server 静默丢弃，
+        # 造成本对象永久 OutOfSync + 自愈反复重试。enabled 仅为说明性标记；停用组件 = 删除对应 element。
         elements:
           - component: opentelemetry-collector              # 同步 observability/opentelemetry/collector：OTelCollector CR（镜像 infra 宿主 operator）
             enabled: "true"
@@ -27,7 +29,6 @@ spec:
             path: observability/opentelemetry/istio
             namespace: istio-system
             wave: 1                                          # 依赖 collector 就绪（istiod 不校验可达性，语义上先建）
-        selector: "{{.enabled}} != 'false'"
   template:
     metadata:
       name: '{{.component}}'

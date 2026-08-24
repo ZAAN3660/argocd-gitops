@@ -10,3 +10,23 @@ helmCharts:
     releaseName: istio
     namespace: istio-system
     valuesFile: values.yaml
+patches:
+  # istio gateway chart 1.22+ 故意把 istio-proxy 镜像硬编码为占位符 auto，
+  # 依赖 istiod 的 mutating webhook 在 Pod 创建时运行时回填成 proxyv2。
+  # GitOps 里 gateway(wave 2) 先于 istiod(wave 1) 就绪时回填无人执行，
+  # auto 原样进集群变成 docker.io/library/auto。显式写死镜像，
+  # 与接管前 istioctl 1.30.3 安装的 proxyv2 一致，不依赖运行时回填。
+  - target:
+      kind: Deployment
+      name: istio-ingressgateway
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: istio-ingressgateway
+      spec:
+        template:
+          spec:
+            containers:
+              - name: istio-proxy
+                image: docker.io/istio/proxyv2:1.30.3

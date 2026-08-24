@@ -1,4 +1,6 @@
 # bookinfo 组件 AppSet：一个文件装 4 个 AppSet 对象（--- 分隔），一个组件一个，各自按 3 个环境发散出 3 个 Application。
+# 注：v3.4.7 AppSet CRD 已移除 list generator 的 selector 过滤字段（写入会被 API server 静默丢弃，
+#     造成永久 OutOfSync + 自愈反复重试）。各 generator 的 enabled 仅为说明性标记；停用组件 = 删除对应 element。
 # 文件内顺序即依赖链顺序。sync-wave 按依赖链分层（全部 > project 的 -1，保证 project 先建、组件应用后建）：
 #   ratings/details = 0（依赖链起点）→ reviews = 1 → productpage = 2（末端，最后同步）
 # prune 按 wave 逆序：productpage 先删、ratings/details 后删、project(-1) 最后删。
@@ -27,7 +29,6 @@ spec:
             enabled: "true"
             server: https://kubernetes.default.svc
             namespace: prod
-        selector: "{{.enabled}} != 'false'"
   template:
     metadata:
       name: 'bookinfo-ratings-{{.environment}}'
@@ -89,7 +90,6 @@ spec:
             enabled: "true"
             server: https://kubernetes.default.svc
             namespace: prod
-        selector: "{{.enabled}} != 'false'"
   template:
     metadata:
       name: 'bookinfo-details-{{.environment}}'
@@ -151,7 +151,6 @@ spec:
             enabled: "true"
             server: https://kubernetes.default.svc
             namespace: prod
-        selector: "{{.enabled}} != 'false'"
   template:
     metadata:
       name: 'bookinfo-reviews-{{.environment}}'
@@ -213,7 +212,6 @@ spec:
             enabled: "true"
             server: https://kubernetes.default.svc
             namespace: prod
-        selector: "{{.enabled}} != 'false'"
   template:                                         # 每个环境套这份模板，就产出 1 个 Application
     metadata:
       name: 'bookinfo-productpage-{{.environment}}' # Argo CD 中应用的名字，不会传播到应用的 Pod
