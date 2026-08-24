@@ -144,8 +144,8 @@ spec:
                   action: keep
                   regex: "5558"
 
-            # 未装组件（当前集群仅 ArgoCD 在跑）：job 预置，组件装上后 kubernetes_sd 自动发现，
-            # 无 target 时零开销。端口为对应 chart 默认 metrics 端口，装上后请照上方方法复核实际端口。
+            # 端口为对应 chart 默认 metrics 端口——keda/opentelemetry-operator 实测与默认不符，
+            # 已按实际端口修正（9666 / 8443）；istio-proxy 需网格内有 sidecar Pod 才有 target。
             - job_name: argo-rollouts
               kubernetes_sd_configs:
                 - role: pod
@@ -157,6 +157,7 @@ spec:
                   action: keep
                   regex: "8090"
 
+            # 已装：端口实测 9666（chart 2.20 默认 metricsservice，非文档 8080）
             - job_name: keda-operator
               kubernetes_sd_configs:
                 - role: pod
@@ -166,7 +167,7 @@ spec:
                   regex: keda-operator
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "8080"
+                  regex: "9666"
 
             - job_name: cert-manager
               kubernetes_sd_configs:
@@ -179,6 +180,8 @@ spec:
                   action: keep
                   regex: "9402"
 
+            # 已装：端口实测 8443（manager metrics，https——若抓取报 TLS/鉴权错，
+            # 需在下方补 scheme: https 与 tls_config: insecure_skip_verify）
             - job_name: opentelemetry-operator
               kubernetes_sd_configs:
                 - role: pod
@@ -188,7 +191,7 @@ spec:
                   regex: opentelemetry-operator
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "8080"
+                  regex: "8443"
 
             # istiod 15014 默认可能要求 mTLS（取决于 meshConfig.enablePrometheusMerge）：
             # 装上后若该 job 恒 up=0，需开启 enablePrometheusMerge 并给采集侧配 TLS 证书，
