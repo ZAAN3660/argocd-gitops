@@ -1,5 +1,17 @@
 # istio gateway 1.30.3 values
 profile: stable              # 与 istiod 同：1.30 起 profile 体系改为 stable
+# chart 1.30.3 默认 containerSecurityContext 带 runAsNonRoot: true，但 proxyv2 镜像（gateway 模式）
+# 无 USER 指令=以 root 运行，kubelet 校验拒绝 → CreateContainerConfigError。
+# 显式配全套（默认块 + runAsUser:1337，对齐接管前 istioctl 原装），覆盖 chart 默认。
+containerSecurityContext:
+  capabilities:
+    drop:
+      - ALL
+  allowPrivilegeEscalation: false
+  privileged: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1337
 name: istio-ingressgateway   # 关键：chart 的 Deployment 名默认取 releaseName（=istio），
                              # 接管前名字是 istio-ingressgateway，必须显式写死才能对齐
 service:
