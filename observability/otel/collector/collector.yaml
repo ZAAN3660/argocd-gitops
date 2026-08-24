@@ -138,19 +138,9 @@ spec:
                   action: keep
                   regex: "8080"
 
-            - job_name: argocd-dex-server
-              kubernetes_sd_configs:
-                - role: pod
-              relabel_configs:
-                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
-                  action: keep
-                  regex: argocd-dex-server
-                - source_labels: [__meta_kubernetes_pod_container_port_number]
-                  action: keep
-                  regex: "5558"
-
-            # 端口为对应 chart 默认 metrics 端口——keda/opentelemetry-operator 实测与默认不符，
-            # 已按实际端口修正（9666 / 8443）；istio-proxy 需网格内有 sidecar Pod 才有 target。
+            # argocd-dex-server job 已移除（2026-08-25）：dex 默认不启 telemetry——argocd-cm 的
+            # dex.config 无 telemetry 段，5558 无监听（实测 connection refused）。
+            # 恢复条件：dex.config 加 telemetry: http: 127.0.0.1:5558 后，按 5558 加回。
             - job_name: argo-rollouts
               kubernetes_sd_configs:
                 - role: pod

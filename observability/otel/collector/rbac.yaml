@@ -27,6 +27,10 @@ rules:
   - apiGroups: ["apps"]
     resources: ["replicasets"]
     verbs: ["get", "list", "watch"]
+  # opentelemetry-operator 的 metrics（--metrics-secure=true）用 TokenReview 认证 + SAR 授权；
+  # 认证通过后还需此 nonResourceURL 授权，否则 403（实测）
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
