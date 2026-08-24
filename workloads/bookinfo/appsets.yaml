@@ -39,19 +39,6 @@ spec:
         - resources-finalizer.argocd.argoproj.io
     spec:
       project: bookinfo
-      ignoreDifferences:
-        - group: argoproj.io
-          kind: Rollout
-          jsonPointers:
-            - /spec/template/metadata/labels/rollouts-pod-template-hash
-        - group: networking.istio.io
-          kind: VirtualService
-          jqPathExpressions:
-            - .spec.http[].route[].weight
-        - group: ""
-          kind: Service
-          jsonPointers:
-            - /spec/selector
       source:
         repoURL: https://github.com/ZAAN3660/argocd-gitops.git
         targetRevision: init
@@ -100,19 +87,6 @@ spec:
         - resources-finalizer.argocd.argoproj.io
     spec:
       project: bookinfo
-      ignoreDifferences:
-        - group: argoproj.io
-          kind: Rollout
-          jsonPointers:
-            - /spec/template/metadata/labels/rollouts-pod-template-hash
-        - group: networking.istio.io
-          kind: VirtualService
-          jqPathExpressions:
-            - .spec.http[].route[].weight
-        - group: ""
-          kind: Service
-          jsonPointers:
-            - /spec/selector
       source:
         repoURL: https://github.com/ZAAN3660/argocd-gitops.git
         targetRevision: init
@@ -161,19 +135,6 @@ spec:
         - resources-finalizer.argocd.argoproj.io
     spec:
       project: bookinfo
-      ignoreDifferences:
-        - group: argoproj.io
-          kind: Rollout
-          jsonPointers:
-            - /spec/template/metadata/labels/rollouts-pod-template-hash
-        - group: networking.istio.io
-          kind: VirtualService
-          jqPathExpressions:
-            - .spec.http[].route[].weight
-        - group: ""
-          kind: Service
-          jsonPointers:
-            - /spec/selector
       source:
         repoURL: https://github.com/ZAAN3660/argocd-gitops.git
         targetRevision: init
@@ -222,19 +183,6 @@ spec:
         - resources-finalizer.argocd.argoproj.io
     spec:
       project: bookinfo                             # 挂到 Argo CD project 下，部署目标受 project 的 destinations 白名单约束
-      ignoreDifferences:                            # 预置豁免清单：灰度发布时 Rollout 控制器会动态改写下述字段，
-        - group: argoproj.io                        # Argo CD 检测漂移（OutOfSync）时跳过它们，不把这些运行时的改动当漂移回滚
-          kind: Rollout
-          jsonPointers:
-            - /spec/template/metadata/labels/rollouts-pod-template-hash
-        - group: networking.istio.io
-          kind: VirtualService
-          jqPathExpressions:
-            - .spec.http[].route[].weight
-        - group: ""
-          kind: Service
-          jsonPointers:
-            - /spec/selector
       source:                                       # 当前应用的部署清单仓库
         repoURL: https://github.com/ZAAN3660/argocd-gitops.git
         targetRevision: init

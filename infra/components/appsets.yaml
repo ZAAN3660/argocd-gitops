@@ -94,17 +94,6 @@ spec:
         argocd.argoproj.io/sync-wave: '{{.wave}}'
     spec:
       project: infra
-      # caBundle 由 cert-manager / istiod / keda 等运行时回填，统一豁免避免"sync 清掉→控制器重写→漂移"死循环。
-      # 对无 webhook 的组件（metrics-server / argo-rollouts / istio-gateway）此豁免为空操作，换来模板零分支。
-      ignoreDifferences:
-        - group: admissionregistration.k8s.io
-          kind: MutatingWebhookConfiguration
-          jqPathExpressions:
-            - .webhooks[].clientConfig.caBundle
-        - group: admissionregistration.k8s.io
-          kind: ValidatingWebhookConfiguration
-          jqPathExpressions:
-            - .webhooks[].clientConfig.caBundle
       source:
         repoURL: https://github.com/ZAAN3660/argocd-gitops.git
         targetRevision: init
@@ -113,6 +102,9 @@ spec:
         server: https://kubernetes.default.svc
         namespace: '{{.namespace}}'
       syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
