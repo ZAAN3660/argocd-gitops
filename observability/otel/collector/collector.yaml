@@ -229,28 +229,30 @@ spec:
           - type: regex_parser
             regex: '^.*/(?P<pod_name>[^_]+)_(?P<namespace_name>[^_]+)_(?P<container_name>[^_]+)-[0-9a-f]+\.log$'
             parse_from: attributes["log.file.path"]
-          # 三件套直接写进 resource attributes（标准 OTel 键名）。为什么在这 move 而不是靠
-          # 下游 resource processor：resource processor 的 from_attribute 只读 resource
-          # attributes 内部键，读不到 filelog 拆出的 LogRecord attributes——实测该链断点
-          # 导致 Loki 3.x 收不到 k8s.namespace.name 等标准键、默认提升名单落空（2026-08-25）
-          - type: move
-            from: attributes.pod_name
-            to: resource.attributes["k8s.pod.name"]
-          - type: move
-            from: attributes.namespace_name
-            to: resource.attributes["k8s.namespace.name"]
-          - type: move
-            from: attributes.container_name
-            to: resource.attributes["k8s.container.name"]
 
     processors:
       # 日志元数据链（顺序即因果链，不可调换）：
-      #   1) filelog 已把 pod/namespace/container 直接 move 进 resource attributes（标准键名），
-      #      故这里 resource processor 只负责补 service.name 标识本 collector 来源；
-      #   2) k8sattributes：按 resource 里的 k8s.pod.name 查 K8s API，把 Pod 的
-      #      label/annotation/部署名等贴回 resource（查询身份是 spec.serviceAccount，
-      #      权限由 collector-rbac.yaml 授予）——这些标准键会被 Loki 3.x 默认提升名单
-      #      自动提为流标签（如 k8s.deployment.name）
+      #   1) transform：把 filelog 拆出的 LogRecord attributes（pod_name 等）set 进
+      #      resource attributes 标准键（k8s.pod.name 等），并删除旧键。不用 filelog
+      #      的 move 操作符：实测其 to: resource.attributes["x"] 在该版本被解析成字面
+      #      键名 attributes.k8s.pod.name，导致 Loki 3.x 默认提升名单匹配不上
+      #      （2026-08-25，collector 0.158.0）；resource processor 的 from_attribute
+      #      又只读 resource 内部键，跨域搬不动——OTTL set 是标准跨域写法；
+      #   2) resource：补 service.name 标识本 collector 来源；
+      #   3) k8sattributes：按 resource 里的 k8s.pod.name 查 K8s API，把 Pod 基础
+      #      metadata 贴回 resource（查询身份是 spec.serviceAccount，权限由
+      #      collector-rbac.yaml 授予）——标准键会被 Loki 3.x 默认提升名单
+      #      自动提为流标签（k8s_pod_name / k8s_namespace_name / k8s_container_name）
+      transform:
+        log_statements:
+          - context: log
+            statements:
+              - set(resource.attributes["k8s.pod.name"], attributes["pod_name"]) where attributes["pod_name"] != nil
+              - set(resource.attributes["k8s.namespace.name"], attributes["namespace_name"]) where attributes["namespace_name"] != nil
+              - set(resource.attributes["k8s.container.name"], attributes["container_name"]) where attributes["container_name"] != nil
+              - delete_key(attributes, "pod_name")
+              - delete_key(attributes, "namespace_name")
+              - delete_key(attributes, "container_name")
       resource:
         attributes:
           - key: service.name
@@ -289,5 +291,5 @@ spec:
           exporters: [otlphttp/tempo]
         logs:
           receivers: [otlp, filelog]
-          processors: [resource, k8sattributes, memory_limiter, batch]
+          processors: [transform, resource, k8sattributes, memory_limiter, batch]
           exporters: [otlphttp/loki]
