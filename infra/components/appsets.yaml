@@ -1,8 +1,9 @@
 # infra 应用域：平台基础组件都是集群级资源，整个集群只装一次，不按环境发散。
-# 一个 AppSet 按组件枚举生成 10 个 Application，Application 名 = infra-<组件名>
-# （K8s 对象名不允许 /，只能用 - 前缀在 ArgoCD UI 里做分层辨识）。
+# 一个 AppSet 按组件枚举生成 10 个 Application，Application 名 = <组件名>（不带 infra- 前缀）。
+# 版本不进名字：K8s 对象名不允许点号，且升级 = 改名字 = 删建重装，代价太大。
+# 版本放 app-version label（value 取 element 的 version 字段），ArgoCD UI 可见。
 # 集群内组件名与 Application 名解耦：由各组件 kustomization 的 helm releaseName 决定，
-# 改 Application 名不影响集群里的组件名（keda 还是 keda，不会变成 infra-keda）。
+# 改 Application 名不影响集群里的组件名（keda 还是 keda）。
 # 组件名沿用 README 命名规则：泛化词加域前缀（istio-base / istio-gateway），官方名自含词根的不加（istiod）。
 # 各组件 helm release 的 app.kubernetes.io/instance 标签 = releaseName，与组件名同词根，接管认领零摩擦。
 # 每个 Application 带 component label（值取 group 字段，istio 三个 App 归一为 istio），
@@ -25,69 +26,80 @@ spec:
           - component: cert-manager          # 接管前 v1.21.1，releaseName 对齐现有标签 instance=cert-manager
             enabled: "true"               # 说明性标记（v3.4.7 无 selector 过滤）；停用 = 删除本 element
             group: cert-manager
+            version: v1.21.1
             path: infra/components/cert-manager
             namespace: cert-manager
             wave: 0
           - component: metrics-server        # 接管前集群里不存在（kube-system 只有 coredns），GitOps 新装
             enabled: "true"
             group: metrics-server
+            version: 3.14.0
             path: infra/components/metrics-server
             namespace: kube-system
             wave: 0
           - component: keda                  # 接管前 2.20.2
             enabled: "true"
             group: keda
+            version: 2.20.2
             path: infra/components/keda
             namespace: keda
             wave: 0
           - component: argo-rollouts         # 无官方 helm chart，静态落仓 install.yaml v1.9.1
             enabled: "true"
             group: argo-rollouts
+            version: v1.9.1
             path: infra/components/argo-rollouts
             namespace: argo-rollouts
             wave: 0
           - component: istio-base            # CRD 必须先于 istiod 就绪
             enabled: "true"
             group: istio
+            version: 1.30.3
             path: infra/components/istio/base
             namespace: istio-system
             wave: 0
           - component: istiod                # 接管前 istioctl 1.30.3 安装；meshConfig 权威在 observability/otel/istio/telemetry-istio.yaml，infra 只装不配
             enabled: "true"
             group: istio
+            version: 1.30.3
             path: infra/components/istio/istiod
             namespace: istio-system
             wave: 1
           - component: istio-gateway         # gateway Pod 注入依赖 istiod 的 sidecar-injector
             enabled: "true"
             group: istio
+            version: 1.30.3
             path: infra/components/istio/gateway
             namespace: istio-system
             wave: 2
           - component: opentelemetry-operator  # 依赖 cert-manager（wave -99）签发 webhook 证书
             enabled: "true"
             group: opentelemetry-operator
+            version: 0.122.0
             path: infra/components/opentelemetry-operator
             namespace: opentelemetry-operator
             wave: 1
           - component: node-exporter        # 接管前集群里不存在（otel-agent 空抓），GitOps 新装；抓取契约见 infra/node-exporter 注释
             enabled: "true"
             group: monitoring               # 与 kube-state-metrics 归一为 monitoring，UI 按 component=monitoring 过滤
+            version: 4.56.1
             path: infra/components/node-exporter
             namespace: monitoring
             wave: 0
           - component: kube-state-metrics   # 同上；otel-agent 按 label + 端口名 http(8080) 抓取，chart 默认值不得改
             enabled: "true"
             group: monitoring
+            version: 8.4.0
             path: infra/components/kube-state-metrics
             namespace: monitoring
             wave: 0
   template:
     metadata:
-      name: 'infra-{{.component}}'
+      name: '{{.component}}'
       namespace: argocd
       labels:
         component: '{{.group}}'
+        app-version: '{{.version}}'
       finalizers:
         - resources-finalizer.argocd.argoproj.io
       annotations:
