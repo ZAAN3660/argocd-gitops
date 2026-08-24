@@ -2,6 +2,17 @@
 # sync-wave -999 = 同一次同步内的最低波：create 时最先建（先于一切组件应用）。
 # 删除顺序不由 wave 保证，由 finalizer 保证（官方 declarative-setup 语义：
 # 项目在没有任何 Application 引用它之前不会被删除）。
+# ── 删除顺序根因复盘（2026-08-25 bootstrap-bookinfo 误删事故）────────────
+# 现象：删域根应用时 AppProject 瞬间消失，AppSet/Application 磨蹭很久才删完。
+# 根因链（按因果序）：
+# 1) sync-wave 只定义 sync 的 apply 顺序（lowest→highest），删除路径无等价物；
+# 2) 删除顺序的真相是 finalizer 差异：AppProject 当时没挂 finalizer → 秒删；
+#    AppSet/Application 挂 resources-finalizer → 须先级联删净各自管理的对象
+#    （AppSet→Application→集群资源）才删自己；
+# 3) delete 默认 foreground 传播：先删完依赖再删自身（19:16 日志铁证）；
+# 4) 陷阱：删除期间根应用 selfHeal 仍在自愈，把 AppProject 秒重建为无主孤儿。
+# 对策：AppProject 挂 resources-finalizer（本文件已挂）——官方语义：
+#     "项目在没有任何 Application 引用它之前不会被删除"。
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
