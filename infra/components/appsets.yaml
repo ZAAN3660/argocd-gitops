@@ -20,61 +20,61 @@ spec:
           - component: cert-manager          # 接管前 v1.21.1，releaseName 对齐现有标签 instance=cert-manager
             enabled: "true"               # 不装改 false：AppSet 移除对应 Application（cascade 卸载），改回 true 自动恢复
             group: cert-manager
-            path: infra/cert-manager
+            path: infra/components/cert-manager
             namespace: cert-manager
             wave: 0
           - component: metrics-server        # 接管前集群里不存在（kube-system 只有 coredns），GitOps 新装
             enabled: "true"
             group: metrics-server
-            path: infra/metrics-server
+            path: infra/components/metrics-server
             namespace: kube-system
             wave: 0
           - component: keda                  # 接管前 2.20.2
             enabled: "true"
             group: keda
-            path: infra/keda
+            path: infra/components/keda
             namespace: keda
             wave: 0
           - component: argo-rollouts         # 无官方 helm chart，静态落仓 install.yaml v1.9.1
             enabled: "true"
             group: argo-rollouts
-            path: infra/argo-rollouts
+            path: infra/components/argo-rollouts
             namespace: argo-rollouts
             wave: 0
           - component: istio-base            # CRD 必须先于 istiod 就绪
             enabled: "true"
             group: istio
-            path: infra/istio/base
+            path: infra/components/istio/base
             namespace: istio-system
             wave: 0
           - component: istiod                # 接管前 istioctl 1.30.3 安装；meshConfig 权威在 observability/opentelemetry/istio/telemetry-istio.yaml，infra 只装不配
             enabled: "true"
             group: istio
-            path: infra/istio/istiod
+            path: infra/components/istio/istiod
             namespace: istio-system
             wave: 1
           - component: istio-gateway         # gateway Pod 注入依赖 istiod 的 sidecar-injector
             enabled: "true"
             group: istio
-            path: infra/istio/gateway
+            path: infra/components/istio/gateway
             namespace: istio-system
             wave: 2
           - component: opentelemetry-operator  # 依赖 cert-manager（wave -99）签发 webhook 证书
             enabled: "true"
             group: opentelemetry-operator
-            path: infra/opentelemetry-operator
+            path: infra/components/opentelemetry-operator
             namespace: opentelemetry-operator
             wave: 1
           - component: node-exporter        # 接管前集群里不存在（otel-agent 空抓），GitOps 新装；抓取契约见 infra/node-exporter 注释
             enabled: "true"
             group: monitoring               # 与 kube-state-metrics 归一为 monitoring，UI 按 component=monitoring 过滤
-            path: infra/node-exporter
+            path: infra/components/node-exporter
             namespace: monitoring
             wave: 0
           - component: kube-state-metrics   # 同上；otel-agent 按 label + 端口名 http(8080) 抓取，chart 默认值不得改
             enabled: "true"
             group: monitoring
-            path: infra/kube-state-metrics
+            path: infra/components/kube-state-metrics
             namespace: monitoring
             wave: 0
         selector: "{{.enabled}} != 'false'"   # 不装改 false：移除对应 Application（cascade 卸载），改回 true 自动恢复
