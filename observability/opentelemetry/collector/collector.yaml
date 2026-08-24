@@ -226,8 +226,11 @@ spec:
             regex: '^(?P<log_time>[^ ]+) (?P<stream>stdout|stderr) (?P<logtag>[FP]) (?P<message>.*)$'
             timestamp:
               parse_from: attributes.log_time
-              layout_type: gotime
-              layout: '2006-01-02T15:04:05.000000000Z07:00'
+              # containerd 时间戳小数秒不定宽（尾部 0 会被剪掉，实测常见 8 位），
+              # gotime 的 .000000000 要求恰 9 位，不匹配整行被丢（failed to emit token）；
+              # strptime 的 %f 兼容 1~9 位变宽小数秒
+              layout_type: strptime
+              layout: '%Y-%m-%dT%H:%M:%S.%fZ'
           - type: regex_parser
             regex: '^.*/(?P<pod_name>[^_]+)_(?P<namespace_name>[^_]+)_(?P<container_name>[^_]+)-[0-9a-f]+\.log$'
             parse_from: attributes["log.file.path"]
