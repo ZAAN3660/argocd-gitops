@@ -7,7 +7,6 @@
 # 组件名沿用 README 命名规则：泛化词加域前缀（istio-base / istio-gateway），官方名自含词根的不加（istiod）。
 # 各组件 helm release 的 app.kubernetes.io/instance 标签 = releaseName，与组件名同词根，接管认领零摩擦。
 # 每个 Application 带 version label（值取 element 的 version 字段，如 version=v1.21.1），ArgoCD UI 直接显示版本。
-# 注意：config 层 AppSet 仍保留 component label（本次未动），UI 按 component=<词根> 过滤只剩 config 层半视图。
 # 本文件位于根应用 path（infra/components）目录顶层，由 directory 模式直接同步。
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
