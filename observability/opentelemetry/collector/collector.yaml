@@ -210,7 +210,6 @@ spec:
         protocols:
           grpc: {}
           http: {}
-          http: {}
 
       # 容器 stdout/stderr 日志采集：daemonset agent 只读挂宿主机 /var/log（见 spec.volumes），
       # 读 /var/log/containers/*.log（CRI 格式）。两个 regex_parser：
