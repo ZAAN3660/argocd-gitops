@@ -36,14 +36,17 @@ apps/     业务层：跑在平台之上的是什么业务
 
 ## 4. 命名规则
 
-**目录名 = 官方全名**（`opentelemetry-operator` 而非 `otel-operator`）：缩写对新人不可读。例外仅限镜像路径等官方命名空间。
+**目录名 = 官方全名**（`opentelemetry-operator` 而非 `otel-operator`）：缩写对新人不可读。例外仅限镜像路径等官方命名空间，以及配置层 observability 域（见下）。
 
 **Application 名 = 官方 chart 名**，两条例外：
 
 - 名单词离开组件上下文无辨识度（`base`、`gateway`）→ 加组件域前缀：`istio-base`、`istio-gateway`。
 - 官方名已自含组件词根（`istiod`）→ 不加前缀，避免 `istio-istiod` 冗余。
+- 配置层无 chart 的组件：App 名 = `otel-<角色>`（`otel-collector`、`otel-telemetry`）。
 
 config/ 目录名镜像 infra/ 组件名：同一组件两层目录同名。组件在安装层没有目录时（无官方安装物），配置层目录挂其**宿主组件**名下（如 otel-agent 挂在 `config/opentelemetry-operator/`）。
+
+**配置层 observability 域用官方缩写 `otel`**（2026-08-25 改名）：目录 `observability/otel/`；OTelCollector CR 名 = `otel`——operator 自动拼 `<CR名>-collector` 生成 DaemonSet/Pod/Service（`otel-collector`），避免 `opentelemetry-collector-collector` 式重复单词；otel 为官方认可词根（Istio 官方集成文档同款）。infra 安装层仍用官方全名：chart/release/namespace 名与 helm 安装链绑定，改名波及整条安装链、收益为零。
 
 **Application label**：AppSet 生成的 Application 统一带 `component` label，值 = **组件词根**（istio 的 base/istiod/gateway 三 App 归一为 `istio`），infra 与 config 两层同词根同值。Argo CD UI 按 `component=<词根>` 过滤即得组件跨层完整视图。注意：此 label 只存在于 Application 对象上，不传播到其管理的 k8s 资源。
 

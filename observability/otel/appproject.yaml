@@ -14,7 +14,7 @@
 # 对策：AppProject 挂 resources-finalizer（本文件已挂）——官方语义：
 #     "项目在没有任何 Application 引用它之前不会被删除"。
 # ── 故障复盘（2026-08-24）──
-# 现象：Application opentelemetry-collector 永久 OutOfSync/Missing，monitoring 里没有任何
+# 现象：Application otel-collector（当时名 opentelemetry-collector）永久 OutOfSync/Missing，monitoring 里没有任何
 #       collector 资源，operator 无从渲染 DaemonSet。
 # 根因链：本项目 clusterResourceWhitelist 最初只放行 Namespace；而 collector/rbac.yaml
 #       的 ClusterRole/ClusterRoleBinding 是集群级资源，Argo CD 校验时报

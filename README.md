@@ -59,8 +59,8 @@
 
 | 目录 | 定制什么 |
 |---|---|
-| config/istio | 网格运行时配置（meshConfig，权威为 ConfigMap） |
-| config/opentelemetry-operator | otel collector / agent 的运行时行为 |
+| observability/otel/istio | 网格运行时配置（meshConfig，权威为 ConfigMap） |
+| observability/otel | otel collector / agent 的运行时行为 |
 | config/grafana | Grafana 面板（实例在宿主机，只存面板定义） |
 
 > Argo CD 自身配置已随域拆分：infra 域在 `infra/` 根，业务域在 `apps/bookinfo/` 根（各自 bootstrap.yaml + project.yaml + appsets/）。

@@ -52,7 +52,7 @@ spec:
             path: infra/components/istio/base
             namespace: istio-system
             wave: 0
-          - component: istiod                # 接管前 istioctl 1.30.3 安装；meshConfig 权威在 observability/opentelemetry/istio/telemetry-istio.yaml，infra 只装不配
+          - component: istiod                # 接管前 istioctl 1.30.3 安装；meshConfig 权威在 observability/otel/istio/telemetry-istio.yaml，infra 只装不配
             enabled: "true"
             group: istio
             path: infra/components/istio/istiod

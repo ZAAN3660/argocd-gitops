@@ -1,12 +1,14 @@
-# observability/opentelemetry 组件 AppSet：单集群无环境发散，list generator 枚举（与 infra-components 同构）。
-# 依赖链：collector(0) → istio-telemetry(1)——meshConfig 引用的 collector Service 语义上先建。
-# label component 归一：opentelemetry-collector → opentelemetry（与 infra 层 operator 同值），
-#                       istio-telemetry → istio（与 infra 层 istiod 等同值），UI 过滤得跨层视图。
-# 本文件位于根应用 path（observability/opentelemetry）目录顶层，由 directory 模式直接同步。
+# observability/otel 组件 AppSet：单集群无环境发散，list generator 枚举（与 infra-components 同构）。
+# 依赖链：collector(0) → telemetry(1)——meshConfig 引用的 collector Service 语义上先建。
+# label component 归一：otel-collector → otel；otel-telemetry → istio（与 infra 层 istiod 等同值），
+#                        UI 过滤得跨层视图。注意断点：infra 层 opentelemetry-operator 的 component
+#                        label 仍是 opentelemetry（官方 chart 名，未改名），与 otel 不同值，
+#                        跨层过滤 operator 时需用 component=opentelemetry 单独过滤。
+# 本文件位于根应用 path（observability/otel）目录顶层，由 directory 模式直接同步。
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: opentelemetry-components
+  name: otel-components
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "-999"                     # 与 project 同波：先于它生成的组件 Application 建立
@@ -17,16 +19,16 @@ spec:
         # v3.4.7 AppSet CRD 已移除 list generator 的 selector 过滤字段：写入会被 API server 静默丢弃，
         # 造成本对象永久 OutOfSync + 自愈反复重试。enabled 仅为说明性标记；停用组件 = 删除对应 element。
         elements:
-          - component: opentelemetry-collector              # 同步 observability/opentelemetry/collector：OTelCollector CR（镜像 infra 宿主 operator）
+          - component: otel-collector                      # 同步 observability/otel/collector：OTelCollector CR otel（镜像 infra 宿主 operator）
             enabled: "true"
-            group: opentelemetry                             # label 值：与 infra 层 opentelemetry-operator 同值，UI 过滤得跨层视图
-            path: observability/opentelemetry/collector
+            group: otel                                     # label 值 = 配置层词根 otel；与 infra 层 opentelemetry-operator 的 opentelemetry 不同值（见头注释）
+            path: observability/otel/collector
             namespace: monitoring
             wave: 0                                          # 依赖链起点：先于 telemetry 同步
-          - component: istio-telemetry                       # 同步 observability/opentelemetry/istio：istio-cm（meshConfig 权威）+ tracing + accesslog
+          - component: otel-telemetry                        # 同步 observability/otel/istio：istio-cm（meshConfig 权威）+ tracing + accesslog
             enabled: "true"
             group: istio                                     # label 值：与 infra 层 istio-base/istiod/istio-gateway 归一为 istio
-            path: observability/opentelemetry/istio
+            path: observability/otel/istio
             namespace: istio-system
             wave: 1                                          # 依赖 collector 就绪（istiod 不校验可达性，语义上先建）
   template:

@@ -1,5 +1,5 @@
-# observability 域根应用：observability/opentelemetry/ 的唯一起点，手工 apply 一次。
-# path 指向 observability/opentelemetry/，该目录顶层只有两个文件：appproject.yaml + appsets.yaml，
+# observability 域根应用：observability/otel/ 的唯一起点，手工 apply 一次。
+# path 指向 observability/otel/，该目录顶层只有两个文件：appproject.yaml + appsets.yaml，
 # 组件子目录（collector/ istio/）被 directory 模式忽略（不递归）。
 # 本文件位于 observability/，不在 path 之内——根应用的管理清单永远不包含它自己。
 # 应用流程：git push 即可（automated prune selfHeal 自动收敛）；新建/删除组件目录后
@@ -16,7 +16,7 @@ spec:
   source:
     repoURL: https://github.com/ZAAN3660/argocd-gitops.git
     targetRevision: init
-    path: observability/opentelemetry
+    path: observability/otel
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

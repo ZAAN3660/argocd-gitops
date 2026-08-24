@@ -1,5 +1,5 @@
 # prometheus-node-exporter 4.56.1（app 1.12.1）：节点级资源指标出口。
-# 接管前集群里不存在（otel-agent 的 scrape 配置一直在空抓，见 config/opentelemetry-operator/otel-agent.yaml）。
+# 接管前集群里不存在（otel-agent 的 scrape 配置一直在空抓，见 observability/otel/collector/collector.yaml）。
 # 抓取契约：otel-agent 的 prometheus receiver 按
 #   pod label app.kubernetes.io/name=prometheus-node-exporter + 容器端口名 metrics
 # 过滤，故 chart 默认 label 与 service.portName(metrics) 不得改动，改任何一值必须同步改 otel relabel。

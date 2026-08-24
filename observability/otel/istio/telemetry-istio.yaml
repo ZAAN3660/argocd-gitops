@@ -1,7 +1,7 @@
 # =============================================================================
-# 文件: observability/opentelemetry/istio/telemetry-istio.yaml（三合一：istio-cm + tracing + accesslog）
+# 文件: observability/otel/istio/telemetry-istio.yaml（三合一：istio-cm + tracing + accesslog）
 # 用途: 集群 istio-system/istio ConfigMap + Telemetry CRs 的声明式权威副本（GitOps 管理）。
-# 同步者: otel AppSet（observability/opentelemetry/appsets.yaml）→ Application istio-telemetry
+# 同步者: otel AppSet（observability/otel/appsets.yaml）→ Application otel-telemetry
 #         （automated prune selfHeal），push 后自动收敛。infra 侧 istiod 已 $patch: delete
 #         让出此 ConfigMap，单一归属（防双主）。历史版本与旧态备份以 git 历史为准。
 # =============================================================================
@@ -10,11 +10,15 @@
 # 2026-08-23  由"手工 apply"迁移为 GitOps 管理：config AppSet/istio-config 接管，
 #             infra 侧 istiod kustomization 加 $patch: delete 让出单一归属。
 # 2026-08-23  加入 meshConfig.extensionProviders.otel：
-#             tracing 数据出口指向 otel-agent-collector.monitoring:4317，
+#             tracing 数据出口指向 otel-collector.monitoring:4317，
 #             供 config/istio/telemetry-tracing.yaml 的 provider 引用（P0 traces 链路）。
 # 2026-08-23  恢复 defaultConfig.proxyStatsMatcher.inclusionPrefixes（8-21 为
 #             故障大盘加的配置，因 istio 重装丢失）。
 #             注意：defaultConfig 变更需重启业务 Pod 才生效。
+# 2026-08-25  随 observability/otel 改名：extensionProviders name opentelemetry → otel；
+#             service opentelemetry-collector.monitoring → otel-collector.monitoring
+#             （operator 自动生成的 Service，手写 service.yaml 已退役）。
+#             无业务 Pod，无重启负担；bookinfo 重建后按新 provider 渲染。
 #
 # ── 应用流程（改本文件后） ─────────────────────────────────────────────────
 #   1) git push 即可（istio-config App automated selfHeal 自动收敛，无需手工 apply）
@@ -49,18 +53,17 @@ data:
     rootNamespace: istio-system
     trustDomain: cluster.local
     extensionProviders:
-    - name: opentelemetry
+    - name: otel
       opentelemetry:
         port: 4317
-        service: opentelemetry-collector.monitoring.svc.cluster.local
+        service: otel-collector.monitoring.svc.cluster.local
   meshNetworks: |
     networks: {}
 ---
 # =============================================================================
-# 文件: config/istio/telemetry-tracing.yaml
-# 用途: 全 mesh 开启 tracing，envoy 生成的 span 上报到 otel-agent-collector
+# 用途: 全 mesh 开启 tracing，envoy 生成的 span 上报到 otel-collector
 # 前置: meshConfig.extensionProviders 中已定义 name: otel（指向
-#       otel-agent-collector.monitoring.svc.cluster.local:4317）
+#       otel-collector.monitoring.svc.cluster.local:4317）
 # 生效范围: istio-system 命名空间 + 无 selector = 全 mesh 生效
 # 注意: randomSamplingPercentage: 100 是【验证期】配置，生产应降到 1~10
 # =============================================================================
@@ -72,7 +75,7 @@ metadata:
 spec:
   tracing:
     - providers:
-        - name: opentelemetry
+        - name: otel
       randomSamplingPercentage: 100
 ---
 # Istio Telemetry: 全 mesh access log 经 otel provider（OTLP/gRPC 4317）发往 collector，
@@ -88,4 +91,4 @@ metadata:
 spec:
   accessLogging:
     - providers:
-        - name: opentelemetry
+        - name: otel
