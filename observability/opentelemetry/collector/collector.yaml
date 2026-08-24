@@ -1,0 +1,282 @@
+# otel-agent OpenTelemetryCollector —— 镜像对象：monitoring 命名空间的 CR（daemonset 形态采集器）。
+# 与安装层的关系：本 CR 由 infra/opentelemetry-operator/ 安装的 operator controller 读取并落地为
+# DaemonSet；镜像与 operator 默认一致（contrib，含 prometheus* 组件）。
+# 应用流程：observability/opentelemetry/appsets.yaml 指向本目录（Application：
+# opentelemetry-collector），Argo CD 应用 CR 后 operator 才渲染出 agent Pod。本文件是运行时行为定义（抓谁、发给谁），故属配置层而非安装层。
+
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: opentelemetry-collector
+  namespace: monitoring
+spec:
+  mode: daemonset
+  # 与 operator 默认镜像一致（contrib 含 prometheus* 组件），显式 pin 防 chart 升级时 tag 漂移
+  image: otel/opentelemetry-collector-contrib:0.158.0
+  # k8sattributes 的查询身份：collector-rbac.yaml 中创建并授权的 SA。
+  # 不指定时 operator 用默认 SA（<CR名>-collector，无 K8s 读权限），标签贴不上
+  serviceAccount: opentelemetry-collector
+  # 日志采集挂载：只读挂宿主机 /var/log（filelog receiver 读 /var/log/containers/*.log）。
+  # 仅对 daemonset 模式有意义（每节点 agent 读本节点日志）；若改 deployment 模式需移除
+  volumes:
+    - name: varlog
+      hostPath:
+        path: /var/log
+  volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+      readOnly: true
+  config:
+    receivers:
+      # 抓取集群内 exporter 的指标
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: node-exporter
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                # 只保留 app.kubernetes.io/name=prometheus-node-exporter 的 Pod
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: prometheus-node-exporter
+                # 只抓端口名为 metrics 的容器端口
+                - source_labels: [__meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: metrics
+
+            - job_name: kube-state-metrics
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: kube-state-metrics
+                # 只抓 8080 (name: http) —— 集群资源指标；
+                # 8081 (name: metrics) 是 ksm 自身进程指标，不要抓错
+                - source_labels: [__meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: http
+
+            - job_name: istio-proxy
+              # istio sidecar 指标：istio-agent 把 envoy stats 转发到 15020
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                # 只保留注入过 sidecar 的 Pod（网格内 Pod 都有该 label）
+                - source_labels: [__meta_kubernetes_pod_label_security_istio_io_tlsMode]
+                  action: keep
+                  regex: istio
+                # 只抓 istio-proxy 容器声明的 15020 端口（name: http-envoy-prom），
+                # 避免为每个容器端口各生成一份 target
+                - source_labels: [__meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: http-envoy-prom
+                - source_labels: [__meta_kubernetes_namespace]
+                  target_label: namespace
+                - source_labels: [__meta_kubernetes_pod_name]
+                  target_label: pod
+                # Argo Rollouts 给 Pod 打的 hash label：分析模板（AnalysisTemplate）靠它区分
+                # stable/canary 两批 Pod。原由 PodMonitor relabel 生成，PodMonitor 移除后
+                # 由此处补齐，否则 canary-hash 查询无数据、灰度分析空跑误判
+                - source_labels: [__meta_kubernetes_pod_label_rollouts_pod_template_hash]
+                  target_label: rollouts_pod_template_hash
+              metrics_path: /stats/prometheus
+
+            # --- infra 组件指标（一组件一 job：label name 白名单 + 容器端口号白名单）---
+            # 为什么用端口号不用端口名：实测 ArgoCD 多数 metrics 端口未声明 name（无名端口
+            # 无法被 __meta_kubernetes_pod_container_port_name 匹配），故统一按端口号过滤。
+            # ArgoCD 未采：redis（镜像无 exporter）、notifications-controller（未声明 metrics 端口）。
+
+            # 已装（label/端口经 kubectl 实测）
+            - job_name: argocd-application-controller
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: argocd-application-controller
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "8082"
+
+            - job_name: argocd-server
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: argocd-server
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "8083"
+
+            - job_name: argocd-repo-server
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: argocd-repo-server
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "8084"
+
+            - job_name: argocd-applicationset-controller
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: argocd-applicationset-controller
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "8080"
+
+            - job_name: argocd-dex-server
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: argocd-dex-server
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "5558"
+
+            # 未装组件（当前集群仅 ArgoCD 在跑）：job 预置，组件装上后 kubernetes_sd 自动发现，
+            # 无 target 时零开销。端口为对应 chart 默认 metrics 端口，装上后请照上方方法复核实际端口。
+            - job_name: argo-rollouts
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: argo-rollouts
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "8090"
+
+            - job_name: keda-operator
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: keda-operator
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "8080"
+
+            - job_name: cert-manager
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: cert-manager
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "9402"
+
+            - job_name: opentelemetry-operator
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: opentelemetry-operator
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "8080"
+
+            # istiod 15014 默认可能要求 mTLS（取决于 meshConfig.enablePrometheusMerge）：
+            # 装上后若该 job 恒 up=0，需开启 enablePrometheusMerge 并给采集侧配 TLS 证书，
+            # 否则放弃此 job（网格流量指标已由 istio-proxy job 覆盖）
+            - job_name: istiod
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app]
+                  action: keep
+                  regex: istiod
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "15014"
+
+      # 应用 SDK 发 OTLP 数据（traces/metrics/logs）从这里进：4317=grpc, 4318=http
+      # 配合 collector-service.yaml 的 ClusterIP，SDK 两种协议均可接入
+      otlp:
+        protocols:
+          grpc: {}
+          http: {}
+          http: {}
+
+      # 容器 stdout/stderr 日志采集：daemonset agent 只读挂宿主机 /var/log（见 spec.volumes），
+      # 读 /var/log/containers/*.log（CRI 格式）。两个 regex_parser：
+      #   1) 拆 CRI 行（时间/stream/正文）  2) 从文件路径拆 pod/namespace/container 元数据
+      # 元数据链：本 receiver 只拿得到路径里的三样；Pod label 等 K8s 元数据由下游
+      # resource + k8sattributes processor 补全（见 processors 段，权限见 collector-rbac.yaml）
+      filelog:
+        include: [/var/log/containers/*.log]
+        start_at: end                  # 只采新日志，agent 重启不重放历史
+        include_file_name: true
+        include_file_path: true
+        operators:
+          - type: regex_parser
+            regex: '^(?P<log_time>[^ ]+) (?P<stream>stdout|stderr) (?P<logtag>[FP]) (?P<message>.*)$'
+            timestamp:
+              parse_from: attributes.log_time
+              layout_type: gotime
+              layout: '2006-01-02T15:04:05.000000000Z07:00'
+          - type: regex_parser
+            regex: '^.*/(?P<pod_name>[^_]+)_(?P<namespace_name>[^_]+)_(?P<container_name>[^_]+)-[0-9a-f]+\.log$'
+            parse_from: attributes["log.file.path"]
+
+    processors:
+      # 日志元数据链（顺序即因果链，不可调换）：
+      #   1) resource：把 filelog 解析出的普通属性 pod_name/namespace_name 提升为
+      #      resource attributes（k8s.pod.name / k8s.namespace.name）——k8sattributes 只认这里；
+      #   2) k8sattributes：按 k8s.pod.name 查 K8s API，把 Pod 的 label/annotation/部署名等
+      #      贴回每条日志（查询身份是 spec.serviceAccount，权限由 collector-rbac.yaml 授予）
+      resource:
+        attributes:
+          - key: k8s.pod.name
+            from_attribute: pod_name
+            action: upsert
+          - key: k8s.namespace.name
+            from_attribute: namespace_name
+            action: upsert
+      k8sattributes:
+        auth_type: serviceAccount
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 512
+      batch: {}
+
+    exporters:
+      prometheusremotewrite:
+        endpoint: http://host.docker.internal:9090/api/v1/write   # 宿主机 Prometheus remote-write 端点
+      # traces 发往宿主机 Tempo（OTLP/HTTP）
+      otlphttp/tempo:
+        endpoint: http://host.docker.internal:4318                # 宿主机 Tempo OTLP/HTTP 接收端口（3200 仅查询，不收 OTLP）
+      # access log 发往宿主机 Loki（Loki 3.0+ 原生 OTLP，路径 /otlp/v1/logs）
+      otlphttp/loki:
+        endpoint: http://host.docker.internal:3100/otlp           # 宿主机 Loki 3.x OTLP 接收
+      debug:
+        verbosity: basic
+
+    service:
+      pipelines:
+        metrics:
+          receivers: [prometheus, otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug, prometheusremotewrite]
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug, otlphttp/tempo]
+        logs:
+          receivers: [otlp, filelog]
+          processors: [resource, k8sattributes, memory_limiter, batch]
+          exporters: [debug, otlphttp/loki]

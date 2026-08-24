@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: dev
+resources:
+  - ../../base
+  - virtual-service.yaml
+patches:
+  # --- 灰度分析模板：宿主机 Prometheus 查询地址 ---
+  - target:
+      kind: AnalysisTemplate
+      name: reviews-success-rate
+    patch: |-
+      - op: replace
+        path: /spec/metrics/0/provider/prometheus/address
+        value: http://host.docker.internal:9090
+  - target:
+      kind: AnalysisTemplate
+      name: reviews-p99-latency
+    patch: |-
+      - op: replace
+        path: /spec/metrics/0/provider/prometheus/address
+        value: http://host.docker.internal:9090
+  - target:
+      kind: AnalysisTemplate
+      name: reviews-traffic-check
+    patch: |-
+      - op: replace
+        path: /spec/metrics/0/provider/prometheus/address
+        value: http://host.docker.internal:9090
+  - target:
+      kind: AnalysisTemplate
+      name: reviews-exp-p99-latency
+    patch: |-
+      - op: replace
+        path: /spec/metrics/0/provider/prometheus/address
+        value: http://host.docker.internal:9090
+  # --- DestinationRule：网格内服务名 ---
+  - target:
+      kind: DestinationRule
+      name: reviews
+    patch: |-
+      - op: replace
+        path: /spec/host
+        value: reviews.dev.svc.cluster.local

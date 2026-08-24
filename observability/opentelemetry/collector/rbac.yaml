@@ -1,0 +1,37 @@
+# k8sattributes processor 的 RBAC 三件套 —— 镜像对象：CR 的 spec.serviceAccount 引用的身份。
+# 因果链：collector 日志 pipeline 里 k8sattributes 拿 pod 名去问 K8s API 要 label/annotation，
+# API 门禁（RBAC）只认 ServiceAccount，故 SA + ClusterRole + ClusterRoleBinding 缺一不可；
+# 缺了它 processor 查询被拒（403），日志标签静默缺失甚至日志被丢。
+# 权限按 k8sattributes 官方最小集：
+#   pods/namespaces：查 Pod 元数据本身；nodes：k8s.node.name 元数据（get 即可，一并给上）；
+#   replicasets：从 Pod owner 链解析 Deployment 名（k8s.deployment.name 查询维度依赖它）。
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: opentelemetry-collector
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: opentelemetry-collector-k8sattributes
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "namespaces", "nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: opentelemetry-collector-k8sattributes
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: opentelemetry-collector-k8sattributes
+subjects:
+  - kind: ServiceAccount
+    name: opentelemetry-collector
+    namespace: monitoring

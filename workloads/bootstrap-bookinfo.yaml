@@ -1,0 +1,27 @@
+# bookinfo 域根应用：workloads/ 目录的唯一起点，手工 apply 一次。
+# path 指向 workloads/bookinfo/，该目录顶层只有两个文件：
+#   appproject.yaml + appsets.yaml（内含 4 个 AppSet 对象，--- 分隔）
+# 组件子目录（productpage/ 等）被 directory 模式忽略（不递归）。
+# 本文件位于 workloads/，不在 path 之内 —— 根应用的管理清单永远不包含它自己，杜绝自我同步/自我 prune。
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bootstrap-bookinfo
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default                          # 根应用只能用内置 default：自定义 project 尚未同步，不能先给自己套约束
+  source:
+    repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+    targetRevision: init
+    path: workloads/bookinfo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

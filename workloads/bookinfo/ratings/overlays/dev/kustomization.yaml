@@ -1,0 +1,52 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: dev
+resources:
+  - ../../base
+  - virtual-service.yaml
+images:
+  - name: docker.io/istio/examples-bookinfo-ratings-v1
+    newTag: 1.20.0
+patches:
+  # --- 灰度分析模板：宿主机 Prometheus 查询地址 ---
+  - target:
+      kind: AnalysisTemplate
+      name: ratings-success-rate
+    patch: |-
+      - op: replace
+        path: /spec/metrics/0/provider/prometheus/address
+        value: http://host.docker.internal:9090
+  - target:
+      kind: AnalysisTemplate
+      name: ratings-p99-latency
+    patch: |-
+      - op: replace
+        path: /spec/metrics/0/provider/prometheus/address
+        value: http://host.docker.internal:9090
+  - target:
+      kind: AnalysisTemplate
+      name: ratings-traffic-check
+    patch: |-
+      - op: replace
+        path: /spec/metrics/0/provider/prometheus/address
+        value: http://host.docker.internal:9090
+  # --- KEDA ScaledObject：扩缩容查询 + Prometheus 地址 ---
+  - target:
+      kind: ScaledObject
+      name: ratings
+    patch: |-
+      - op: replace
+        path: /spec/triggers/0/metadata/query
+        value: |
+          sum(rate(istio_requests_total{destination_service=~"ratings.*", destination_service_namespace="dev", response_code=~"2..|3.."}[2m]))
+      - op: replace
+        path: /spec/triggers/0/metadata/serverAddress
+        value: http://host.docker.internal:9090
+  # --- DestinationRule：网格内服务名 ---
+  - target:
+      kind: DestinationRule
+      name: ratings
+    patch: |-
+      - op: replace
+        path: /spec/host
+        value: ratings.dev.svc.cluster.local

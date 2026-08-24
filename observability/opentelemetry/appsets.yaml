@@ -1,0 +1,56 @@
+# observability/opentelemetry 组件 AppSet：单集群无环境发散，list generator 枚举（与 infra-components 同构）。
+# 依赖链：collector(0) → istio-telemetry(1)——meshConfig 引用的 collector Service 语义上先建。
+# label component 归一：opentelemetry-collector → opentelemetry（与 infra 层 operator 同值），
+#                       istio-telemetry → istio（与 infra 层 istiod 等同值），UI 过滤得跨层视图。
+# 本文件位于根应用 path（observability/opentelemetry）目录顶层，由 directory 模式直接同步。
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: opentelemetry-components
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-999"                     # 与 project 同波：先于它生成的组件 Application 建立
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - component: opentelemetry-collector              # 同步 observability/opentelemetry/collector：OTelCollector CR（镜像 infra 宿主 operator）
+            enabled: "true"
+            group: opentelemetry                             # label 值：与 infra 层 opentelemetry-operator 同值，UI 过滤得跨层视图
+            path: observability/opentelemetry/collector
+            namespace: monitoring
+            wave: 0                                          # 依赖链起点：先于 telemetry 同步
+          - component: istio-telemetry                       # 同步 observability/opentelemetry/istio：istio-cm（meshConfig 权威）+ tracing + accesslog
+            enabled: "true"
+            group: istio                                     # label 值：与 infra 层 istio-base/istiod/istio-gateway 归一为 istio
+            path: observability/opentelemetry/istio
+            namespace: istio-system
+            wave: 1                                          # 依赖 collector 就绪（istiod 不校验可达性，语义上先建）
+        selector: "{{.enabled}} != 'false'"
+  template:
+    metadata:
+      name: '{{.component}}'
+      namespace: argocd
+      labels:
+        component: '{{.group}}'
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{.wave}}'
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: observability
+      source:
+        repoURL: https://github.com/ZAAN3660/argocd-gitops.git
+        targetRevision: init
+        path: '{{.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

@@ -1,0 +1,29 @@
+# bookinfo AppProject：业务域的权限边界，根应用 bootstrap-bookinfo 的同步清单之一。
+# sync-wave -1 = 同一次同步内的最低波：create 最先建、prune 逆序时最后删。
+# 边界：sync-wave 只约束根应用一次同步内部的相对顺序，管不住 AppSet 控制器异步删应用的竞态。
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: bookinfo                                             # project = 应用域/团队名；新增应用域/团队，就新增一个 project 文件
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-999"                     # 同步波最低档：create 时最先建，prune 时最后删（prune 按 wave 逆序）
+                                                             # 只能约束 bootstrap 同一次同步内部的相对顺序，管不住 appset 控制器异
+                                                             # 步删应用的竞态
+spec:
+  description: bookinfo 业务域
+  sourceRepos:
+    - 'https://github.com/ZAAN3660/argocd-gitops.git'        # Git 仓库列表
+  destinations:                                              # (server, namespace) 二元组，不在清单里的组合一律拒绝 sync
+    - namespace: dev
+      server: https://kubernetes.default.svc
+    - namespace: staging
+      server: https://kubernetes.default.svc
+    - namespace: prod
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:                                  # 集群级资源白名单：只放行 Namespace（应用要自建环境命名空间）
+    - group: ''
+      kind: Namespace
+    # namespaceResourceWhitelist: []                         # 这一行必须整个不写（nil = 放行所有命名空间级资源）。显式写 [] 会被 Argo
+                                                             # CD 解释为"拒绝一切命名空间级资源"，Service/Rollout 等全会被拦截
+  sourceNamespaces: []                                       # 空 = 不限制 Application 来源命名空间

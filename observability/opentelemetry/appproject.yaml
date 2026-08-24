@@ -1,0 +1,28 @@
+# observability AppProject：可观测性数据面域的权限边界，根应用 bootstrap-otel 的同步清单之一。
+# sync-wave -999 = 同一次同步内的最低波：create 时最先建，prune 逆序时最后删。
+# 边界：sync-wave 只约束根应用一次同步内部的相对顺序，管不住 AppSet 控制器异步删应用的竞态。
+# 落点：OTelCollector CR → monitoring；istio Telemetry CR → istio-system。
+# 注意：两者均为命名空间级资源，无需 CRD/集群级白名单——CRD 由 infra 域
+#       opentelemetry-operator Application 安装，权限边界各归各的域。
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: observability
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-999"
+spec:
+  description: 可观测性数据面（OTel collector、istio telemetry 出口）
+  sourceRepos:
+    - 'https://github.com/ZAAN3660/argocd-gitops.git'
+  destinations:                                              # (server, namespace) 二元组，不在清单里的组合一律拒绝 sync
+    - namespace: monitoring                                  # OTelCollector CR（otel-collector daemonset 形态）
+      server: https://kubernetes.default.svc
+    - namespace: istio-system                                # istio Telemetry CR（tracing + accesslog）
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:                                  # 集群级资源白名单：只放行 Namespace（CreateNamespace 需要）
+    - group: ''
+      kind: Namespace
+    # namespaceResourceWhitelist: []                         # 这一行必须整个不写（nil = 放行所有命名空间级资源）。显式写 [] 会被 Argo
+                                                             # CD 解释为"拒绝一切命名空间级资源"，Telemetry/Collector 等全会被拦截
+  sourceNamespaces: []                                       # 空 = 不限制 Application 来源命名空间
