@@ -1,21 +1,3 @@
-# otel-agent OpenTelemetryCollector CR —— 镜像对象：monitoring 命名空间、otel-agent-collector
-# daemonset 形态的 per-node 采集层（agent）。
-# 命名规则：CR 名 otel-agent → operator 自动拼出 DaemonSet/Pod（otel-agent-collector /
-# otel-agent-collector-<node>）。
-#
-# 架构分工（2026-08-25 拆分，旧 CR otel "一体三职" daemonset 退役）：
-#   - otel-agent（本目录）：只做一件事——每节点读本节点 /var/log/containers 的容器日志，
-#     transform/resource/k8sattributes 富化后 OTLP 发给 gateway；
-#   - otel-gateway（observability/otel/gateway）：metrics 抓取（TA 分片）+ OTLP 接收 + 集中导出。
-# 乱序根因（旧架构）与修复：旧 daemonset 每 worker 一个实例且每个实例都跑 prometheus
-# receiver 全量抓同一批 targets → 双写交错 → 宿主 Prometheus out of order 拒收。
-# 本层不再包含 prometheus receiver，daemonset 多实例只产生"日志"这种无乱序问题的数据，
-# 双写根因被架构性消除（抓取移交给 gateway 的 TA 分片）。
-#
-# 应用流程：observability/otel/appsets.yaml → Application otel-agent（wave 1，
-# 依赖 gateway Service 就绪；OTLP exporter 自带重试队列，先起后起均无数据丢失）。
-# RBAC（k8sattributes 查询身份）见同目录 rbac.yaml。
-
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
@@ -23,82 +5,116 @@ metadata:
   namespace: monitoring
 spec:
   mode: daemonset
-  image: otel/opentelemetry-collector-contrib:0.158.0   # 与 operator 版本一致，显式 pin 防漂移
-  # k8sattributes 的查询身份：rbac.yaml 中创建并授权的 SA。
-  # 不指定时 operator 用默认 SA（<CR名>-collector，无 K8s 读权限），标签贴不上
+  image: otel/opentelemetry-collector-contrib:0.158.0
   serviceAccount: otel-agent
-  # 日志采集挂载：只读挂宿主机 /var/log（filelog receiver 读 /var/log/containers/*.log）。
-  # 仅对 daemonset 模式有意义（每节点 agent 读本节点日志）
+  resources:
+    limits:
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  env:
+    - name: K8S_NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
   volumes:
     - name: varlog
       hostPath:
         path: /var/log
+    - name: otel-agent-storage
+      hostPath:
+        path: /var/lib/otel-agent
+        type: DirectoryOrCreate
   volumeMounts:
     - name: varlog
       mountPath: /var/log
       readOnly: true
+    - name: otel-agent-storage
+      mountPath: /var/lib/otel-agent
   config:
     receivers:
-      # 容器 stdout/stderr 日志采集：只读挂宿主机 /var/log（见 spec.volumes），
-      # 读 /var/log/containers/*.log（CRI 格式）。两个 regex_parser：
-      #   1) 拆 CRI 行（时间/stream/正文）  2) 从文件路径拆 pod/namespace/container 元数据
-      # 元数据链：本 receiver 只拿得到路径里的三样；Pod label 等 K8s 元数据由下游
-      # resource + k8sattributes processor 补全（见 processors 段，权限见 rbac.yaml）
       filelog:
-        include: [/var/log/containers/*.log]
-        start_at: end                  # 只采新日志，agent 重启不重放历史
-        include_file_name: true
+        include: [/var/log/pods/*/*/*.log]
+        exclude:
+          - /var/log/pods/*_otel-agent-collector-*_*/*.log
+          - /var/log/pods/*_otel-gateway-collector-*_*/*.log
+        start_at: end
+        include_file_name: false
         include_file_path: true
+        storage: file_storage/filelogreceiver
         operators:
+          - type: router
+            id: get-format
+            routes:
+              - output: parser-docker
+                expr: 'body matches "^\\{"'
+              - output: parser-crio
+                expr: 'body matches "^[^ Z]+ "'
+              - output: parser-containerd
+                expr: 'body matches "^[^ Z]+Z"'
           - type: regex_parser
-            regex: '^(?P<log_time>[^ ]+) (?P<stream>stdout|stderr) (?P<logtag>[FP]) (?P<message>.*)$'
+            id: parser-crio
+            regex: '^(?P<time>[^ Z]+) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'
+            output: extract_metadata_from_filepath
             timestamp:
-              parse_from: attributes.log_time
-              # containerd 时间戳小数秒不定宽（尾部 0 会被剪掉，实测常见 8 位），
-              # gotime 的 .000000000 要求恰 9 位，不匹配整行被丢（failed to emit token）；
-              # strptime 的 %f 兼容 1~9 位变宽小数秒
-              layout_type: strptime
-              layout: '%Y-%m-%dT%H:%M:%S.%fZ'
+              parse_from: attributes.time
+              layout_type: gotime
+              layout: '2006-01-02T15:04:05.999999999Z07:00'
           - type: regex_parser
-            regex: '^.*/(?P<pod_name>[^_]+)_(?P<namespace_name>[^_]+)_(?P<container_name>[^_]+)-[0-9a-f]+\.log$'
+            id: parser-containerd
+            regex: '^(?P<time>[^ ^Z]+Z) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'
+            output: extract_metadata_from_filepath
+            timestamp:
+              parse_from: attributes.time
+              layout_type: gotime
+              layout: '2006-01-02T15:04:05.999999999Z'
+          - type: json_parser
+            id: parser-docker
+            output: extract_metadata_from_filepath
+            timestamp:
+              parse_from: attributes.time
+              layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+          - type: regex_parser
+            id: extract_metadata_from_filepath
+            regex: '^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]{36})\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log$'
             parse_from: attributes["log.file.path"]
+            cache:
+              size: 128
+          - type: move
+            id: clean-up-log-record
+            from: attributes["log"]
+            to: body
+          - type: move
+            id: extract-metadata
+            from: attributes["stream"]
+            to: attributes["log.iostream"]
+          - type: move
+            id: move-pod-name
+            from: attributes["pod_name"]
+            to: resource["k8s.pod.name"]
+          - type: move
+            id: move-namespace
+            from: attributes["namespace"]
+            to: resource["k8s.namespace.name"]
+          - type: move
+            id: move-container-name
+            from: attributes["container_name"]
+            to: resource["k8s.container.name"]
+          - type: move
+            id: move-containerd
+            from: attributes["logtag"]
+            to: resource["conmon-containerd"]
+          - type: move
+            id: move-pod-uid
+            from: attributes["uid"]
+            to: resource["k8s.pod.uid"]
+          - type: move
+            id: move-restart-count
+            from: attributes["restart_count"]
+            to: resource["k8s.container.restart_count"]
 
     processors:
-      # 日志元数据链（顺序即因果链，不可调换）：
-      #   1) transform/k8s：把 filelog 拆出的 LogRecord attributes（pod_name 等）set 进
-      #      resource attributes 标准键（k8s.pod.name 等），并删除旧键。不用 filelog
-      #      的 move 操作符：实测其 to: resource.attributes["x"] 在该版本被解析成字面
-      #      键名 attributes.k8s.pod.name，导致 Loki 3.x 默认提升名单匹配不上
-      #      （2026-08-25，collector 0.158.0）；resource processor 的 from_attribute
-      #      又只读 resource 内部键，跨域搬不动——OTTL set 是标准跨域写法；
-      #   2) k8sattributes：按 resource 里的 k8s.pod.name 查 K8s API，把 Pod 基础
-      #      metadata 贴回 resource（查询身份是 spec.serviceAccount，权限由
-      #      rbac.yaml 授予）。extract.metadata 显式列出（覆盖默认），新增
-      #      k8s.deployment/statefulset/daemonset.name：从 Pod ownerReferences
-      #      链解析 workload 名（collector 0.158 不支持 k8s.workload.name 泛型
-      #      字段，须按类型枚举），是 service.name 的真实身份来源。
-      #      标准键会被 Loki 3.x 默认提升名单自动提为流标签
-      #      （k8s_pod_name / k8s_namespace_name / k8s_container_name）；
-      #      陷阱（2026-08-25 实测）：默认 pod_association 源只有 pod.ip/pod.uid/
-      #      connection，不含 k8s.pod.name——filelog 日志只有 pod 名，默认源
-      #      全部失配 → 关联失败、extract 全空 → service.name 兜底成 pod 名。
-      #      显式把 k8s.pod.name 加为关联源后 deployment/statefulset 名才提取得到。
-      #   3) transform/svc：service.name 设真实 workload 身份。修复 2026-08-25
-      #      之前 resource processor upsert service.name=otel-agent 的语义污染：
-      #      采集器把自己的名字当服务名，Loki 里所有容器 stdout 日志混成一个
-      #      service_name=otel-agent，按服务查日志无从下手。
-      #      取值链（service.name==nil 守卫逐个尝试）：deployment/statefulset/
-      #      daemonset 名 → 兜底 k8s.pod.name（裸 Pod，如 kubectl run 的 fortio-load）。
-      transform/k8s:
-        log_statements:
-          - context: log
-            statements:
-              - set(resource.attributes["k8s.pod.name"], attributes["pod_name"]) where attributes["pod_name"] != nil
-              - set(resource.attributes["k8s.namespace.name"], attributes["namespace_name"]) where attributes["namespace_name"] != nil
-              - set(resource.attributes["k8s.container.name"], attributes["container_name"]) where attributes["container_name"] != nil
-              - delete_key(attributes, "pod_name")
-              - delete_key(attributes, "namespace_name")
-              - delete_key(attributes, "container_name")
       k8sattributes:
         auth_type: serviceAccount
         extract:
@@ -111,8 +127,13 @@ spec:
             - k8s.node.name
             - k8s.container.name
             - k8s.deployment.name
+            - k8s.deployment.uid
             - k8s.statefulset.name
             - k8s.daemonset.name
+          labels: []
+          annotations: []
+        filter:
+          node_from_env_var: K8S_NODE_NAME
         pod_association:
           - sources:
               - from: resource_attribute
@@ -131,26 +152,36 @@ spec:
               - set(attributes["service.name"], attributes["k8s.statefulset.name"]) where attributes["service.name"] == nil and attributes["k8s.statefulset.name"] != nil
               - set(attributes["service.name"], attributes["k8s.daemonset.name"]) where attributes["service.name"] == nil and attributes["k8s.daemonset.name"] != nil
               - set(attributes["service.name"], attributes["k8s.pod.name"]) where attributes["service.name"] == nil and attributes["k8s.pod.name"] != nil
+      transform/cleanup:
+        log_statements:
+          - context: log
+            statements:
+              - delete_key(attributes, "time")
       memory_limiter:
         check_interval: 1s
         limit_mib: 512
-      batch: {}
+        spike_limit_mib: 128
+      batch:
+        send_batch_size: 8192
+        timeout: 1s
 
     exporters:
-      # 富化后的日志 OTLP/gRPC 发给集中层 gateway（Service 由 operator 为 CR otel-gateway 生成）。
-      # exporterhelper 默认自带 sending_queue + retry：gateway 短暂不可用不丢数据
       otlp:
         endpoint: otel-gateway-collector.monitoring.svc.cluster.local:4317
-        # collector 0.116+ 起 OTLP exporter 默认走 TLS（无 scheme 视为 https）；
-        # 集群内明文 gRPC 必须显式 insecure:true，否则报
-        # "tls: first record does not look like a TLS handshake"，日志全堵重试队列
         tls:
           insecure: true
 
+    extensions:
+      file_storage/filelogreceiver:
+        directory: /var/lib/otel-agent/file_storage/receiver
+
     service:
+      telemetry:
+        metrics:
+          address: 0.0.0.0:8888
+      extensions: [file_storage/filelogreceiver]
       pipelines:
-        # agent 只有一条 pipeline：日志。metrics/traces 不经 agent（SDK 与 istio 直发 gateway）
         logs:
           receivers: [filelog]
-          processors: [transform/k8s, k8sattributes, transform/svc, memory_limiter, batch]
+          processors: [k8sattributes, transform/svc, transform/cleanup, memory_limiter, batch]
           exporters: [otlp]
