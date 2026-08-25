@@ -1,39 +1,44 @@
-# otel OpenTelemetryCollector CR —— 镜像对象：monitoring 命名空间、otel-collector daemonset 形态采集器。
-# 命名规则（2026-08-25 改名）：CR 名用官方词根 otel（短、无重复）；operator 按 <CR名>-collector
-# 自动拼出 DaemonSet/Pod/Service（otel-collector / otel-collector-xxx / otel-collector）。
-# 与安装层的关系：本 CR 由 infra/opentelemetry-operator/ 安装的 operator controller 读取并落地为
-# DaemonSet；镜像与 operator 默认一致（contrib，含 prometheus* 组件）。
-# 应用流程：observability/otel/appsets.yaml 指向本目录（Application：otel-collector），
-# Argo CD 应用 CR 后 operator 才渲染出 agent Pod。本文件是运行时行为定义（抓谁、发给谁），故属配置层而非安装层。
-# 2026-08-25 变更：手写 service.yaml 已删除——operator 自动生成的 Service otel-collector
-# （4317=otlp-grpc / 4318=otlp-http，另有 -headless 与 -monitoring）与手写版端口一致，
-# 单一归属铁律：Service 归 operator 管，istio provider 直接指向 otel-collector.monitoring.svc。
+# otel-gateway OpenTelemetryCollector CR —— 镜像对象：monitoring 命名空间、otel-gateway-collector
+# statefulset 形态的集中处理层（gateway）。
+# 命名规则：CR 名 otel-gateway → operator 自动拼出 Service/Pod（otel-gateway-collector /
+# otel-gateway-collector-0/-1，另有 -headless 与 -monitoring）。istio meshConfig 的
+# extensionProviders.otel 指向 otel-gateway-collector.monitoring.svc.cluster.local:4317。
+#
+# 架构分工（2026-08-25 拆分，旧 CR otel "一体三职" daemonset 退役）：
+#   - otel-agent（observability/otel/agent）：daemonset，per-node 日志采集（filelog+富化）→ OTLP 发本层；
+#   - otel-gateway（本目录）：statefulset + target_allocator，职责二合一——
+#     1) metrics 抓取（prometheus receiver，TA 按 target 哈希分片给 2 副本，无重复抓取）；
+#     2) OTLP 集中接收（istio tracing/accesslog、业务 SDK）→ 集中导出宿主 Prometheus/Tempo/Loki。
+#
+# 乱序根因修复（2026-08-25 实验证实）：旧 daemonset 每 worker 一个实例、各全量抓同一批
+# targets，毫秒级时间戳交错 → 宿主 Prometheus 以 out of order 拒收。TA 分片后每个 target
+# 恰由一个副本抓取 → 单写者，无交错。replicas:2 的 HA 与"无重复抓取"在此模式下同时成立。
+#
+# 应用流程：observability/otel/appsets.yaml → Application otel-gateway（wave 0，
+# 先于 otel-agent / otel-istio 建立）。RBAC 见同目录 rbac.yaml。
 
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
-  name: otel
+  name: otel-gateway
   namespace: monitoring
 spec:
-  mode: daemonset
-  # 与 operator 默认镜像一致（contrib 含 prometheus* 组件），显式 pin 防 chart 升级时 tag 漂移
-  image: otel/opentelemetry-collector-contrib:0.158.0
-  # k8sattributes 的查询身份：collector-rbac.yaml 中创建并授权的 SA。
-  # 不指定时 operator 用默认 SA（<CR名>-collector，无 K8s 读权限），标签贴不上
-  serviceAccount: otel-collector
-  # 日志采集挂载：只读挂宿主机 /var/log（filelog receiver 读 /var/log/containers/*.log）。
-  # 仅对 daemonset 模式有意义（每节点 agent 读本节点日志）；若改 deployment 模式需移除
-  volumes:
-    - name: varlog
-      hostPath:
-        path: /var/log
-  volumeMounts:
-    - name: varlog
-      mountPath: /var/log
-      readOnly: true
+  mode: statefulset            # TA 分片需要稳定身份（target→副本的哈希映射随副本身份稳定）；
+                               # 无需持久卷：未配置 volumeClaimTemplates，Pod 无 PVC
+  replicas: 2                  # 集中层 HA：抓取/导出均可横向；TA 保证两副本不抓同一 target
+  image: otel/opentelemetry-collector-contrib:0.158.0   # 与 operator 版本一致，显式 pin 防漂移
+  # 身份：rbac.yaml 中授予 /metrics nonResourceURL get——opentelemetry-operator job 的
+  # secure metrics（8443, TLS+TokenReview+SAR）授权链依赖此 SA（否则 403）
+  serviceAccount: otel-gateway-collector
+  # 关键开关：prometheus 抓取由 Target Allocator 托管。operator 自动创建 TA 的
+  # Deployment/SA/RBAC（含 kubernetes_sd 所需 pods 权限），并把本 CR 的 scrape_configs
+  # 交给 TA；TA 完成服务发现 + 分片，各 collector 副本只抓分给自己的 targets。
+  # 因此 collector 自身不再需要任何 K8s API 权限（旧 otel-agent-pod-reader 补权已随安装层退役）。
+  targetAllocator:
+    enabled: true
   config:
     receivers:
-      # 抓取集群内 exporter 的指标
+      # ── 抓取集群内 exporter 的指标（job 定义原样迁移自旧 collector.yaml，语义与注释一致）──
       prometheus:
         config:
           scrape_configs:
@@ -93,7 +98,6 @@ spec:
             # 无法被 __meta_kubernetes_pod_container_port_name 匹配），故统一按端口号过滤。
             # ArgoCD 未采：redis（镜像无 exporter）、notifications-controller（未声明 metrics 端口）。
 
-            # 已装（label/端口经 kubectl 实测）
             - job_name: argocd-application-controller
               kubernetes_sd_configs:
                 - role: pod
@@ -155,7 +159,6 @@ spec:
             # keda-operator job 已移除（2026-08-25）：keda 默认 --enable-prometheus-metrics=false，
             # 不暴露 HTTP metrics；9666 是 metricsservice（gRPC，给 metrics-apiserver 用），8081
             # 是 health 探测，均无 Prometheus 指标可采。留 job 只会常年 up=0 红灯。
-            # 恢复条件：infra 侧 keda values 开启 enable-prometheus-metrics 并暴露 HTTP 端口后，再按真实端口加回。
             - job_name: cert-manager
               kubernetes_sd_configs:
                 - role: pod
@@ -169,6 +172,8 @@ spec:
 
             # 已装：端口实测 8443（--metrics-addr=0.0.0.0:8443 --metrics-secure=true，TLS+TokenReview
             # 认证）。https + 自签证书跳验 + 用本 SA token 过认证；credential 路径为 K8s 自动挂载。
+            # 授权链：TokenReview 只验证 token 合法；是否放行由 SubjectAccessReview 判
+            # /metrics 的 nonResourceURL get —— 权限在 rbac.yaml 绑给本 CR 的 SA。
             - job_name: opentelemetry-operator
               kubernetes_sd_configs:
                 - role: pod
@@ -199,67 +204,22 @@ spec:
                   action: keep
                   regex: "15014"
 
-      # 应用 SDK 发 OTLP 数据（traces/metrics/logs）从这里进：4317=grpc, 4318=http
-      # 配合 collector-service.yaml 的 ClusterIP，SDK 两种协议均可接入
+      # 应用 SDK 与 istio（tracing/accesslog）发 OTLP 数据（traces/metrics/logs）从这里进：
+      # 4317=grpc, 4318=http。istio 的 meshConfig.extensionProviders.otel 指向本层 Service。
       otlp:
         protocols:
           grpc: {}
           http: {}
 
-      # 容器 stdout/stderr 日志采集：daemonset agent 只读挂宿主机 /var/log（见 spec.volumes），
-      # 读 /var/log/containers/*.log（CRI 格式）。两个 regex_parser：
-      #   1) 拆 CRI 行（时间/stream/正文）  2) 从文件路径拆 pod/namespace/container 元数据
-      # 元数据链：本 receiver 只拿得到路径里的三样；Pod label 等 K8s 元数据由下游
-      # resource + k8sattributes processor 补全（见 processors 段，权限见 collector-rbac.yaml）
-      filelog:
-        include: [/var/log/containers/*.log]
-        start_at: end                  # 只采新日志，agent 重启不重放历史
-        include_file_name: true
-        include_file_path: true
-        operators:
-          - type: regex_parser
-            regex: '^(?P<log_time>[^ ]+) (?P<stream>stdout|stderr) (?P<logtag>[FP]) (?P<message>.*)$'
-            timestamp:
-              parse_from: attributes.log_time
-              # containerd 时间戳小数秒不定宽（尾部 0 会被剪掉，实测常见 8 位），
-              # gotime 的 .000000000 要求恰 9 位，不匹配整行被丢（failed to emit token）；
-              # strptime 的 %f 兼容 1~9 位变宽小数秒
-              layout_type: strptime
-              layout: '%Y-%m-%dT%H:%M:%S.%fZ'
-          - type: regex_parser
-            regex: '^.*/(?P<pod_name>[^_]+)_(?P<namespace_name>[^_]+)_(?P<container_name>[^_]+)-[0-9a-f]+\.log$'
-            parse_from: attributes["log.file.path"]
-
     processors:
-      # 日志元数据链（顺序即因果链，不可调换）：
-      #   1) transform：把 filelog 拆出的 LogRecord attributes（pod_name 等）set 进
-      #      resource attributes 标准键（k8s.pod.name 等），并删除旧键。不用 filelog
-      #      的 move 操作符：实测其 to: resource.attributes["x"] 在该版本被解析成字面
-      #      键名 attributes.k8s.pod.name，导致 Loki 3.x 默认提升名单匹配不上
-      #      （2026-08-25，collector 0.158.0）；resource processor 的 from_attribute
-      #      又只读 resource 内部键，跨域搬不动——OTTL set 是标准跨域写法；
-      #   2) resource：补 service.name 标识本 collector 来源；
-      #   3) k8sattributes：按 resource 里的 k8s.pod.name 查 K8s API，把 Pod 基础
-      #      metadata 贴回 resource（查询身份是 spec.serviceAccount，权限由
-      #      collector-rbac.yaml 授予）——标准键会被 Loki 3.x 默认提升名单
-      #      自动提为流标签（k8s_pod_name / k8s_namespace_name / k8s_container_name）
-      transform:
-        log_statements:
-          - context: log
-            statements:
-              - set(resource.attributes["k8s.pod.name"], attributes["pod_name"]) where attributes["pod_name"] != nil
-              - set(resource.attributes["k8s.namespace.name"], attributes["namespace_name"]) where attributes["namespace_name"] != nil
-              - set(resource.attributes["k8s.container.name"], attributes["container_name"]) where attributes["container_name"] != nil
-              - delete_key(attributes, "pod_name")
-              - delete_key(attributes, "namespace_name")
-              - delete_key(attributes, "container_name")
+      # 集中层只做资源限制与批处理；日志富化（transform/k8sattributes）在 agent 侧完成。
+      # service.name 用 upsert：filelog 日志已带 otel-agent，不会被覆盖；
+      # istio accesslog 无该属性，插入 otel-gateway 标识来源。
       resource:
         attributes:
           - key: service.name
-            value: otelcol
+            value: otel-gateway
             action: upsert
-      k8sattributes:
-        auth_type: serviceAccount
       memory_limiter:
         check_interval: 1s
         limit_mib: 512
@@ -274,15 +234,11 @@ spec:
       # access log 发往宿主机 Loki（Loki 3.0+ 原生 OTLP，路径 /otlp/v1/logs）
       otlphttp/loki:
         endpoint: http://host.docker.internal:3100/otlp           # 宿主机 Loki 3.x OTLP 接收
-      # debug exporter 已移除（2026-08-25）：降噪 basic→normal 后仍参与自我反馈循环——
-      # normal 打印的 error 日志被自身 filelog 采回，Loki 限流(429)时批堆积、内存冲顶
-      # memory_limiter 512MiB 进入 refused 模式，连带 metrics pipeline 的 scrape commit 全部
-      # 被拒（up 指标大面积丢失）。排障期已结束，彻底移除；需要逐条观察时临时加回。
 
     service:
       pipelines:
         metrics:
-          receivers: [prometheus, otlp]
+          receivers: [prometheus, otlp]    # prometheus 抓取（TA 分片）+ SDK OTLP 直发
           processors: [memory_limiter, batch]
           exporters: [prometheusremotewrite]
         traces:
@@ -290,6 +246,6 @@ spec:
           processors: [memory_limiter, batch]
           exporters: [otlphttp/tempo]
         logs:
-          receivers: [otlp, filelog]
-          processors: [transform, resource, k8sattributes, memory_limiter, batch]
+          receivers: [otlp]               # otel-agent 的容器日志 + istio accesslog
+          processors: [resource, memory_limiter, batch]
           exporters: [otlphttp/loki]

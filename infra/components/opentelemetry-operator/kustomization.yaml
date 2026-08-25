@@ -7,7 +7,8 @@ helmCharts:
     releaseName: opentelemetry-operator
     namespace: opentelemetry-operator
     valuesFile: values.yaml
-resources:
-  # otel-agent 补权 RBAC（集群级）：agent CR 在 observability/otel/collector，但其 App 的
-  # project 为 default（无集群级白名单），集群级资源只能归安装层本 App 管理。
-  - otel-agent-rbac.yaml
+# resources:
+# 2026-08-25 退役 otel-agent-rbac.yaml（已删文件）：旧 CR 的 prometheus receiver 用
+# kubernetes_sd 需要 pods list/watch 补权；agent/gateway 拆分后服务发现移交
+# target_allocator（operator 自动创建 TA 的 SA/RBAC，含 pods 权限），collector 自身
+# 不再需要 K8s API 权限。此补权对象从本 kustomization 移除，由 infra App prune 回收。

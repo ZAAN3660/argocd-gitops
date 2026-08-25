@@ -43,7 +43,7 @@ spec:
   sourceRepos:
     - 'https://github.com/ZAAN3660/argocd-gitops.git'
   destinations:                                              # (server, namespace) 二元组，不在清单里的组合一律拒绝 sync
-    - namespace: monitoring                                  # OTelCollector CR（otel-collector daemonset 形态）
+    - namespace: monitoring                                  # OTelCollector CR（otel-gateway statefulset + otel-agent daemonset 两层）
       server: https://kubernetes.default.svc
     - namespace: istio-system                                # istio Telemetry CR（tracing + accesslog）
       server: https://kubernetes.default.svc

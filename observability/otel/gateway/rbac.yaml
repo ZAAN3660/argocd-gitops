@@ -1,0 +1,39 @@
+# gateway 的 RBAC —— 镜像对象：CR otel-gateway 的 spec.serviceAccount（otel-gateway-collector）。
+# 因果链（只此一条权限，见下方 ClusterRole）：opentelemetry-operator job 抓 8443
+# secure metrics（TLS + TokenReview 认证 + SubjectAccessReview 授权）。TokenReview 只验
+# token 合法性，放行与否由 SAR 判：需要采集身份对 /metrics nonResourceURL 有 get。
+# 本绑定正是这条授权链的末端。
+#
+# 注意：prometheus receiver 的 kubernetes_sd 服务发现权限【不】在这里——TA 模式下
+# 服务发现由 Target Allocator 执行，operator 自动为 TA 创建 SA/RBAC（含 pods 权限），
+# collector 自身不再需要 K8s API 权限。安装层旧补权 otel-agent-pod-reader 已同步退役。
+#
+# 集群级资源：所在 Application（otel-gateway）的 AppProject 是 observability，
+# 依赖 appproject.yaml 的 clusterResourceWhitelist 放行 rbac.authorization.k8s.io。
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-gateway-collector
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-gateway-scrape
+rules:
+  # opentelemetry-operator secure metrics 的 SAR 授权：/metrics 的 nonResourceURL get
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-gateway-scrape
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-gateway-scrape
+subjects:
+  - kind: ServiceAccount
+    name: otel-gateway-collector
+    namespace: monitoring

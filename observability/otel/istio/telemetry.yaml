@@ -19,6 +19,10 @@
 #             service opentelemetry-collector.monitoring → otel-collector.monitoring
 #             （operator 自动生成的 Service，手写 service.yaml 已退役）。
 #             无业务 Pod，无重启负担；bookinfo 重建后按新 provider 渲染。
+# 2026-08-25  agent/gateway 拆分：provider 出口 service 改指 gateway——
+#             otel-collector.monitoring → otel-gateway-collector.monitoring。
+#             原因：tracing/accesslog 是网格集中上报（非 per-node 数据），应进集中层；
+#             旧 daemonset 已是双写主体（与 metrics 抓取共用），拆分后它不再收 OTLP。
 #
 # ── 应用流程（改本文件后） ─────────────────────────────────────────────────
 #   1) git push 即可（istio-config App automated selfHeal 自动收敛，无需手工 apply）
@@ -56,14 +60,14 @@ data:
     - name: otel
       opentelemetry:
         port: 4317
-        service: otel-collector.monitoring.svc.cluster.local
+        service: otel-gateway-collector.monitoring.svc.cluster.local
   meshNetworks: |
     networks: {}
 ---
 # =============================================================================
-# 用途: 全 mesh 开启 tracing，envoy 生成的 span 上报到 otel-collector
+# 用途: 全 mesh 开启 tracing，envoy 生成的 span 上报到 gateway（otel-gateway-collector）
 # 前置: meshConfig.extensionProviders 中已定义 name: otel（指向
-#       otel-collector.monitoring.svc.cluster.local:4317）
+#       otel-gateway-collector.monitoring.svc.cluster.local:4317）
 # 生效范围: istio-system 命名空间 + 无 selector = 全 mesh 生效
 # 注意: randomSamplingPercentage: 100 是【验证期】配置，生产应降到 1~10
 # =============================================================================
