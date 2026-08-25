@@ -213,16 +213,14 @@ spec:
 
     processors:
       # 集中层只做资源限制与批处理；日志富化（transform/k8sattributes）在 agent 侧完成。
-      # service.name 用 insert（只在键不存在时写）：filelog 日志已带 service.name=otel-agent，
-      # 保持不动；istio accesslog 无该属性，插入 otel-gateway 标识来源。
-      # 陷阱（2026-08-25 实测）：OTTL 的 upsert 语义是"存在即更新、不存在即插入"，
-      # 会把 agent 的 service.name=otel-agent 全覆盖成 otel-gateway，使 Loki 里
-      # agent 采集的容器日志与 gateway 自身来源混成同一 service_name，失去区分度。
-      resource:
-        attributes:
-          - key: service.name
-            value: otel-gateway
-            action: insert
+      # 【2026-08-25 修复】原 resource processor 的 insert service.name=otel-gateway
+      # 已删除：service.name 的语义是"产生数据的服务"，不是"转发数据的组件"。
+      # 网关把采集器名写进 ALS 日志，导致 Loki 里 ALS 流只剩 otel-gateway 一个身份、
+      # 真实来源（httpbin/fortio）无从区分。身份改由源头声明：
+      #   stdout 日志 → agent 侧 k8s.deployment/statefulset/daemonset.name（agent.yaml 的 transform/svc）；
+      #   ALS 日志   → meshConfig envoyOtelAls.resourceAttributes（otel/istio/telemetry.yaml，
+      #                 问题 3 修复项）。问题 3 落地前 ALS 流无 service_name label，
+      #                 期间仅 span_id/trace_id/detected_level 可查（可接受，验证用）。
       memory_limiter:
         check_interval: 1s
         limit_mib: 512
@@ -250,5 +248,5 @@ spec:
           exporters: [otlphttp/tempo]
         logs:
           receivers: [otlp]               # otel-agent 的容器日志 + istio accesslog
-          processors: [resource, memory_limiter, batch]
+          processors: [memory_limiter, batch]
           exporters: [otlphttp/loki]
