@@ -1,6 +1,6 @@
 # istiod 1.29.6 values（降级自 1.30.3）
-profile: default        # 1.29 的 profile 命名为 default；1.30 起才改叫 stable。
-                       # 降级回 1.29 必须改回 default，否则 chart 报 unknown profile
+profile: stable        # 1.29/1.30 均用 stable（default→stable 改名发生在 1.29，chart files 里有 profile-stable.yaml 而无 default）
+                       # 降级回 1.29 无需改 profile 名；写 default 会报 unknown profile（排障实证）
 revisionTags:
   - default            # 字符串列表（不是对象）：保留接管前的 istiod-revision-tag-default Service/webhook，防被 prune
 # mesh 运行时配置（proxyStatsMatcher / extensionProviders.otel 等）不在此：

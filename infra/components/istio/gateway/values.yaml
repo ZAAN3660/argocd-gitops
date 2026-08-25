@@ -1,5 +1,5 @@
 # istio gateway 1.29.6 values
-profile: default              # 1.29 的 profile 命名为 default（1.30 起才改 stable）
+profile: stable              # 1.29/1.30 均用 stable（default→stable 改名发生在 1.29，不是 1.30；写 default 会报 unknown profile）
 # chart 1.29.6 默认 containerSecurityContext 带 runAsNonRoot: true，但 proxyv2 镜像（gateway 模式）
 # 无 USER 指令=以 root 运行，kubelet 校验拒绝 → CreateContainerConfigError。
 # 显式配全套（默认块 + runAsUser:1337，对齐接管前 istioctl 原装），覆盖 chart 默认。
