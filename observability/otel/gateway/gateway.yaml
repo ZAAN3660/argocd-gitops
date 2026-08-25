@@ -245,9 +245,14 @@ spec:
       # 【transform/als 修复说明】envoyOtelAls 的 resource 无任何 k8s/service 标识，
       # 到 Loki 统一落 service_name=unknown_service，与业务流无法区分。ALS 特征：
       # 无 service.name 且无 k8s.pod.name（容器日志经 agent 富化后两者必有其一）；
-      # 命中则补 service.name=istio-envoy-als。span_id/trace_id 由 envoy 作为 attributes
-      # 附上，Loki 中可直接按 trace_id/span_id 检索。
-      # 注意：业务 SDK 若直发无标识 OTLP 日志也会命中此规则（当前集群无此场景）。
+      # 命中则补 service.name=istio-envoy-als。
+      # 【trace_id/span_id 实测结论（2026-08-25）】Envoy ALS 把 trace_id/span_id
+      # 发在 OTLP 顶层 TraceId/SpanId 字段，不是 attributes。Loki 对顶层字段硬编码
+      # 转 structured metadata（不进索引、等值查不到），log_attributes 的
+      # index_label 规则只对 attributes 生效。故此处用 OTTL 把顶层字段复制进
+      # attributes：经 Loki otlp_config.log_attributes[index_label] 转为可索引 label，
+      # 支持 {trace_id="..."} 直搜（索引级过滤，不再全流扫描）。
+      # 注意：业务 SDK 若直发无标识 OTLP 日志也会命中 service.name 补写规则（当前集群无此场景）。
       transform/als:
         error_mode: ignore
         log_statements:
@@ -256,6 +261,16 @@ spec:
               - attributes["service.name"] == nil and attributes["k8s.pod.name"] == nil
             statements:
               - set(attributes["service.name"], "istio-envoy-als")
+          - context: log
+            conditions:
+              - trace_id != nil
+            statements:
+              - set(attributes["trace_id"], trace_id.string)
+          - context: log
+            conditions:
+              - span_id != nil
+            statements:
+              - set(attributes["span_id"], span_id.string)
       memory_limiter:
         check_interval: 1s
         limit_mib: 512
