@@ -7,10 +7,6 @@ spec:
   mode: daemonset
   image: otel/opentelemetry-collector-contrib:0.158.0
   serviceAccount: otel-agent
-  podSecurityContext:
-    fsGroup: 10001   # otelcol 镜像默认非 root（uid/gid 10001），hostPath 挂载点由 kubelet 以 root
-                     # 创建（0755）；fsGroup 让挂载点组归 10001 且 setgid，file_storage 才能
-                     # 在挂载点内自建子目录（create_directory: true）
   resources:
     limits:
       memory: 1Gi
@@ -26,16 +22,10 @@ spec:
     - name: varlog
       hostPath:
         path: /var/log
-    - name: otel-agent-storage
-      hostPath:
-        path: /var/lib/otel-agent
-        type: DirectoryOrCreate
   volumeMounts:
     - name: varlog
       mountPath: /var/log
       readOnly: true
-    - name: otel-agent-storage
-      mountPath: /var/lib/otel-agent
   config:
     receivers:
       filelog:
@@ -43,10 +33,9 @@ spec:
         exclude:
           - /var/log/pods/*_otel-agent-collector-*_*/*.log
           - /var/log/pods/*_otel-gateway-collector-*_*/*.log
-        start_at: end
+        start_at: end   # 无 storage 持久化：重启从文件末尾续读，重启窗口内的日志不采集（已接受的取舍）
         include_file_name: false
         include_file_path: true
-        storage: file_storage/filelogreceiver
         operators:
           - type: router
             id: get-format
@@ -175,16 +164,9 @@ spec:
         tls:
           insecure: true
 
-    extensions:
-      file_storage/filelogreceiver:
-        directory: /var/lib/otel-agent/file_storage/receiver
-        create_directory: true   # hostPath DirectoryOrCreate 只建挂载点 /var/lib/otel-agent，
-                                 # 子目录需 file_storage 自建（0.158 默认不自动创建目录）
-
     service:
       # telemetry 段不写：metrics 暴露由 operator 注入（enableMetrics 默认 true，新 readers 格式，端口 8888）。
       # 手写旧格式 address 在 collector 0.116+ 已废弃，0.158 解码直接报 invalid keys: address；与 gateway 对齐。
-      extensions: [file_storage/filelogreceiver]
       pipelines:
         logs:
           receivers: [filelog]
