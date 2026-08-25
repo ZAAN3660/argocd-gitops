@@ -52,7 +52,7 @@ spec:
             path: infra/components/istio/base
             namespace: istio-system
             wave: 0
-          - component: istiod                # 接管前 istioctl 1.30.3 安装；meshConfig 权威在 observability/otel/istio/telemetry-istio.yaml，infra 只装不配
+          - component: istiod                # 降级至 1.29.6（1.30.3 的 envoy 1.38.4-dev 导致 accesslog 数据面失效）；meshConfig 权威在 observability/otel/istio/telemetry-istio.yaml，infra 只装不配
             enabled: "true"
             version: 1.30.3
             path: infra/components/istio/istiod
