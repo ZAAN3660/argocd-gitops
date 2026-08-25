@@ -176,9 +176,8 @@ spec:
         directory: /var/lib/otel-agent/file_storage/receiver
 
     service:
-      telemetry:
-        metrics:
-          address: 0.0.0.0:8888
+      # telemetry 段不写：metrics 暴露由 operator 注入（enableMetrics 默认 true，新 readers 格式，端口 8888）。
+      # 手写旧格式 address 在 collector 0.116+ 已废弃，0.158 解码直接报 invalid keys: address；与 gateway 对齐。
       extensions: [file_storage/filelogreceiver]
       pipelines:
         logs:
