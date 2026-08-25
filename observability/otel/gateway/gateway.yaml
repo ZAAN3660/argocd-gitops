@@ -221,12 +221,11 @@ spec:
 
       # 应用 SDK 与 istio（tracing/accesslog）发 OTLP 数据（traces/metrics/logs）从这里进：
       # 4317=grpc, 4318=http。istio 的 meshConfig.extensionProviders.otel 指向本层 Service。
-      # 0.158 起 otlp 单 receiver 拆成 otlp_grpc/otlp_http（别名废弃警告），协议各自独立。
-      otlp_grpc:
+      # 注意：otlp receiver 在 0.158 无别名废弃（改名仅限 exporter：otlp→otlp_grpc、
+      # otlphttp→otlp_http），receiver 合法名仍是 otlp（grpc+http 两协议共存）。
+      otlp:
         protocols:
           grpc: {}
-      otlp_http:
-        protocols:
           http: {}
 
     processors:
@@ -270,14 +269,14 @@ spec:
     service:
       pipelines:
         metrics:
-          receivers: [prometheus, otlp_grpc, otlp_http]   # prometheus 抓取（TA 分片）+ SDK OTLP 直发
+          receivers: [prometheus, otlp]    # prometheus 抓取（TA 分片）+ SDK OTLP 直发
           processors: [memory_limiter, batch]
           exporters: [prometheus_remote_write]
         traces:
-          receivers: [otlp_grpc, otlp_http]
+          receivers: [otlp]
           processors: [memory_limiter, batch]
           exporters: [otlp_http/tempo]
         logs:
-          receivers: [otlp_grpc, otlp_http]              # otel-agent 的容器日志 + istio accesslog
+          receivers: [otlp]               # otel-agent 的容器日志 + istio accesslog
           processors: [transform/als, memory_limiter, batch]
           exporters: [otlp_http/loki]
