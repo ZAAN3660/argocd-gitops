@@ -37,3 +37,34 @@ subjects:
   - kind: ServiceAccount
     name: otel-gateway-collector
     namespace: monitoring
+---
+# ── Target Allocator 的服务发现补权（2026-08-25 实测补上）──
+# 镜像对象：operator 为 CR otel-gateway 自动创建的 TA 的 SA（otel-gateway-targetallocator，
+# 由 operator 管理，本文件不重复声明——单一归属）。
+# 因果链（实测故障）：operator 0.158 给 TA 的默认 RBAC 不含 pods 权限；TA 用
+# kubernetes_sd (role: pod) 做服务发现时 reflector 持续 "pods is forbidden"，
+# 新 targets 无法被发现（旧缓存 targets 仍被抓，up 短暂全绿是假象）。
+# 修复：本 ClusterRole + Binding 给 TA 身份补 pods get/list/watch（cluster scope）。
+# 旧架构里这份权限由安装层 otel-agent-pod-reader 授给 collector 自己；TA 模式下
+# 服务发现主体换成 TA，权限对象随之迁移到此处。
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-gateway-targetallocator-sd
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-gateway-targetallocator-sd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-gateway-targetallocator-sd
+subjects:
+  - kind: ServiceAccount
+    name: otel-gateway-targetallocator
+    namespace: monitoring

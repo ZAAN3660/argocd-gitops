@@ -103,6 +103,11 @@ spec:
       # exporterhelper 默认自带 sending_queue + retry：gateway 短暂不可用不丢数据
       otlp:
         endpoint: otel-gateway-collector.monitoring.svc.cluster.local:4317
+        # collector 0.116+ 起 OTLP exporter 默认走 TLS（无 scheme 视为 https）；
+        # 集群内明文 gRPC 必须显式 insecure:true，否则报
+        # "tls: first record does not look like a TLS handshake"，日志全堵重试队列
+        tls:
+          insecure: true
 
     service:
       pipelines:
