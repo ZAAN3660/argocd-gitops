@@ -79,6 +79,10 @@ spec:
       #      字段，须按类型枚举），是 service.name 的真实身份来源。
       #      标准键会被 Loki 3.x 默认提升名单自动提为流标签
       #      （k8s_pod_name / k8s_namespace_name / k8s_container_name）；
+      #      陷阱（2026-08-25 实测）：默认 pod_association 源只有 pod.ip/pod.uid/
+      #      connection，不含 k8s.pod.name——filelog 日志只有 pod 名，默认源
+      #      全部失配 → 关联失败、extract 全空 → service.name 兜底成 pod 名。
+      #      显式把 k8s.pod.name 加为关联源后 deployment/statefulset 名才提取得到。
       #   3) transform/svc：service.name 设真实 workload 身份。修复 2026-08-25
       #      之前 resource processor upsert service.name=otel-agent 的语义污染：
       #      采集器把自己的名字当服务名，Loki 里所有容器 stdout 日志混成一个
@@ -109,6 +113,16 @@ spec:
             - k8s.deployment.name
             - k8s.statefulset.name
             - k8s.daemonset.name
+        pod_association:
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.ip
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.uid
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.name
       transform/svc:
         log_statements:
           - context: resource
