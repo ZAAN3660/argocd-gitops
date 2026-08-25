@@ -7,6 +7,10 @@ spec:
   mode: daemonset
   image: otel/opentelemetry-collector-contrib:0.158.0
   serviceAccount: otel-agent
+  podSecurityContext:
+    fsGroup: 10001   # otelcol 镜像默认非 root（uid/gid 10001），hostPath 挂载点由 kubelet 以 root
+                     # 创建（0755）；fsGroup 让挂载点组归 10001 且 setgid，file_storage 才能
+                     # 在挂载点内自建子目录（create_directory: true）
   resources:
     limits:
       memory: 1Gi
