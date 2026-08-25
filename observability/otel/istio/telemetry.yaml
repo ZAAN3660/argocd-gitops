@@ -23,6 +23,9 @@
 #             otel-collector.monitoring → otel-gateway-collector.monitoring。
 #             原因：tracing/accesslog 是网格集中上报（非 per-node 数据），应进集中层；
 #             旧 daemonset 已是双写主体（与 metrics 抓取共用），拆分后它不再收 OTLP。
+# 2026-08-25  合并 accesslog/tracing 两个 CR 为一个 otel CR：istioctl analyze 报
+#             IST0160——同一 root namespace 下多个无 selector Telemetry 行为未定义，
+#             导致 envoy bootstrap 无 tracing、listener 无 accesslog（配置未渲染）。
 #
 # ── 应用流程（改本文件后） ─────────────────────────────────────────────────
 #   1) git push 即可（istio-config App automated selfHeal 自动收敛，无需手工 apply）
@@ -65,34 +68,25 @@ data:
     networks: {}
 ---
 # =============================================================================
-# 用途: 全 mesh 开启 tracing，envoy 生成的 span 上报到 gateway（otel-gateway-collector）
-# 前置: meshConfig.extensionProviders 中已定义 name: otel（指向
-#       otel-gateway-collector.monitoring.svc.cluster.local:4317）
+# 用途: 全 mesh 开启 tracing + accesslog，统一经 otel provider（OTLP/gRPC 4317）
+#       发往 gateway（otel-gateway-collector）
+# 前置: 1) meshConfig.extensionProviders 已定义 name: otel（指向
+#         otel-gateway-collector.monitoring.svc.cluster.local:4317）
+#       2) Istio >= 1.18（accessLogging 支持 openTelemetry provider）
 # 生效范围: istio-system 命名空间 + 无 selector = 全 mesh 生效
 # 注意: randomSamplingPercentage: 100 是【验证期】配置，生产应降到 1~10
+# 注意: tracing 是 bootstrap 级配置，网格内已运行 Pod 需重启后才生效
 # =============================================================================
 apiVersion: telemetry.istio.io/v1
 kind: Telemetry
 metadata:
-  name: tracing
-  namespace: istio-system
-spec:
-  tracing:
-    - providers:
-        - name: otel
-      randomSamplingPercentage: 100
----
-# Istio Telemetry: 全 mesh access log 经 otel provider（OTLP/gRPC 4317）发往 collector，
-# 由 collector logs pipeline 转发宿主机 Loki。
-# 前置: 1) meshConfig.extensionProviders 已定义 name: otel（与 tracing 共用）
-#       2) Istio >= 1.18（accessLogging 支持 openTelemetry provider）
-# 生效范围: istio-system + 无 selector = 全 mesh
-apiVersion: telemetry.istio.io/v1
-kind: Telemetry
-metadata:
-  name: accesslog
+  name: otel
   namespace: istio-system
 spec:
   accessLogging:
     - providers:
         - name: otel
+  tracing:
+    - providers:
+        - name: otel
+      randomSamplingPercentage: 100
