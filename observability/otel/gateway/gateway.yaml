@@ -213,13 +213,16 @@ spec:
 
     processors:
       # 集中层只做资源限制与批处理；日志富化（transform/k8sattributes）在 agent 侧完成。
-      # service.name 用 upsert：filelog 日志已带 otel-agent，不会被覆盖；
-      # istio accesslog 无该属性，插入 otel-gateway 标识来源。
+      # service.name 用 insert（只在键不存在时写）：filelog 日志已带 service.name=otel-agent，
+      # 保持不动；istio accesslog 无该属性，插入 otel-gateway 标识来源。
+      # 陷阱（2026-08-25 实测）：OTTL 的 upsert 语义是"存在即更新、不存在即插入"，
+      # 会把 agent 的 service.name=otel-agent 全覆盖成 otel-gateway，使 Loki 里
+      # agent 采集的容器日志与 gateway 自身来源混成同一 service_name，失去区分度。
       resource:
         attributes:
           - key: service.name
             value: otel-gateway
-            action: upsert
+            action: insert
       memory_limiter:
         check_interval: 1s
         limit_mib: 512
