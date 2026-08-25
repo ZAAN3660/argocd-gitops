@@ -208,6 +208,9 @@ spec:
             # 不进宿主 Prometheus）。operator 给 collector pod 声明 8888（name: metrics），
             # label app.kubernetes.io/name 按 CR 名生成（otel-agent-collector /
             # otel-gateway-collector），一个 job 白名单覆盖 agent(2)+gateway(2)。
+            # 注意：8888 端点暴露 target_info，prometheus receiver 会把 job/instance 规范化为
+            # service_name(otelcol-contrib)/service_instance_id(UUID)，故额外保留 pod 名 label
+            # 以便区分组件（查询用 {job="otelcol-contrib", pod=~"otel-gateway.*"} 等）。
             - job_name: otel-collectors
               kubernetes_sd_configs:
                 - role: pod
@@ -218,6 +221,8 @@ spec:
                 - source_labels: [__meta_kubernetes_pod_container_port_name]
                   action: keep
                   regex: metrics
+                - source_labels: [__meta_kubernetes_pod_name]
+                  target_label: pod
 
       # 应用 SDK 与 istio（tracing/accesslog）发 OTLP 数据（traces/metrics/logs）从这里进：
       # 4317=grpc, 4318=http。istio 的 meshConfig.extensionProviders.otel 指向本层 Service。
