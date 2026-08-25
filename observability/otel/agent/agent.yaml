@@ -28,7 +28,7 @@ spec:
       readOnly: true
   config:
     receivers:
-      filelog:
+      file_log:
         include: [/var/log/pods/*/*/*.log]
         exclude:
           - /var/log/pods/*_otel-agent-collector-*_*/*.log
@@ -108,7 +108,7 @@ spec:
             to: resource["k8s.container.restart_count"]
 
     processors:
-      k8sattributes:
+      k8s_attributes:
         auth_type: serviceAccount
         extract:
           metadata:
@@ -159,7 +159,7 @@ spec:
         timeout: 1s
 
     exporters:
-      otlp:
+      otlp_grpc:
         endpoint: otel-gateway-collector.monitoring.svc.cluster.local:4317
         tls:
           insecure: true
@@ -169,6 +169,6 @@ spec:
       # 手写旧格式 address 在 collector 0.116+ 已废弃，0.158 解码直接报 invalid keys: address；与 gateway 对齐。
       pipelines:
         logs:
-          receivers: [filelog]
-          processors: [k8sattributes, transform/svc, transform/cleanup, memory_limiter, batch]
-          exporters: [otlp]
+          receivers: [file_log]
+          processors: [k8s_attributes, transform/svc, transform/cleanup, memory_limiter, batch]
+          exporters: [otlp_grpc]

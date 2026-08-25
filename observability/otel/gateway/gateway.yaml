@@ -204,11 +204,29 @@ spec:
                   action: keep
                   regex: "15014"
 
+            # otel 组件自身 metrics 自抓（【P3 修复】此前 8888 暴露但无 job，otelcol_* 指标
+            # 不进宿主 Prometheus）。operator 给 collector pod 声明 8888（name: metrics），
+            # label app.kubernetes.io/name 按 CR 名生成（otel-agent-collector /
+            # otel-gateway-collector），一个 job 白名单覆盖 agent(2)+gateway(2)。
+            - job_name: otel-collectors
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                  action: keep
+                  regex: otel-agent-collector|otel-gateway-collector
+                - source_labels: [__meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: metrics
+
       # 应用 SDK 与 istio（tracing/accesslog）发 OTLP 数据（traces/metrics/logs）从这里进：
       # 4317=grpc, 4318=http。istio 的 meshConfig.extensionProviders.otel 指向本层 Service。
-      otlp:
+      # 0.158 起 otlp 单 receiver 拆成 otlp_grpc/otlp_http（别名废弃警告），协议各自独立。
+      otlp_grpc:
         protocols:
           grpc: {}
+      otlp_http:
+        protocols:
           http: {}
 
     processors:
@@ -218,35 +236,48 @@ spec:
       # 网关把采集器名写进 ALS 日志，导致 Loki 里 ALS 流只剩 otel-gateway 一个身份、
       # 真实来源（httpbin/fortio）无从区分。身份改由源头声明：
       #   stdout 日志 → agent 侧 k8s.deployment/statefulset/daemonset.name（agent.yaml 的 transform/svc）；
-      #   ALS 日志   → meshConfig envoyOtelAls.resourceAttributes（otel/istio/telemetry.yaml，
-      #                 问题 3 修复项）。问题 3 落地前 ALS 流无 service_name label，
-      #                 期间仅 span_id/trace_id/detected_level 可查（可接受，验证用）。
+      #   ALS 日志   → 下方 transform/als 补 service.name（原计划 meshConfig envoyOtelAls
+      #                 .resourceAttributes 经查 1.29 API proto 证实该字段不存在，方案已换）。
+      # 【transform/als 修复说明】envoyOtelAls 的 resource 无任何 k8s/service 标识，
+      # 到 Loki 统一落 service_name=unknown_service，与业务流无法区分。ALS 特征：
+      # 无 service.name 且无 k8s.pod.name（容器日志经 agent 富化后两者必有其一）；
+      # 命中则补 service.name=istio-envoy-als。span_id/trace_id 由 envoy 作为 attributes
+      # 附上，Loki 中可直接按 trace_id/span_id 检索。
+      # 注意：业务 SDK 若直发无标识 OTLP 日志也会命中此规则（当前集群无此场景）。
+      transform/als:
+        error_mode: ignore
+        log_statements:
+          - context: resource
+            conditions:
+              - attributes["service.name"] == nil and attributes["k8s.pod.name"] == nil
+            statements:
+              - set(attributes["service.name"], "istio-envoy-als")
       memory_limiter:
         check_interval: 1s
         limit_mib: 512
       batch: {}
 
     exporters:
-      prometheusremotewrite:
+      prometheus_remote_write:
         endpoint: http://host.docker.internal:9090/api/v1/write   # 宿主机 Prometheus remote-write 端点
       # traces 发往宿主机 Tempo（OTLP/HTTP）
-      otlphttp/tempo:
+      otlp_http/tempo:
         endpoint: http://host.docker.internal:4318                # 宿主机 Tempo OTLP/HTTP 接收端口（3200 仅查询，不收 OTLP）
       # access log 发往宿主机 Loki（Loki 3.0+ 原生 OTLP，路径 /otlp/v1/logs）
-      otlphttp/loki:
+      otlp_http/loki:
         endpoint: http://host.docker.internal:3100/otlp           # 宿主机 Loki 3.x OTLP 接收
 
     service:
       pipelines:
         metrics:
-          receivers: [prometheus, otlp]    # prometheus 抓取（TA 分片）+ SDK OTLP 直发
+          receivers: [prometheus, otlp_grpc, otlp_http]   # prometheus 抓取（TA 分片）+ SDK OTLP 直发
           processors: [memory_limiter, batch]
-          exporters: [prometheusremotewrite]
+          exporters: [prometheus_remote_write]
         traces:
-          receivers: [otlp]
+          receivers: [otlp_grpc, otlp_http]
           processors: [memory_limiter, batch]
-          exporters: [otlphttp/tempo]
+          exporters: [otlp_http/tempo]
         logs:
-          receivers: [otlp]               # otel-agent 的容器日志 + istio accesslog
-          processors: [memory_limiter, batch]
-          exporters: [otlphttp/loki]
+          receivers: [otlp_grpc, otlp_http]              # otel-agent 的容器日志 + istio accesslog
+          processors: [transform/als, memory_limiter, batch]
+          exporters: [otlp_http/loki]
