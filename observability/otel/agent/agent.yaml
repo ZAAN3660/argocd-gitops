@@ -123,7 +123,17 @@ spec:
             - k8s.deployment.uid
             - k8s.statefulset.name
             - k8s.daemonset.name
-          labels: []
+          # 提取 Pod label 进资源属性：transform/svc 的 service.name 兜底链依赖 app。
+          # 2026-08-27 修复：bookinfo 全部为 Argo Rollout，owner 链 Pod→RS→Rollout 无
+          # Deployment，k8s.deployment/statefulset/daemonset.name 提取全落空，service.name
+          # 掉到 pod-name 兜底（Loki 里 service_name 变成 Pod 名）。app label 与 Service 同名，
+          # 作为工作负载身份的首选兜底。
+          labels:
+            - from: pod
+              key: app
+            # 标准化 label：当前集群组件未使用，预留给未来组件
+            - from: pod
+              key: app.kubernetes.io/name
           annotations: []
         filter:
           node_from_env_var: K8S_NODE_NAME
@@ -144,6 +154,11 @@ spec:
               - set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil and attributes["k8s.deployment.name"] != nil
               - set(attributes["service.name"], attributes["k8s.statefulset.name"]) where attributes["service.name"] == nil and attributes["k8s.statefulset.name"] != nil
               - set(attributes["service.name"], attributes["k8s.daemonset.name"]) where attributes["service.name"] == nil and attributes["k8s.daemonset.name"] != nil
+              # 2026-08-27 修复：Rollout 类工作负载（bookinfo 全部组件）无 Deployment 链，
+              # 上面三条全不命中。用 Pod 的 app label 兜底（与 Service 同名），
+              # 最后才是 pod name（原始行为保留）。
+              - set(attributes["service.name"], attributes["app"]) where attributes["service.name"] == nil and attributes["app"] != nil
+              - set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil and attributes["app.kubernetes.io/name"] != nil
               - set(attributes["service.name"], attributes["k8s.pod.name"]) where attributes["service.name"] == nil and attributes["k8s.pod.name"] != nil
       transform/cleanup:
         log_statements:
