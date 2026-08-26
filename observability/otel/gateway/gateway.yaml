@@ -273,7 +273,7 @@ spec:
               - set(attributes["span_id"], span_id.string)
       memory_limiter:
         check_interval: 1s
-        limit_mib: 512
+        limit_mib: 2048
       batch: {}
 
     exporters:
