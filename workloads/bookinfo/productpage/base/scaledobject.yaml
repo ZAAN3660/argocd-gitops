@@ -9,7 +9,7 @@ spec:
     apiVersion: argoproj.io/v1alpha1
     kind: Rollout
     name: productpage
-  minReplicaCount: 2                        # 最少副本
+  minReplicaCount: 1                        # 最少副本
   maxReplicaCount: 4                        # 扩容上限
   pollingInterval: 5                        # 每 N 秒查一次触发器指标
   cooldownPeriod: 120                       # 指标降下来后等 N 秒才缩容，防抖动
