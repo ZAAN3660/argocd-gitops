@@ -5,7 +5,7 @@ helmCharts:
     repo: https://open-telemetry.github.io/opentelemetry-helm-charts
     version: 0.122.0
     releaseName: opentelemetry-operator
-    namespace: opentelemetry-operator
+    namespace: opentelemetry-operator-system
     valuesFile: values.yaml
 # resources:
 # 2026-08-25 退役 otel-agent-rbac.yaml（已删文件）：旧 CR 的 prometheus receiver 用

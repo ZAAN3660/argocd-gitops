@@ -6,8 +6,8 @@ resources:
   - virtual-service.yaml                    # 合并后的 VS：同时管外部入口与网格内调用，Rollout 接管其权重
   - gateway.yaml                            # 南北流量的统一入口
 images:
-  - name: docker.io/istio/examples-bookinfo-productpage-v1
-    newTag: 1.20.0
+  - name: docker.io/zaan3660/bookinfo-productpage
+    newTag: 1.29.6
 patches:
   # --- 灰度分析模板：宿主机 Prometheus 查询地址 ---
   - target:
