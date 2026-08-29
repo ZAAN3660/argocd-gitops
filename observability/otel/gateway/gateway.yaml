@@ -220,6 +220,63 @@ spec:
                 - source_labels: [__meta_kubernetes_pod_name]
                   target_label: pod
 
+            # 【P1 修复】kubelet + cAdvisor：kubelet 面板缺 21/25、container_* 全缺的根因。
+            # kubelet 10250 是 TLS 端点：SA token 认证（TokenReview）+ SAR 授权（nodes/metrics get，
+            # rbac.yaml 已补）。role: node 按节点直连发现，TA 侧需 nodes list/watch（rbac.yaml 同批补）。
+            # /metrics 与 /metrics/cadvisor 是两个不同 path，必须拆两个 job。
+            - job_name: kubelet
+              kubernetes_sd_configs:
+                - role: node
+              scheme: https
+              tls_config:
+                insecure_skip_verify: true     # kubelet 证书无有效 CA 链，跳验（与 operator 8443 同取舍）
+              authorization:
+                credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_node_name]
+                  target_label: node
+
+            - job_name: kubelet-cadvisor
+              kubernetes_sd_configs:
+                - role: node
+              metrics_path: /metrics/cadvisor   # cAdvisor 指标（container_*），compute-resources 系列依赖
+              scheme: https
+              tls_config:
+                insecure_skip_verify: true
+              authorization:
+                credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_node_name]
+                  target_label: node
+
+            # CoreDNS 9153 /metrics 匿名开放，无需认证。coredns 面板 17/17 全缺由此补齐。
+            - job_name: coredns
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_k8s_app]
+                  action: keep
+                  regex: kube-dns
+                - source_labels: [__meta_kubernetes_pod_container_port_number]
+                  action: keep
+                  regex: "9153"
+
+            # apiserver /metrics：与 opentelemetry-operator 8443 同款授权链
+            # （TokenReview + SAR nonResourceURL /metrics get，复用 rbac.yaml 现有规则，零 RBAC 增量）。
+            # 经 default/kubernetes Service 的 endpoints 发现，endpoint = 节点 IP:6443。
+            - job_name: apiserver
+              kubernetes_sd_configs:
+                - role: endpoints
+              scheme: https
+              tls_config:
+                insecure_skip_verify: true
+              authorization:
+                credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+                  action: keep
+                  regex: default;kubernetes;https
+
       # ── 入口二：应用 SDK 与 istio（tracing/accesslog）发 OTLP 数据（traces/metrics/logs）从这里进 ──
       # 4317=grpc, 4318=http。istio 的 meshConfig.extensionProviders.otel 指向本层 Service。
       # 注意：otlp receiver 在 0.158 无别名废弃（改名仅限 exporter：otlp→otlp_grpc、

@@ -20,7 +20,12 @@ metadata:
   name: otel-gateway-scrape
 rules:
   # opentelemetry-operator secure metrics 的 SAR 授权：/metrics 的 nonResourceURL get
+  # （apiserver job 复用同一条规则，零增量）
   - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+  # kubelet 10250（/metrics + /metrics/cadvisor）的 SAR 授权：子资源 nodes/metrics 的 get
+  - apiGroups: [""]
+    resources: ["nodes/metrics"]
     verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -48,6 +53,10 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  # kubelet job（role: node）/ apiserver job（role: endpoints）的服务发现权限
+  - apiGroups: [""]
+    resources: ["nodes", "endpoints"]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
