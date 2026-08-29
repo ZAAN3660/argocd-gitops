@@ -38,7 +38,7 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: argo-rollouts                              # argo-rollouts
       server: https://kubernetes.default.svc
-    - namespace: opentelemetry-operator                     # opentelemetry-operator
+    - namespace: opentelemetry-operator-system              # opentelemetry-operator-system
       server: https://kubernetes.default.svc
     - namespace: monitoring                                 # node exporter/ kube-state-metrics
       server: https://kubernetes.default.svc
