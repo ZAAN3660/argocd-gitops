@@ -1,59 +1,64 @@
-# otel-gateway OpenTelemetryCollector CR —— 镜像对象：monitoring 命名空间、otel-gateway-collector
-# statefulset 形态的集中处理层（gateway）。
-# 命名规则：CR 名 otel-gateway → operator 自动拼出 Service/Pod（otel-gateway-collector /
-# otel-gateway-collector-0/-1，另有 -headless 与 -monitoring）。istio meshConfig 的
-# extensionProviders.otel 指向 otel-gateway-collector.monitoring.svc.cluster.local:4317。
+# ================================================================================================================
+# 命名规则：CR 名 otel-gateway → operator 自动拼出 Service/Pod（otel-gateway-collector / otel-gateway-collector-0/-1，
+#         另有 -headless 与 -monitoring）。istio meshConfig 的 extensionProviders.otel 指向
+#         otel-gateway-collector.monitoring.svc.cluster.local:4317
 #
-# 架构分工（2026-08-25 拆分，旧 CR otel "一体三职" daemonset 退役）：
-#   - otel-agent（observability/otel/agent）：daemonset，per-node 日志采集（filelog+富化）→ OTLP 发本层；
-#   - otel-gateway（本目录）：statefulset + target_allocator，职责二合一——
-#     1) metrics 抓取（prometheus receiver，TA 按 target 哈希分片给 2 副本，无重复抓取）；
-#     2) OTLP 集中接收（istio tracing/accesslog、业务 SDK）→ 集中导出宿主 Prometheus/Tempo/Loki。
+# 架构分工：
+#   - otel-agent：daemonset，per-node 日志采集（filelog + 日志富化）→ OTLP 发给 otel-gateway
+#   - otel-gateway：statefulset + target_allocator，职责二合一 ——
+#     1) metrics 抓取（prometheus receiver，TA 按 target 哈希分片给 2 副本，无重复抓取）
+#     2) OTLP 集中接收（istio tracing/accesslog、业务 SDK）→ 集中导出到 Prometheus / Tempo / Loki
 #
-# 乱序根因修复（2026-08-25 实验证实）：旧 daemonset 每 worker 一个实例、各全量抓同一批
-# targets，毫秒级时间戳交错 → 宿主 Prometheus 以 out of order 拒收。TA 分片后每个 target
-# 恰由一个副本抓取 → 单写者，无交错。replicas:2 的 HA 与"无重复抓取"在此模式下同时成立。
-#
-# 应用流程：observability/otel/appsets.yaml → Application otel-gateway（wave 0，
-# 先于 otel-agent / otel-istio 建立）。RBAC 见同目录 rbac.yaml。
-
+# 【三种信号的流向总览（运行时因果链）】
+#   metrics：集群 exporter → prometheus receiver + 业务 SDK OTLP 直发 → otlp receiver → memory_limiter → batch → prometheus_remote_write → Prometheus
+#   traces ：业务 SDK / istio 直发 OTLP  →  otlp receiver → memory_limiter → batch → otlp_http/tempo → Tempo（4318）
+#   logs   ：otel-agent 容器日志 + istio envoy access log（均 OTLP）→ otlp receiver → transform/als → memory_limiter → batch → otlp_http/loki → Loki（3100）
+# ================================================================================================================
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
   name: otel-gateway
   namespace: monitoring
 spec:
-  mode: statefulset            # TA 分片需要稳定身份（target→副本的哈希映射随副本身份稳定）；
-                               # 无需持久卷：未配置 volumeClaimTemplates，Pod 无 PVC
-  replicas: 2                  # 集中层 HA：抓取/导出均可横向；TA 保证两副本不抓同一 target
-  image: otel/opentelemetry-collector-contrib:0.158.0   # 与 operator 版本一致，显式 pin 防漂移
-  # 身份：rbac.yaml 中授予 /metrics nonResourceURL get——opentelemetry-operator job 的
-  # secure metrics（8443, TLS+TokenReview+SAR）授权链依赖此 SA（否则 403）
+  mode: statefulset
+  replicas: 2
+  image: otel/opentelemetry-collector-contrib:0.158.0
   serviceAccount: otel-gateway-collector
-  # 关键开关：prometheus 抓取由 Target Allocator 托管。operator 自动创建 TA 的
-  # Deployment/SA/RBAC（含 kubernetes_sd 所需 pods 权限），并把本 CR 的 scrape_configs
-  # 交给 TA；TA 完成服务发现 + 分片，各 collector 副本只抓分给自己的 targets。
-  # 因此 collector 自身不再需要任何 K8s API 权限（旧 otel-agent-pod-reader 补权已随安装层退役）。
+  # 关键开关：prometheus 抓取由 Target Allocator 托管。operator 自动创建 TA 的 Deployment/SA/RBAC（含 kubernetes_sd 所需 pods 
+  #         权限），并把本 CR 的 scrape_configs 交给 TA；TA 完成服务发现 + 分片，各 collector 副本只抓分给自己的 targets。因此
+  #         collector 自身不再需要任何 K8s API 权限
+  # 注意：权限主体跟着"谁做服务发现"走——TA 模式下 K8s API 权限在 TA 身上，不在 collector 身上。operator 默认给 TA 的 RBAC 不含 pods 
+  #      权限。rbac.yaml 底部已补 ClusterRole，缺了它 TA 的 reflector 持续 forbidden，新 targets 就发现不了
   targetAllocator:
     enabled: true
   config:
+    # ──────────────────────────────────────────────────────────────────────────
+    #                        管道第一段：receivers（数据入口）
+    # ──────────────────────────────────────────────────────────────────────────
     receivers:
-      # ── 抓取集群内 exporter 的指标（job 定义原样迁移自旧 collector.yaml，语义与注释一致）──
+      # ── 入口一：抓取集群内 exporter 的指标 ──
       prometheus:
         config:
           scrape_configs:
+            # 【抓取流水线原理：一条 target 的旅程】
+            #   1 服务发现（TA 执行）：kubernetes_sd_configs(role: pod) 经 K8s API 列出 Pod，每个 Pod 的每个"声明了端口"的容器
+            #     端口都生成一个 target 候选 —— 所以每个 job 必须按端口名/号 keep 过滤（一个 Pod 多端口 = 多个候选，不过滤即多抓）
+            #   2 relabel（TA 执行）：__meta_kubernetes_* 标签由 SD 产生；action: keep = 白名单过滤（regex 不匹配的 target 被
+            #     丢弃）；target_label = 把 SD 元数据改名为正式 label 写入指标
+            #   3 分片（TA 执行）：按 target 哈希平均分给两个副本，每个 target 恰有一个副本抓取——单写者，毫秒级交错消失（乱序根因）
+            #   4 抓取（collector 副本执行）：真正发起 HTTP 抓取的是 collector，TA 只做 1~3 并下发任务
             - job_name: node-exporter
               kubernetes_sd_configs:
                 - role: pod
               relabel_configs:
-                # 只保留 app.kubernetes.io/name=prometheus-node-exporter 的 Pod
+                # 保留 app.kubernetes.io/name=prometheus-node-exporter 的 Pod
                 - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
                   action: keep
                   regex: prometheus-node-exporter
-                # 只抓端口名为 metrics 的容器端口
+                # 抓端口名为 metrics 的容器端口
                 - source_labels: [__meta_kubernetes_pod_container_port_name]
                   action: keep
-                  regex: metrics
+                  regex: metrics               # 即 9100 端口
 
             - job_name: kube-state-metrics
               kubernetes_sd_configs:
@@ -62,8 +67,7 @@ spec:
                 - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
                   action: keep
                   regex: kube-state-metrics
-                # 只抓 8080 (name: http) —— 集群资源指标；
-                # 8081 (name: metrics) 是 ksm 自身进程指标，不要抓错
+                # 抓 8080 (name: http) —— 集群资源指标；
                 - source_labels: [__meta_kubernetes_pod_container_port_name]
                   action: keep
                   regex: http
@@ -91,13 +95,11 @@ spec:
                 # 由此处补齐，否则 canary-hash 查询无数据、灰度分析空跑误判
                 - source_labels: [__meta_kubernetes_pod_label_rollouts_pod_template_hash]
                   target_label: rollouts_pod_template_hash
-              metrics_path: /stats/prometheus
+              metrics_path: /stats/prometheus    # envoy 的 Prometheus 统计端点，由 istio-agent 在 15020 代理暴露
 
-            # --- infra 组件指标（一组件一 job：label name 白名单 + 容器端口号白名单）---
             # 为什么用端口号不用端口名：实测 ArgoCD 多数 metrics 端口未声明 name（无名端口
             # 无法被 __meta_kubernetes_pod_container_port_name 匹配），故统一按端口号过滤。
             # ArgoCD 未采：redis（镜像无 exporter）、notifications-controller（未声明 metrics 端口）。
-
             - job_name: argocd-application-controller
               kubernetes_sd_configs:
                 - role: pod
@@ -107,7 +109,7 @@ spec:
                   regex: argocd-application-controller
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "8082"
+                  regex: "8082"                 # application-controller 的 metrics 端口
 
             - job_name: argocd-server
               kubernetes_sd_configs:
@@ -118,7 +120,7 @@ spec:
                   regex: argocd-server
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "8083"
+                  regex: "8083"                 # argocd-server 的 metrics 端口
 
             - job_name: argocd-repo-server
               kubernetes_sd_configs:
@@ -129,7 +131,7 @@ spec:
                   regex: argocd-repo-server
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "8084"
+                  regex: "8084"                 # repo-server 的 metrics 端口
 
             - job_name: argocd-applicationset-controller
               kubernetes_sd_configs:
@@ -140,11 +142,8 @@ spec:
                   regex: argocd-applicationset-controller
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "8080"
+                  regex: "8080"                 # applicationset-controller 的 metrics 端口
 
-            # argocd-dex-server job 已移除（2026-08-25）：dex 默认不启 telemetry——argocd-cm 的
-            # dex.config 无 telemetry 段，5558 无监听（实测 connection refused）。
-            # 恢复条件：dex.config 加 telemetry: http: 127.0.0.1:5558 后，按 5558 加回。
             - job_name: argo-rollouts
               kubernetes_sd_configs:
                 - role: pod
@@ -154,11 +153,8 @@ spec:
                   regex: argo-rollouts
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "8090"
+                  regex: "8090"                 # rollouts controller 的 metrics 端口
 
-            # keda-operator job 已移除（2026-08-25）：keda 默认 --enable-prometheus-metrics=false，
-            # 不暴露 HTTP metrics；9666 是 metricsservice（gRPC，给 metrics-apiserver 用），8081
-            # 是 health 探测，均无 Prometheus 指标可采。留 job 只会常年 up=0 红灯。
             - job_name: cert-manager
               kubernetes_sd_configs:
                 - role: pod
@@ -168,9 +164,9 @@ spec:
                   regex: cert-manager
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "9402"
+                  regex: "9402"                 # cert-manager 的 metrics 端口
 
-            # 已装：端口实测 8443（--metrics-addr=0.0.0.0:8443 --metrics-secure=true，TLS+TokenReview
+            # 端口实测 8443（--metrics-addr=0.0.0.0:8443 --metrics-secure=true，TLS+TokenReview
             # 认证）。https + 自签证书跳验 + 用本 SA token 过认证；credential 路径为 K8s 自动挂载。
             # 授权链：TokenReview 只验证 token 合法；是否放行由 SubjectAccessReview 判
             # /metrics 的 nonResourceURL get —— 权限在 rbac.yaml 绑给本 CR 的 SA。
@@ -183,12 +179,12 @@ spec:
                   regex: opentelemetry-operator
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "8443"
-              scheme: https
+                  regex: "8443"                 # operator 的 secure metrics 端口
+              scheme: https                    # 8443 是 TLS 端点
               tls_config:
-                insecure_skip_verify: true
+                insecure_skip_verify: true     # operator 证书无有效 CA 链，跳验（取舍：省证书管理；风险：中间人）
               authorization:
-                credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+                credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token   # 用本 Pod 自动挂载的 SA token 作 Bearer 认证
 
             # istiod 15014 默认可能要求 mTLS（取决于 meshConfig.enablePrometheusMerge）：
             # 装上后若该 job 恒 up=0，需开启 enablePrometheusMerge 并给采集侧配 TLS 证书，
@@ -202,7 +198,7 @@ spec:
                   regex: istiod
                 - source_labels: [__meta_kubernetes_pod_container_port_number]
                   action: keep
-                  regex: "15014"
+                  regex: "15014"                # istiod 控制面 metrics 端口
 
             # otel 组件自身 metrics 自抓（【P3 修复】此前 8888 暴露但无 job，otelcol_* 指标
             # 不进宿主 Prometheus）。operator 给 collector pod 声明 8888（name: metrics），
@@ -220,19 +216,22 @@ spec:
                   regex: otel-agent-collector|otel-gateway-collector
                 - source_labels: [__meta_kubernetes_pod_container_port_name]
                   action: keep
-                  regex: metrics
+                  regex: metrics               # 即 8888 端口（operator 声明 name: metrics）
                 - source_labels: [__meta_kubernetes_pod_name]
                   target_label: pod
 
-      # 应用 SDK 与 istio（tracing/accesslog）发 OTLP 数据（traces/metrics/logs）从这里进：
+      # ── 入口二：应用 SDK 与 istio（tracing/accesslog）发 OTLP 数据（traces/metrics/logs）从这里进 ──
       # 4317=grpc, 4318=http。istio 的 meshConfig.extensionProviders.otel 指向本层 Service。
       # 注意：otlp receiver 在 0.158 无别名废弃（改名仅限 exporter：otlp→otlp_grpc、
       # otlphttp→otlp_http），receiver 合法名仍是 otlp（grpc+http 两协议共存）。
       otlp:
         protocols:
-          grpc: {}
-          http: {}
+          grpc: {}      # 4317：OTLP/gRPC 标准端口（agent、istio、业务 SDK 的默认入口）
+          http: {}      # 4318：OTLP/HTTP 标准端口
 
+    # ──────────────────────────────────────────────────────────────────────────
+    #                        管道第二段：processors（数据加工）
+    # ──────────────────────────────────────────────────────────────────────────
     processors:
       # 集中层只做资源限制与批处理；日志富化（transform/k8sattributes）在 agent 侧完成。
       # 【2026-08-25 修复】原 resource processor 的 insert service.name=otel-gateway
@@ -254,49 +253,68 @@ spec:
       # 支持 {trace_id="..."} 直搜（索引级过滤，不再全流扫描）。
       # 注意：业务 SDK 若直发无标识 OTLP 日志也会命中 service.name 补写规则（当前集群无此场景）。
       transform/als:
-        error_mode: ignore
+        error_mode: ignore   # 语句执行出错不丢日志、不中断管道，仅跳过该语句——身份补写类改写的稳妥选择
         log_statements:
           - context: resource
             conditions:
+              # 两个身份标识皆空 ⇒ 判定为 ALS（容器日志经 agent 富化后必有其一）
               - attributes["service.name"] == nil and attributes["k8s.pod.name"] == nil
             statements:
-              - set(attributes["service.name"], "istio-envoy-als")
+              - set(attributes["service.name"], "istio-envoy-als")   # 补写固定身份，Loki 里与业务流区分
           - context: log
             conditions:
-              - trace_id != nil
+              - trace_id != nil    # 顶层 TraceId 字段存在才复制
             statements:
-              - set(attributes["trace_id"], trace_id.string)
+              - set(attributes["trace_id"], trace_id.string)   # 十六进制字符串复制进 attributes，供 Loki 建索引
           - context: log
             conditions:
               - span_id != nil
             statements:
               - set(attributes["span_id"], span_id.string)
+      # 内存保护（与 agent.yaml 同款处理器，语义相同）：
+      # limit_mib 是【硬限】（进程堆目标上限，实际总内存约高出 50Mi）；软限 = limit - spike，
+      # 先于硬限介入丢数据。spike 未写时取默认值 = limit 的 20%（2048×20%≈410Mi），
+      # 即软限 ≈ 1638Mi。网关汇聚全集群流量，水位显著高于 agent 的 512。
+      # 陷阱②：本 CR 未声明 resources.limits，容器无 cgroup 内存硬顶——
+      # memory_limiter 是唯一防线；若删掉它，内存失控时由内核直接 OOM Kill。
       memory_limiter:
         check_interval: 1s
         limit_mib: 2048
-      batch: {}
+      batch: {}      # 空配置 = 全默认：攒满 8192 条或 200ms 超时先到先发
+                     # 对比 agent 显式 1s：网关多一跳，出口延迟预算更紧（取舍：更短延迟、略降攒批收益）
 
+    # ──────────────────────────────────────────────────────────────────────────
+    #                        管道第三段：exporters（数据出口）
+    # ──────────────────────────────────────────────────────────────────────────
+    # 三个出口对应宿主机三个后端（host.docker.internal = kind 集群在 Docker 网络中访问宿主机）：
+    # Prometheus(metrics) / Tempo(traces) / Loki(logs)——按信号分家，各回各家。
     exporters:
       prometheus_remote_write:
         endpoint: http://host.docker.internal:9090/api/v1/write   # 宿主机 Prometheus remote-write 端点
+        # 协议：Remote Write（protobuf + Snappy 压缩），宿主机 Prometheus 需开启 --web.enable-remote-write-receiver
       # traces 发往宿主机 Tempo（OTLP/HTTP）
       otlp_http/tempo:
         endpoint: http://host.docker.internal:4318                # 宿主机 Tempo OTLP/HTTP 接收端口（3200 仅查询，不收 OTLP）
       # access log 发往宿主机 Loki（Loki 3.0+ 原生 OTLP，路径 /otlp/v1/logs）
       otlp_http/loki:
-        endpoint: http://host.docker.internal:3100/otlp           # 宿主机 Loki 3.x OTLP 接收
+        endpoint: http://host.docker.internal:3100/otlp           # 宿主机 Loki 3.x OTLP 接收（exporter 自动拼 /v1/logs 子路径）
 
+    # ──────────────────────────────────────────────────────────────────────────
+    #                        管道组装：service.pipelines
+    # ──────────────────────────────────────────────────────────────────────────
+    # 按信号类型分三条独立管道，互不串扰；只有同一信号的多个 exporter 才会产生数据复制
     service:
       pipelines:
         metrics:
           receivers: [prometheus, otlp]    # prometheus 抓取（TA 分片）+ SDK OTLP 直发
-          processors: [memory_limiter, batch]
-          exporters: [prometheus_remote_write]
+          processors: [memory_limiter, batch]         # 不做 transform：指标身份已在 relabel 阶段定好
+          exporters: [prometheus_remote_write]        # 全量指标归宿主 Prometheus（不落 Tempo/Loki）
         traces:
-          receivers: [otlp]
+          receivers: [otlp]                # 仅 SDK / istio 直发（本层不抓取 traces）
           processors: [memory_limiter, batch]
-          exporters: [otlp_http/tempo]
+          exporters: [otlp_http/tempo]     # traces 归 Tempo
         logs:
           receivers: [otlp]               # otel-agent 的容器日志 + istio accesslog
+          # 顺序即执行顺序：先补身份（transform/als），再限流、攒批——被限流丢弃的日志也已带正确身份
           processors: [transform/als, memory_limiter, batch]
-          exporters: [otlp_http/loki]
+          exporters: [otlp_http/loki]     # logs 归 Loki

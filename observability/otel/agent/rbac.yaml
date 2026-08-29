@@ -1,20 +1,16 @@
-# agent 的 RBAC 三件套 —— 镜像对象：CR otel-agent 的 spec.serviceAccount 引用的身份
-# （otel-agent）。
-# 因果链：agent 日志 pipeline 里 k8sattributes 拿 pod 名去问 K8s API 要 label/annotation，
-# API 门禁（RBAC）只认 ServiceAccount，故 SA + ClusterRole + ClusterRoleBinding 缺一不可；
-# 缺了它 processor 查询被拒（403），日志标签静默缺失甚至日志被丢。
-# 权限按 k8sattributes 官方最小集：
-#   pods/namespaces：查 Pod 元数据本身；nodes：k8s.node.name 元数据（get 即可，一并给上）；
-#   replicasets：从 Pod owner 链解析 Deployment 名（k8s.deployment.name/uid 依赖它）；
-#   daemonsets/statefulsets：k8s.daemonset.name / k8s.statefulset.name 提取依赖
-#   （2026-08-25 补：与 agent.yaml 第 7 条 metadata 列表对齐）。
+# ================================================================================================================
+# Agent 的 RBAC ——  otel-agent 的 spec.serviceAccount 字段处引用 SA otel-agent
 #
-# 与旧 collector/rbac.yaml 的差异（2026-08-25 拆分）：nonResourceURLs /metrics 一段已移除——
-# opentelemetry-operator 8443 secure metrics 的抓取随 prometheus receiver 移交给 gateway
-# （其授权链在 observability/otel/gateway/rbac.yaml）。
+# 因果链：日志 pipeline 里 k8sattributes 拿 pod 名去问 K8s API 要 label/annotation，API 门禁（RBAC）只认 ServiceAccount，
+#        故 SA + ClusterRole + ClusterRoleBinding 缺一不可；缺了它 processor 查询被拒（403），日志标签静默缺失甚至日志被丢
 #
-# 集群级资源：所在 Application（otel-agent）的 AppProject 是 observability，依赖
-# appproject.yaml 的 clusterResourceWhitelist 放行 rbac.authorization.k8s.io。
+# k8sattributes 官方最小权限集合：
+#   pods/namespaces：查 Pod 元数据
+#   nodes：          查 k8s.node.name 元数据
+#   replicasets：    从 Pod owner 链解析 Deployment 名的权限，k8s.deployment.name/uid 依赖它
+#   daemonsets：     k8s.daemonset.name 的提取依赖
+#   daemonsets：     k8s.statefulset.name 提取依赖
+# ================================================================================================================
 apiVersion: v1
 kind: ServiceAccount
 metadata:

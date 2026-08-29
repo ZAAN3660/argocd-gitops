@@ -1,46 +1,26 @@
-# =============================================================================
-# 文件: observability/otel/istio/telemetry-istio.yaml（三合一：istio-cm + tracing + accesslog）
-# 用途: 集群 istio-system/istio ConfigMap + Telemetry CRs 的声明式权威副本（GitOps 管理）。
-# 同步者: otel AppSet（observability/otel/appsets.yaml）→ Application otel-telemetry
-#         （automated prune selfHeal），push 后自动收敛。infra 侧 istiod 已 $patch: delete
-#         让出此 ConfigMap，单一归属（防双主）。历史版本与旧态备份以 git 历史为准。
-# =============================================================================
-#
-# ── 变更历史 ───────────────────────────────────────────────────────────────
-# 2026-08-23  由"手工 apply"迁移为 GitOps 管理：config AppSet/istio-config 接管，
-#             infra 侧 istiod kustomization 加 $patch: delete 让出单一归属。
-# 2026-08-23  加入 meshConfig.extensionProviders.otel：
-#             tracing 数据出口指向 otel-collector.monitoring:4317，
-#             供 config/istio/telemetry-tracing.yaml 的 provider 引用（P0 traces 链路）。
-# 2026-08-23  恢复 defaultConfig.proxyStatsMatcher.inclusionPrefixes（8-21 为
-#             故障大盘加的配置，因 istio 重装丢失）。
-#             注意：defaultConfig 变更需重启业务 Pod 才生效。
-# 2026-08-25  随 observability/otel 改名：extensionProviders name opentelemetry → otel；
-#             service opentelemetry-collector.monitoring → otel-collector.monitoring
-#             （operator 自动生成的 Service，手写 service.yaml 已退役）。
-#             无业务 Pod，无重启负担；bookinfo 重建后按新 provider 渲染。
-# 2026-08-25  agent/gateway 拆分：provider 出口 service 改指 gateway——
-#             otel-collector.monitoring → otel-gateway-collector.monitoring。
-#             原因：tracing/accesslog 是网格集中上报（非 per-node 数据），应进集中层；
-#             旧 daemonset 已是双写主体（与 metrics 抓取共用），拆分后它不再收 OTLP。
-# 2026-08-25  合并 accesslog/tracing 两个 CR 为一个 otel CR：istioctl analyze 报
-#             IST0160——同一 root namespace 下多个无 selector Telemetry 行为未定义
-#             （istiod 只取其中一个），tracing 被忽略。修复后已验证：envoy HCM
-#             tracing（envoy.tracers.opentelemetry）渲染、span 到达 Tempo。
-#             【排障复盘】tracing 配置在 listener 的 HCM 上，不是 bootstrap.tracing，
-#             排查时曾误查 bootstrap 字段走了弯路。
-# 2026-08-25  accesslog 修复：opentelemetry 类型 provider 不支持 accesslog
-#             （源码 telemetryAccessLog 对其返回 nil），accesslog 需要独立的
-#             envoyOtelAls 类型 provider。新增 otel-als provider 并让
-#             accessLogging 引用它。accesslog/tracing 均为 xDS 动态配置，
-#             无需重启业务 Pod（旧注释"bootstrap 级需重启"已修正）。
-#
-# ── 应用流程（改本文件后） ─────────────────────────────────────────────────
-#   1) git push 即可（istio-config App automated selfHeal 自动收敛，无需手工 apply）
-#   2) istiod 热加载 meshConfig（约 1 分钟），注意观察 istiod 日志无 error
-#   3) 无需重启业务 Pod：Telemetry 的 tracing/accesslog 经 xDS（LDS）动态下发。
-#      例外：改 defaultConfig（如 proxyStatsMatcher，bootstrap 级）才需重启 Pod
-# =============================================================================
+# ================================================================================================================
+# 用途: 全 mesh 开启 tracing + accesslog，统一经 otel provider（OTLP/gRPC 4317）发往 gateway（otel-gateway-collector）
+# 前置: 1) meshConfig.extensionProviders 已定义 name: otel（tracing，opentelemetry 类型）与 name: otel-als（accesslog，
+#         envoyOtelAls 类型），均指向 otel-gateway-collector.monitoring.svc.cluster.local:4317
+#       2) Istio >= 1.18（accessLogging 支持 envoyOtelAls provider）
+# 生效范围: istio-system 命名空间 + 无 selector = 全 mesh 生效
+# 注意: randomSamplingPercentage: 100 是【验证期】配置，生产应降到 1~10
+# 注意: tracing/accesslog 均经 xDS 动态下发，无需重启业务 Pod
+# ================================================================================================================
+apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata:
+  name: otel
+  namespace: istio-system
+spec:
+  accessLogging:
+    - providers:
+        - name: otel-als
+  tracing:
+    - providers:
+        - name: otel
+      randomSamplingPercentage: 100
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -79,28 +59,3 @@ data:
         service: otel-gateway-collector.monitoring.svc.cluster.local
   meshNetworks: |
     networks: {}
----
-# =============================================================================
-# 用途: 全 mesh 开启 tracing + accesslog，统一经 otel provider（OTLP/gRPC 4317）
-#       发往 gateway（otel-gateway-collector）
-# 前置: 1) meshConfig.extensionProviders 已定义 name: otel（tracing，opentelemetry 类型）
-#          与 name: otel-als（accesslog，envoyOtelAls 类型），均指向
-#          otel-gateway-collector.monitoring.svc.cluster.local:4317
-#       2) Istio >= 1.18（accessLogging 支持 envoyOtelAls provider）
-# 生效范围: istio-system 命名空间 + 无 selector = 全 mesh 生效
-# 注意: randomSamplingPercentage: 100 是【验证期】配置，生产应降到 1~10
-# 注意: tracing/accesslog 均经 xDS 动态下发，无需重启业务 Pod
-# =============================================================================
-apiVersion: telemetry.istio.io/v1
-kind: Telemetry
-metadata:
-  name: otel
-  namespace: istio-system
-spec:
-  accessLogging:
-    - providers:
-        - name: otel-als
-  tracing:
-    - providers:
-        - name: otel
-      randomSamplingPercentage: 100

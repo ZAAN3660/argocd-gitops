@@ -1,39 +1,31 @@
-# observability/otel 组件 AppSet：单集群无环境发散，list generator 枚举（与 infra-components 同构）。
-# 依赖链：collector(0) → telemetry(1)——meshConfig 引用的 collector Service 语义上先建。
-# 无版本 label（宿主/配置类组件，无独立版本语义）；组件辨识靠 App 名本身。
-# 本文件位于根应用 path（observability/otel）目录顶层，由 directory 模式直接同步。
+# observability/otel 组件 AppSet：单集群无环境发散，list generator 枚举（与 infra-components 同构）
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: otel
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-999"                     # 与 project 同波：先于它生成的组件 Application 建立
+    argocd.argoproj.io/sync-wave: "-999"
 spec:
   goTemplate: true
   generators:
     - list:
-        # v3.4.7 AppSet CRD 已移除 list generator 的 selector 过滤字段：写入会被 API server 静默丢弃，
-        # 造成本对象永久 OutOfSync + 自愈反复重试。enabled 仅为说明性标记；停用组件 = 删除对应 element。
         elements:
-          # 2026-08-25 拆分：原单一 CR otel（daemonset 一体三职）→ agent/gateway 两层标准架构。
-          # 旧 element otel-collector 删除后，AppSet 回收旧 Application → finalizer 级联 prune
-          # 旧 CR/DaemonSet/Service/RBAC。依赖链：gateway(0) → agent/istio(1)。
-          - component: otel-gateway                      # 同步 observability/otel/gateway：CR otel-gateway（statefulset + target_allocator 集中层）
+          - component: otel-gateway
             enabled: "true"
             path: observability/otel/gateway
             namespace: monitoring
-            wave: 0                                          # 依赖链起点：agent 的 OTLP 出口与 istio provider 都指向它的 Service
-          - component: otel-agent                        # 同步 observability/otel/agent：CR otel-agent（daemonset，per-node 日志采集）
+            wave: 0
+          - component: otel-agent
             enabled: "true"
             path: observability/otel/agent
             namespace: monitoring
-            wave: 1                                          # 依赖 gateway Service；OTLP exporter 自带重试，顺序不硬依赖
-          - component: otel-istio                        # 同步 observability/otel/istio：istio-cm（meshConfig 权威）+ tracing + accesslog
+            wave: 1                                      # 依赖 gateway Service；OTLP exporter 自带重试，顺序不硬依赖
+          - component: otel-istio
             enabled: "true"
             path: observability/otel/istio
             namespace: istio-system
-            wave: 1                                          # 依赖 gateway Service（istiod 不校验可达性，语义上先建）
+            wave: 1                                      # 依赖 gateway Service（istiod 不校验可达性，语义上先建）
   template:
     metadata:
       name: '{{.component}}'

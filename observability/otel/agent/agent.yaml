@@ -1,19 +1,43 @@
-apiVersion: opentelemetry.io/v1beta1
-kind: OpenTelemetryCollector
+
+# ================================================================================================================
+# 【采集链路中的角色：Agent vs Gateway】
+#   Agent：daemonset 模式，每个节点一个实例，只做四件事 —— 采集本节点容器日志 → 解析/富化 → 归一化 service.name → 转发 Gateway
+#   Gateway：中心化聚合端，接收所有 Agent 数据，再做批处理/采样并写出后端存储（Loki）
+#   职责分离的收益：解析、富化等重活下沉到每个节点处理，中心只做聚合外发，避免单点成为全集群日志解析的瓶颈
+#
+# 【一条日志的完整旅程】
+#   kubelet 把容器 stdout/stderr 落盘到 /var/log/pods/<namespace>_<pod>_<uid>/<容器名>/<重启次数>.log
+#   → filelog 接收器 tail 宿主机文件（DaemonSet 才有资格挂宿主机路径）
+#   → router 按行首特征分流三种运行时格式（docker JSON / CRI-O / containerd）
+#   → 对应 parser 拆出 时间戳/stream/正文，并把文本时间解析为真正的纳秒时间戳
+#   → extract_metadata_from_filepath 从文件路径正则抠出 ns/pod/uid/容器/重启次数
+#   → move 系列把临时字段归位：正文进 body、Pod 维度进 resource、流名进 attributes
+#   → k8s_attributes 处理器凭本地 informer 缓存关联 API，补全 k8s.* 资源属性
+#   → transform/svc 按兜底链确定 service.name（下游区分"哪个服务"的标准标签）
+#   → memory_limiter 应用层软限控内存 → batch 攒批降网络开销
+#   → otlp_grpc 导出器 → otel-gateway-collector.monitoring:4317
+# ================================================================================================================
+apiVersion: opentelemetry.io/v1beta1    # OTel Operator 注册的 CRD API 版本
+kind: OpenTelemetryCollector            # CR 类型：声明一个 Collector 实例
 metadata:
-  name: otel-agent
-  namespace: monitoring
+  name: otel-agent                      # CR 名；Operator 生成的工作负载以 <name>-collector 命名
+  namespace: monitoring                 # 工作负载落地的命名空间（本仓库观测栈统一放 monitoring）
+
 spec:
-  mode: daemonset
-  image: otel/opentelemetry-collector-contrib:0.158.0
-  serviceAccount: otel-agent
+  mode: daemonset                       # DaemonSet 模式下， Agent 挂载宿主机 /var/log，就能采集到容器日志
+  image: otel/opentelemetry-collector-contrib:0.158.0  # contrib 发行版 = 官方 core 组件 + 社区组件（filelog / 
+                                                       # k8sattributes / transform 等全部属于 contrib 组件） 
+  serviceAccount: otel-agent            # k8s_attributes 处理器需要经过 serviceAccount 授权，才能访问 API Server
   resources:
     limits:
-      memory: 1Gi
+      memory: 1Gi                       # 内存上限：内核 cgroup 强制，超限 = OOM Kill（Pod 重启，内存中数据全丢）
     requests:
-      cpu: 100m
+      cpu: 100m                         # 调度保证值：影响 QoS 等级与调度决策
       memory: 256Mi
   env:
+    # 用 downward API 把"Pod 被调度到的节点名"注入环境变量，链路：
+    #   spec.nodeName（Pod 字段）→ env K8S_NODE_NAME → k8s_attributes.filter.node_from_env_var。
+    # 没有它，处理器就不知道"我是哪个节点上的 Agent"，无法做节点级过滤。
     - name: K8S_NODE_NAME
       valueFrom:
         fieldRef:
@@ -21,39 +45,54 @@ spec:
   volumes:
     - name: varlog
       hostPath:
-        path: /var/log
+        path: /var/log                  # 挂载宿主机 /var/log 目录，因为 kubelet 会把本节点所有容器的 stdout/stderr 写到这里
   volumeMounts:
     - name: varlog
       mountPath: /var/log
-      readOnly: true
+      readOnly: true                    # 只读挂载
+
   config:
+    # ──────────────────────────────────────────────────────────────────────────
+    #                        管道第一段：receivers（数据接收）
+    # ──────────────────────────────────────────────────────────────────────────
     receivers:
-      file_log:
-        include: [/var/log/pods/*/*/*.log]
-        exclude:
-          - /var/log/pods/*_otel-agent-collector-*_*/*.log
-          - /var/log/pods/*_otel-gateway-collector-*_*/*.log
-        start_at: end   # 无 storage 持久化：重启从文件末尾续读，重启窗口内的日志不采集（已接受的取舍）
-        include_file_name: false
-        include_file_path: true
+      file_log: # 采集对象：kubelet 落盘的容器日志文件
+        include: [/var/log/pods/*/*/*.log]                    # 通配符 * 分别对应 <namespace>_<pod>_<uid>/<container_name>/<重启次数>.log
+        exclude:                                              # 排除 Agent 与 Gateway 的日志文件。采集动作本身就会产生"行为日志"，该"行为日志"若
+                                                              # 被采集，就又会产生"行为日志"，死循环了
+          - /var/log/pods/*_otel-agent-collector-*_*/*.log   
+          - /var/log/pods/*_otel-gateway-collector-*_*/*.log 
+        start_at: end                                         # end - collector 启动后从日志文件的末尾开始采集日志，若 collector 重启了，重启
+                                                              #       过程中由业务 Pod 产生的日志将不被采集; 这里使用 end 的原因：当前配置未启用 
+                                                              #       storage，filelog 读取偏移量未持久化存储；若改为 start，让 collector 启
+                                                              #       动后从日志文件的头部开始采集日志，那么偏移量之前的日志又会被重新采集一遍
+
+        include_file_name: false                              # 不生成"文件名"属性：后续只用完整路径，少一个属性、少一份基数
+        include_file_path: true                               # 生成 attributes["log.file.path"]，它是下方
+                                                              # extract_metadata_from_filepath 的 parse_from 数据来源
+        
+        # operators 是一条顺序执行的处理流水线（stanza 引擎），数组顺序就是执行顺序
         operators:
+          # 接收原始日志，正则匹配判断日志来自哪种容器运行时
           - type: router
             id: get-format
             routes:
-              - output: parser-docker
-                expr: 'body matches "^\\{"'
+              - output: parser-docker             
+                expr: 'body matches "^\\{"'      # docker     → 格式：“JSON：{"log":"..","stream":"..","time":".."}"
               - output: parser-crio
-                expr: 'body matches "^[^ Z]+ "'
+                expr: 'body matches "^[^ Z]+ "'  # CRI-O      → 格式："时间戳（带时区偏移，如+08:00）stdout logtag 正文"
               - output: parser-containerd
-                expr: 'body matches "^[^ Z]+Z"'
+                expr: 'body matches "^[^ Z]+Z"'  # containerd → 格式："时间戳Z stdout logtag 正文"
+          # 接收 router 路由过来的日志，解析 CRI-O 日志中的时间
           - type: regex_parser
             id: parser-crio
             regex: '^(?P<time>[^ Z]+) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'
-            output: extract_metadata_from_filepath
+            output: extract_metadata_from_filepath   # 显式指定下一个 operator
             timestamp:
-              parse_from: attributes.time
-              layout_type: gotime
+              parse_from: attributes.time     # 从解析出的 time 属性取文本时间
+              layout_type: gotime             # Go 参考时间布局（Mon Jan 2 15:04:05 MST 2006 的缩写）
               layout: '2006-01-02T15:04:05.999999999Z07:00'
+          # 接收 router 路由过来的日志，解析 containerd 日志中的时间
           - type: regex_parser
             id: parser-containerd
             regex: '^(?P<time>[^ ^Z]+Z) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'
@@ -62,26 +101,34 @@ spec:
               parse_from: attributes.time
               layout_type: gotime
               layout: '2006-01-02T15:04:05.999999999Z'
+          # 接收 router 路由过来的日志，解析 docker 日志中的时间
           - type: json_parser
             id: parser-docker
             output: extract_metadata_from_filepath
             timestamp:
               parse_from: attributes.time
               layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+          # 接收上面 3 个 parser 处理后的日志，从文件路径中解析 namespace/pod/uid/容器/重启次数
           - type: regex_parser
             id: extract_metadata_from_filepath
             regex: '^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]{36})\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log$'
             parse_from: attributes["log.file.path"]
             cache:
-              size: 128
+              size: 128   # cache：同一文件的所有行共享同一路径，解析结果 LRU 缓存 128 条，避免每条日志都重跑正则 —— 高频路径的性能关键
+          # 接收上面 extract_metadata_from_filepath 处理后的日志，将解析出的原始字段，按 Otel 的数据模型规范进行 move 归位
+          # Otel 数据模型三个命名空间：
+          #   body       = 日志正文（展示/检索的主文本）
+          #   attributes = 日志属性（单条日志自身特征，如 stream）
+          #   resource   = 资源属性（日志"出处"特征：哪个 Pod/命名空间/节点）
+          # 归位原则：出处维度一律进 resource，正文进 body，单条特征留在 attributes
           - type: move
             id: clean-up-log-record
-            from: attributes["log"]
-            to: body
+            from: attributes["log"]   # 三种格式的正文都落在 attributes["log"]。docker 由 JSON 解包，CRI-O/containerd 由正则命名组 log
+            to: body                  # 正文统一移动到 body
           - type: move
             id: extract-metadata
-            from: attributes["stream"]
-            to: attributes["log.iostream"]
+            from: attributes["stream"]      # stdout / stderr
+            to: attributes["log.iostream"]  # 重命名为 OTel 语义化属性名 log.iostream
           - type: move
             id: move-pod-name
             from: attributes["pod_name"]
@@ -96,8 +143,8 @@ spec:
             to: resource["k8s.container.name"]
           - type: move
             id: move-containerd
-            from: attributes["logtag"]
-            to: resource["conmon-containerd"]
+            from: attributes["logtag"]          # 运行时给出的分行标记（P=partial 分段 / F=full 完整）
+            to: resource["conmon-containerd"]   # 迁入资源属性；属性名沿用部署既定命名约定
           - type: move
             id: move-pod-uid
             from: attributes["uid"]
@@ -107,11 +154,21 @@ spec:
             from: attributes["restart_count"]
             to: resource["k8s.container.restart_count"]
 
+    # ──────────────────────────────────────────────────────────────────────────
+    #                        管道第二段：processors（数据加工）
+    # ──────────────────────────────────────────────────────────────────────────
     processors:
+      # 资源富化 - 把"日志内容之外"的 K8s 元数据补到资源属性上
+      # 处理过程 - 处理器通过 pod_association 找到日志对应的 Pod 对象，再沿 ownerReferences 向上找到 Deployment/StatefulSet/
+      #           DaemonSet，补全 k8s.* 属性 —— transform/svc 的 service.name 兜底链吃它的产物。
+      # 性能关键 - 数据来自本地 informer 缓存（启动 list 一次 + watch 增量更新），不是每条日志实时请求 API Server —— 否则高频日志
+      #           会把 API Server 打爆
+      # RBAC权限 - 本地 informer 缓存的建立依赖 list/watch
       k8s_attributes:
-        auth_type: serviceAccount
+        auth_type: serviceAccount    # 使用上面的 otel-agent SA 认证
         extract:
           metadata:
+            # 白名单：只提取列出的属性。刻意不全量提取：资源属性会随每条日志落到下游，属性越多基数越大，存储与查询成本越高
             - k8s.pod.name
             - k8s.pod.uid
             - k8s.pod.ip
@@ -123,74 +180,100 @@ spec:
             - k8s.deployment.uid
             - k8s.statefulset.name
             - k8s.daemonset.name
-          # 提取 Pod label 进资源属性：transform/svc 的 service.name 兜底链依赖 app。
-          # 2026-08-27 修复：bookinfo 全部为 Argo Rollout，owner 链 Pod→RS→Rollout 无
-          # Deployment，k8s.deployment/statefulset/daemonset.name 提取全落空，service.name
-          # 掉到 pod-name 兜底（Loki 里 service_name 变成 Pod 名）。app label 与 Service 同名，
-          # 作为工作负载身份的首选兜底。
-          # 2026-08-27 二次修复：k8sattributes 提取 label 时不给 tag_name，属性名默认是
-          # k8s.pod.labels.<key>（官方 README），transform/svc 引用 attributes["app"] 永远
-          # 取不到值，兜底链落空。必须用 tag_name 显式命名，提取结果才叫 app。
+          # 提取 Pod label 进资源属性
           labels:
             - from: pod
               key: app
-              tag_name: app
-            # 标准化 label：当前集群组件未使用，预留给未来组件
+              tag_name: app      # 显式命名：提取结果属性名 = app（默认会是 k8s.pod.labels.app）
             - from: pod
               key: app.kubernetes.io/name
               tag_name: app.kubernetes.io/name
-          annotations: []
+          # 提取 Pod annotation 进资源属性
+          annotations: []        # 显式空列表：不提取注解
         filter:
+          # 关联本节点的 Pod（节点名来自 env 注入的 K8S_NODE_NAME）
           node_from_env_var: K8S_NODE_NAME
         pod_association:
+          # 关联策略 = 按优先级排列的兜底链：先试 ip，再试 uid，最后试 name
+          # 本管道的实际生效路径：上方 move 已把 k8s.pod.uid / k8s.pod.name 预置进
+          # 资源属性，关联时处理器据其在缓存中定位 Pod；k8s.pod.ip 列在首位是给
+          # "其他来源已预注入 IP"的场景预留（本管道中通常用不上，实际以 uid 为主）
           - sources:
               - from: resource_attribute
-                name: k8s.pod.ip
+                name: k8s.pod.ip      # 首选：IP 在 Pod 生命周期内唯一且不变
           - sources:
               - from: resource_attribute
-                name: k8s.pod.uid
+                name: k8s.pod.uid     # 次选：UID 终身唯一（跨重建也唯一）
           - sources:
               - from: resource_attribute
-                name: k8s.pod.name
+                name: k8s.pod.name    # 最后兜底：名字可能因重建复用，需配合 namespace 定位
+      # service.name 归一化：OTTL（OpenTelemetry Transformation Language）声明式改写
+      # context: resource = 在资源属性上操作（另有 log/span/metric 等上下文）。
+      # 语句语义：set(目标, 来源) where 条件 —— 条件成立才赋值。
+      # 兜底链原理：每条 where 都带 service.name == nil 前置条件，从上到下第一条
+      # 命中后 service.name 非 nil，后续语句自动失效 ⇒ 顺序即优先级：Deployment → StatefulSet → DaemonSet → app label → app.kubernetes.io/name → pod name
+      # 设计意图：service.name 是下游（Gateway/Loki）区分"哪个服务"的标准标签，尽量与 Service/工作负载同名，避免下游维度分裂
       transform/svc:
         log_statements:
           - context: resource
             statements:
+              # 优先级 1：Deployment 名（k8s_attributes 沿 owner 链提取）
               - set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil and attributes["k8s.deployment.name"] != nil
+              # 优先级 2：StatefulSet 名
               - set(attributes["service.name"], attributes["k8s.statefulset.name"]) where attributes["service.name"] == nil and attributes["k8s.statefulset.name"] != nil
+              # 优先级 3：DaemonSet 名
               - set(attributes["service.name"], attributes["k8s.daemonset.name"]) where attributes["service.name"] == nil and attributes["k8s.daemonset.name"] != nil
-              # 2026-08-27 修复：Rollout 类工作负载（bookinfo 全部组件）无 Deployment 链，
-              # 上面三条全不命中。用 Pod 的 app label 兜底（与 Service 同名），
-              # 最后才是 pod name（原始行为保留）。
-              # 注意：app 属性依赖 k8s_attributes.labels 的 tag_name: app 显式命名，
-              # 否则提取结果叫 k8s.pod.labels.app，本条永远不命中。
+              # 2026-08-27 修复：Rollout 类工作负载无 Deployment 链，上面三条全不命中，用 Pod 的 app label 兜底（与 Service 同名），最后才是 pod name（原始行为保留）
+              # 注意：app 属性依赖 k8s_attributes.labels 的 tag_name: app 显式命名，否则提取结果叫 k8s.pod.labels.app，本条永远不命中
+              # 优先级 4：app label（Rollout 类工作负载的实际生效路径）
               - set(attributes["service.name"], attributes["app"]) where attributes["service.name"] == nil and attributes["app"] != nil
+              # 优先级 5：标准化推荐 label app.kubernetes.io/name
               - set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil and attributes["app.kubernetes.io/name"] != nil
+              # 优先级 6：Pod 名最终兜底（保证 service.name 永不落空，原始行为保留）
               - set(attributes["service.name"], attributes["k8s.pod.name"]) where attributes["service.name"] == nil and attributes["k8s.pod.name"] != nil
+      # 清理中间产物：time 文本已被各 parser 的 timestamp 块解析并写入日志时间戳，attributes 里残留的原始文本 time 不再有用，删除以避免冗余与基数膨胀
       transform/cleanup:
         log_statements:
           - context: log
             statements:
               - delete_key(attributes, "time")
+      # 内存保护：周期性检查自身内存水位，超限后主动丢弃新数据/拒绝接收，属于"体面的止损"（背压）
+      # 与容器 limits 的分工：
+      #   memory_limiter = collector 应用层先感知、可控降级（丢新数据，保进程）
+      #   cgroup 1Gi     = 内核兜底，超了直接 OOM Kill（内存数据全丢 + Pod 重启）
+      # 语义（易错点，2026-08-29 修正）：limit_mib 是【硬限】；软限 = limit - spike = 384Mi，
+      # 先于硬限介入丢数据。硬限 512Mi + 约 50Mi 进程开销，仍明显低于容器 1Gi，余量充足
       memory_limiter:
-        check_interval: 1s
-        limit_mib: 512
-        spike_limit_mib: 128
+        check_interval: 1s      # 检查周期：每秒核对一次内存水位
+        limit_mib: 512          # 硬限：进程堆目标上限（超了强制 GC + 丢弃新数据）
+        spike_limit_mib: 128    # 突发余量：软限 = 512 - 128 = 384 MiB；允许瞬时冲高 128Mi 再压回
+      # 批处理：把逐条小发送合并为大包，可显著降低网络与序列化开销（gRPC 场景收益明显），触发条件二选一先到：攒满 8192 条 / 等满 1s
       batch:
         send_batch_size: 8192
         timeout: 1s
 
+    # ──────────────────────────────────────────────────────────────────────────
+    #                        管道第三段：exporters（数据出口）
+    # ──────────────────────────────────────────────────────────────────────────
     exporters:
       otlp_grpc:
         endpoint: otel-gateway-collector.monitoring.svc.cluster.local:4317
         tls:
-          insecure: true
+          insecure: true    # 集群内东西向流量未启用 TLS。好处：运维简单；风险：明文传输，依赖可信内网前提
 
+    # ──────────────────────────────────────────────────────────────────────────
+    #                        管道组装：service.pipelines
+    # ──────────────────────────────────────────────────────────────────────────
+    # 上面声明的 receiver/processor/exporter 只是"零件"，需要把它们拼装成流水线
     service:
-      # telemetry 段不写：metrics 暴露由 operator 注入（enableMetrics 默认 true，新 readers 格式，端口 8888）。
-      # 手写旧格式 address 在 collector 0.116+ 已废弃，0.158 解码直接报 invalid keys: address；与 gateway 对齐。
       pipelines:
         logs:
-          receivers: [file_log]
+          receivers: [file_log]    # 入口：宿主机容器日志文件
+          # processors 数组顺序 = 数据处理顺序，各环节有依赖关系：
+          #   1 k8s_attributes   —— 必须先跑：transform/svc 消费它产出的 deployment/app 等属性
+          #   2 transform/svc    —— 消费第 1 步产物，确定 service.name
+          #   3 transform/cleanup—— 清理 time 等中间属性
+          #   4 memory_limiter   —— 靠近出口放：丢弃数据发生在最接近出口处，前面白干的工作最少
+          #   5 batch            —— 必须紧贴 exporter：攒批的对象就是即将发出的数据
           processors: [k8s_attributes, transform/svc, transform/cleanup, memory_limiter, batch]
-          exporters: [otlp_grpc]
+          exporters: [otlp_grpc]   # 出口：转发 Gateway:4317

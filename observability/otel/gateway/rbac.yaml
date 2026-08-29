@@ -1,15 +1,13 @@
-# gateway 的 RBAC —— 镜像对象：CR otel-gateway 的 spec.serviceAccount（otel-gateway-collector）。
-# 因果链（只此一条权限，见下方 ClusterRole）：opentelemetry-operator job 抓 8443
-# secure metrics（TLS + TokenReview 认证 + SubjectAccessReview 授权）。TokenReview 只验
-# token 合法性，放行与否由 SAR 判：需要采集身份对 /metrics nonResourceURL 有 get。
-# 本绑定正是这条授权链的末端。
+# ================================================================================================================
+# Gateway 的 RBAC
+# 
+# 因果链：opentelemetry-operator job 抓 8443 secure metrics（TLS + TokenReview 认证 + SubjectAccessReview 授权）。
+#        TokenReview 只验 token 合法性，放行与否由 SAR 判：需要采集身份对 /metrics nonResourceURL 有 get。本绑定正是这条授权
+#        链的末端。
 #
-# 注意：prometheus receiver 的 kubernetes_sd 服务发现权限【不】在这里——TA 模式下
-# 服务发现由 Target Allocator 执行，operator 自动为 TA 创建 SA/RBAC（含 pods 权限），
-# collector 自身不再需要 K8s API 权限。安装层旧补权 otel-agent-pod-reader 已同步退役。
-#
-# 集群级资源：所在 Application（otel-gateway）的 AppProject 是 observability，
-# 依赖 appproject.yaml 的 clusterResourceWhitelist 放行 rbac.authorization.k8s.io。
+# 注意：prometheus receiver 的 kubernetes_sd 服务发现权限【不】在这里——TA 模式下服务发现由 Target Allocator 执行，operator 自
+#      动为 TA 创建 SA/RBAC（含 pods 权限），collector 自身不再需要 K8s API 权限。安装层旧补权 otel-agent-pod-reader 已同步退役
+# ================================================================================================================
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -38,15 +36,11 @@ subjects:
     name: otel-gateway-collector
     namespace: monitoring
 ---
-# ── Target Allocator 的服务发现补权（2026-08-25 实测补上）──
-# 镜像对象：operator 为 CR otel-gateway 自动创建的 TA 的 SA（otel-gateway-targetallocator，
-# 由 operator 管理，本文件不重复声明——单一归属）。
-# 因果链（实测故障）：operator 0.158 给 TA 的默认 RBAC 不含 pods 权限；TA 用
-# kubernetes_sd (role: pod) 做服务发现时 reflector 持续 "pods is forbidden"，
-# 新 targets 无法被发现（旧缓存 targets 仍被抓，up 短暂全绿是假象）。
-# 修复：本 ClusterRole + Binding 给 TA 身份补 pods get/list/watch（cluster scope）。
-# 旧架构里这份权限由安装层 otel-agent-pod-reader 授给 collector 自己；TA 模式下
-# 服务发现主体换成 TA，权限对象随之迁移到此处。
+# Operator 为 CR otel-gateway 自动创建的 TA 的 SA（otel-gateway-targetallocator，由 operator 管理，本文件不重复声明——单一归属
+#
+# 因果链：Operator 0.158 给 TA 的默认 RBAC 不含 pods 权限；TA 用 kubernetes_sd (role: pod) 做服务发现时 reflector 持续
+#        "pods is forbidden"，新 targets 无法被发现（旧缓存 targets 仍被抓，up 短暂全绿是假象）。 ClusterRole + Binding 给 TA 
+#        身份补 pods get/list/watch（cluster scope）
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
