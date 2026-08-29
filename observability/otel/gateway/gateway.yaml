@@ -69,6 +69,16 @@ spec:
                 - source_labels: [__meta_kubernetes_pod_container_port_name]
                   action: keep
                   regex: metrics               # 即 9100 端口
+                # 复刻集群语义：注入 namespace/pod/node label
+                # （rules 的 node:node_num_cpu:sum 靠 (namespace,pod) join kube_pod_info 拿 node，
+                #   node:node_cpu_utilization:ratio_rate5m 靠 node 维度分节点，缺了它们一条 join 为空、
+                #   一条三个节点被错误合并成单值）
+                - source_labels: [__meta_kubernetes_namespace]
+                  target_label: namespace
+                - source_labels: [__meta_kubernetes_pod_name]
+                  target_label: pod
+                - source_labels: [__meta_kubernetes_pod_node_name]
+                  target_label: node
 
             - job_name: kube-state-metrics
               kubernetes_sd_configs:
