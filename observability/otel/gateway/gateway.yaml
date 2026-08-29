@@ -39,6 +39,11 @@ spec:
       # ── 入口一：抓取集群内 exporter 的指标 ──
       prometheus:
         config:
+          # kube-prometheus-stack 体系约定:所有指标必须带 cluster label
+          # (dashboard expr 里 cluster=~"$cluster" 过滤、rules 里 by (cluster) 聚合都依赖它)。
+          # 注入后 remote write 到宿主机 Prometheus 的每个样本都带 cluster=docker-desktop。
+          external_labels:
+            cluster: docker-desktop
           scrape_configs:
             # 【抓取流水线原理：一条 target 的旅程】
             #   1 服务发现（TA 执行）：kubernetes_sd_configs(role: pod) 经 K8s API 列出 Pod，每个 Pod 的每个"声明了端口"的容器
