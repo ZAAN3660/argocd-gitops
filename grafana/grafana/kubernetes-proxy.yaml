@@ -17,7 +17,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -40,9 +40,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(up{cluster=\"$cluster\", job=\"kube-proxy\"})",
+          "expr": "sum(up{cluster=~\"$cluster\", job=\"kube-proxy\"})",
           "instant": true
         }
       ],
@@ -52,7 +52,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -91,9 +91,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(kubeproxy_sync_proxy_rules_duration_seconds_count{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval]))",
+          "expr": "sum(rate(kubeproxy_sync_proxy_rules_duration_seconds_count{cluster=~\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval]))",
           "legendFormat": "rate"
         }
       ],
@@ -103,7 +103,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -142,9 +142,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "histogram_quantile(0.99,rate(kubeproxy_sync_proxy_rules_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval]))",
+          "expr": "histogram_quantile(0.99,rate(kubeproxy_sync_proxy_rules_duration_seconds_bucket{cluster=~\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval]))",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -154,7 +154,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -193,9 +193,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(kubeproxy_network_programming_duration_seconds_count{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval]))",
+          "expr": "sum(rate(kubeproxy_network_programming_duration_seconds_count{cluster=~\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval]))",
           "legendFormat": "rate"
         }
       ],
@@ -205,7 +205,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -244,9 +244,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(kubeproxy_network_programming_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval])) by (instance, le))",
+          "expr": "histogram_quantile(0.99, sum(rate(kubeproxy_network_programming_duration_seconds_bucket{cluster=~\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval])) by (instance, le))",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -256,7 +256,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -295,33 +295,33 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"2..\"}[$__rate_interval]))",
+          "expr": "sum(rate(rest_client_requests_total{cluster=~\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"2..\"}[$__rate_interval]))",
           "legendFormat": "2xx"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"3..\"}[$__rate_interval]))",
+          "expr": "sum(rate(rest_client_requests_total{cluster=~\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"3..\"}[$__rate_interval]))",
           "legendFormat": "3xx"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"4..\"}[$__rate_interval]))",
+          "expr": "sum(rate(rest_client_requests_total{cluster=~\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"4..\"}[$__rate_interval]))",
           "legendFormat": "4xx"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(rest_client_requests_total{cluster=\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"5..\"}[$__rate_interval]))",
+          "expr": "sum(rate(rest_client_requests_total{cluster=~\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"5..\"}[$__rate_interval]))",
           "legendFormat": "5xx"
         }
       ],
@@ -331,7 +331,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -370,9 +370,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\",verb=\"POST\"}[$__rate_interval])) by (verb, le))",
+          "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=~\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\",verb=\"POST\"}[$__rate_interval])) by (verb, le))",
           "legendFormat": "{{verb}}"
         }
       ],
@@ -382,7 +382,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -421,9 +421,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\", verb=\"GET\"}[$__rate_interval])) by (verb, le))",
+          "expr": "histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=~\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\", verb=\"GET\"}[$__rate_interval])) by (verb, le))",
           "legendFormat": "{{verb}}"
         }
       ],
@@ -433,7 +433,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -472,9 +472,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "process_resident_memory_bytes{cluster=\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\"}",
+          "expr": "process_resident_memory_bytes{cluster=~\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\"}",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -484,7 +484,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -523,9 +523,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "rate(process_cpu_seconds_total{cluster=\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\"}[$__rate_interval])",
+          "expr": "rate(process_cpu_seconds_total{cluster=~\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\"}[$__rate_interval])",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -535,7 +535,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -574,9 +574,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "go_goroutines{cluster=\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\"}",
+          "expr": "go_goroutines{cluster=~\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\"}",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -594,8 +594,8 @@
       {
         "current": {
           "selected": true,
-          "text": "default",
-          "value": "default"
+          "text": "prometheus",
+          "value": "efw4jztwa45q8d"
         },
         "hide": 0,
         "label": "Data source",
@@ -607,7 +607,7 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "hide": 2,
         "label": "cluster",
@@ -622,13 +622,13 @@
         "allValue": ".+",
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "hide": 0,
         "includeAll": true,
         "label": "instance",
         "name": "instance",
-        "query": "label_values(up{job=\"kube-proxy\", cluster=\"$cluster\", job=\"kube-proxy\"}, instance)",
+        "query": "label_values(up{job=\"kube-proxy\", cluster=~\"$cluster\", job=\"kube-proxy\"}, instance)",
         "refresh": 2,
         "type": "query"
       }

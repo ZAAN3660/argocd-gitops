@@ -17,7 +17,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "The SLO (service level objective) and other metrics displayed on this dashboard are for informational purposes only.",
       "gridPos": {
@@ -37,7 +37,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How many percent of requests (both read and write) in 30 days have been answered successfully and fast enough?",
       "fieldConfig": {
@@ -59,9 +59,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "apiserver_request:availability30d{verb=\"all\", cluster=\"$cluster\"}"
+          "expr": "apiserver_request:availability30d{verb=\"all\", cluster=~\"$cluster\"}"
         }
       ],
       "title": "Availability (30d) > 99.000%",
@@ -70,7 +70,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How much error budget is left looking at our 99.000% availability guarantee?",
       "fieldConfig": {
@@ -105,9 +105,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "100 * (apiserver_request:availability30d{verb=\"all\", cluster=\"$cluster\"} - 0.990000)",
+          "expr": "100 * (apiserver_request:availability30d{verb=\"all\", cluster=~\"$cluster\"} - 0.990000)",
           "legendFormat": "error budget"
         }
       ],
@@ -117,7 +117,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How many percent of read requests (LIST,GET) in 30 days have been answered successfully and fast enough?",
       "fieldConfig": {
@@ -139,9 +139,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "apiserver_request:availability30d{verb=\"read\", cluster=\"$cluster\"}"
+          "expr": "apiserver_request:availability30d{verb=\"read\", cluster=~\"$cluster\"}"
         }
       ],
       "title": "Read Availability (30d)",
@@ -150,7 +150,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How many read requests (LIST,GET) per second do the apiservers get by code?",
       "fieldConfig": {
@@ -237,9 +237,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum by (code) (code_resource:apiserver_request_total:rate5m{verb=\"read\", cluster=\"$cluster\"})",
+          "expr": "sum by (code) (code_resource:apiserver_request_total:rate5m{verb=\"read\", cluster=~\"$cluster\"})",
           "legendFormat": "{{ code }}"
         }
       ],
@@ -249,7 +249,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How many percent of read requests (LIST,GET) per second are returned with errors (5xx)?",
       "fieldConfig": {
@@ -281,9 +281,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"read\",code=~\"5..\", cluster=\"$cluster\"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"read\", cluster=\"$cluster\"})",
+          "expr": "sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"read\",code=~\"5..\", cluster=~\"$cluster\"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"read\", cluster=~\"$cluster\"})",
           "legendFormat": "{{ resource }}"
         }
       ],
@@ -293,7 +293,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How many seconds is the 99th percentile for reading (LIST|GET) a given resource?",
       "fieldConfig": {
@@ -324,9 +324,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb=\"read\", cluster=\"$cluster\"}",
+          "expr": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb=\"read\", cluster=~\"$cluster\"}",
           "legendFormat": "{{ resource }}"
         }
       ],
@@ -336,7 +336,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How many percent of write requests (POST|PUT|PATCH|DELETE) in 30 days have been answered successfully and fast enough?",
       "fieldConfig": {
@@ -358,9 +358,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "apiserver_request:availability30d{verb=\"write\", cluster=\"$cluster\"}"
+          "expr": "apiserver_request:availability30d{verb=\"write\", cluster=~\"$cluster\"}"
         }
       ],
       "title": "Write Availability (30d)",
@@ -369,7 +369,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How many write requests (POST|PUT|PATCH|DELETE) per second do the apiservers get by code?",
       "fieldConfig": {
@@ -456,9 +456,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum by (code) (code_resource:apiserver_request_total:rate5m{verb=\"write\", cluster=\"$cluster\"})",
+          "expr": "sum by (code) (code_resource:apiserver_request_total:rate5m{verb=\"write\", cluster=~\"$cluster\"})",
           "legendFormat": "{{ code }}"
         }
       ],
@@ -468,7 +468,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How many percent of write requests (POST|PUT|PATCH|DELETE) per second are returned with errors (5xx)?",
       "fieldConfig": {
@@ -500,9 +500,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"write\",code=~\"5..\", cluster=\"$cluster\"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"write\", cluster=\"$cluster\"})",
+          "expr": "sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"write\",code=~\"5..\", cluster=~\"$cluster\"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"write\", cluster=~\"$cluster\"})",
           "legendFormat": "{{ resource }}"
         }
       ],
@@ -512,7 +512,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "description": "How many seconds is the 99th percentile for writing (POST|PUT|PATCH|DELETE) a given resource?",
       "fieldConfig": {
@@ -543,9 +543,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb=\"write\", cluster=\"$cluster\"}",
+          "expr": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb=\"write\", cluster=~\"$cluster\"}",
           "legendFormat": "{{ resource }}"
         }
       ],
@@ -555,7 +555,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -586,9 +586,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(workqueue_adds_total{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name)",
+          "expr": "sum(rate(workqueue_adds_total{job=\"apiserver\", instance=~\"$instance\", cluster=~\"$cluster\"}[$__rate_interval])) by (instance, name)",
           "legendFormat": "{{instance}} {{name}}"
         }
       ],
@@ -598,7 +598,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -629,9 +629,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(workqueue_depth{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name)",
+          "expr": "sum(rate(workqueue_depth{job=\"apiserver\", instance=~\"$instance\", cluster=~\"$cluster\"}[$__rate_interval])) by (instance, name)",
           "legendFormat": "{{instance}} {{name}}"
         }
       ],
@@ -641,7 +641,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -675,9 +675,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{job=\"apiserver\", instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])) by (instance, name, le))",
+          "expr": "histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{job=\"apiserver\", instance=~\"$instance\", cluster=~\"$cluster\"}[$__rate_interval])) by (instance, name, le))",
           "legendFormat": "{{instance}} {{name}}"
         }
       ],
@@ -687,7 +687,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -717,9 +717,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "process_resident_memory_bytes{job=\"apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}",
+          "expr": "process_resident_memory_bytes{job=\"apiserver\",instance=~\"$instance\", cluster=~\"$cluster\"}",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -729,7 +729,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -760,9 +760,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "rate(process_cpu_seconds_total{job=\"apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}[$__rate_interval])",
+          "expr": "rate(process_cpu_seconds_total{job=\"apiserver\",instance=~\"$instance\", cluster=~\"$cluster\"}[$__rate_interval])",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -772,7 +772,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -802,9 +802,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "go_goroutines{job=\"apiserver\",instance=~\"$instance\", cluster=\"$cluster\"}",
+          "expr": "go_goroutines{job=\"apiserver\",instance=~\"$instance\", cluster=~\"$cluster\"}",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -822,8 +822,8 @@
       {
         "current": {
           "selected": true,
-          "text": "default",
-          "value": "default"
+          "text": "prometheus",
+          "value": "efw4jztwa45q8d"
         },
         "hide": 0,
         "label": "Data source",
@@ -835,7 +835,7 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "hide": 2,
         "label": "cluster",
@@ -849,12 +849,12 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "hide": 0,
         "includeAll": true,
         "name": "instance",
-        "query": "label_values(up{job=\"apiserver\", cluster=\"$cluster\"}, instance)",
+        "query": "label_values(up{job=\"apiserver\", cluster=~\"$cluster\"}, instance)",
         "refresh": 2,
         "sort": 1,
         "type": "query"

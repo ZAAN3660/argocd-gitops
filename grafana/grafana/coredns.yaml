@@ -35,7 +35,7 @@
   "panels": [
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -119,7 +119,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum(rate(coredns_dns_request_count_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (proto) or\nsum(rate(coredns_dns_requests_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (proto)",
           "format": "time_series",
@@ -135,7 +135,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -219,7 +219,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum(rate(coredns_dns_request_type_count_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (type) or \nsum(rate(coredns_dns_requests_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (type)",
           "interval": "1m",
@@ -234,7 +234,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -318,7 +318,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum(rate(coredns_dns_request_count_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (zone) or\nsum(rate(coredns_dns_requests_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (zone)",
           "interval": "1m",
@@ -333,7 +333,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -417,7 +417,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum(rate(coredns_dns_request_count_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) or\nsum(rate(coredns_dns_requests_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m]))",
           "interval": "1m",
@@ -433,7 +433,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -554,7 +554,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.99, (sum(rate(coredns_dns_request_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (le,proto)))",
           "interval": "1m",
@@ -565,7 +565,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.90, (sum(rate(coredns_dns_request_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (le,proto)))",
           "intervalFactor": 2,
@@ -575,7 +575,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.50, (sum(rate(coredns_dns_request_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (le,proto)))",
           "intervalFactor": 2,
@@ -589,7 +589,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -673,7 +673,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.99, (sum(rate(coredns_dns_request_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (le,proto)))",
           "format": "time_series",
@@ -685,7 +685,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.90, (sum(rate(coredns_dns_request_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (le,proto)))",
           "format": "time_series",
@@ -697,7 +697,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.50, (sum(rate(coredns_dns_request_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (le,proto)))",
           "format": "time_series",
@@ -713,7 +713,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -797,7 +797,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum(rate(coredns_dns_response_rcode_count_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (rcode) or\nsum(rate(coredns_dns_responses_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (rcode)",
           "interval": "1m",
@@ -812,7 +812,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -896,7 +896,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.99, (sum(rate(coredns_dns_request_duration_seconds{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (job)) or (sum(rate(coredns_dns_request_duration_seconds_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (le, job)))",
           "format": "time_series",
@@ -907,7 +907,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.90, (sum(rate(coredns_dns_request_duration_seconds{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by ()) or (sum(rate(coredns_dns_request_duration_seconds_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (le)))",
           "format": "time_series",
@@ -918,7 +918,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.50, (sum(rate(coredns_dns_request_duration_seconds{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by ()) or (sum(rate(coredns_dns_request_duration_seconds_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (le)))",
           "format": "time_series",
@@ -933,7 +933,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -1054,7 +1054,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.99, (sum(rate(coredns_dns_response_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (le,proto))) ",
           "interval": "1m",
@@ -1065,7 +1065,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.90, (sum(rate(coredns_dns_response_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (le,proto))) ",
           "interval": "1m",
@@ -1076,7 +1076,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.50, (sum(rate(coredns_dns_response_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"udp\"}[5m])) by (le,proto))) ",
           "hide": false,
@@ -1092,7 +1092,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -1176,7 +1176,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.99, (sum(rate(coredns_dns_response_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (le,proto))) ",
           "format": "time_series",
@@ -1187,7 +1187,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.90, (sum(rate(coredns_dns_response_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (le,proto))) ",
           "format": "time_series",
@@ -1198,7 +1198,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "histogram_quantile(0.50, (sum(rate(coredns_dns_response_size_bytes{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\",proto=\"tcp\"}[5m])) by (le,proto))) ",
           "format": "time_series",
@@ -1214,7 +1214,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -1298,7 +1298,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum(coredns_cache_size{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}) by (type) or\nsum(coredns_cache_entries{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}) by (type)",
           "interval": "1m",
@@ -1313,7 +1313,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -1397,7 +1397,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum(rate(coredns_cache_hits_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (type)",
           "hide": false,
@@ -1408,7 +1408,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum(rate(coredns_cache_misses_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (type)",
           "hide": false,
@@ -1449,14 +1449,10 @@
       },
       {
         "allValue": ".*",
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
+        "current": null,
         "datasource": {
           "type": "prometheus",
-          "uid": "$datasource"
+          "uid": "efw4jztwa45q8d"
         },
         "definition": "label_values(coredns_dns_requests_total, cluster)",
         "hide": 2,
@@ -1477,14 +1473,10 @@
       },
       {
         "allValue": ".*",
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
+        "current": null,
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "definition": "label_values(coredns_dns_requests_total{cluster=~\"$cluster\"},job)",
         "hide": 0,
@@ -1506,14 +1498,10 @@
       },
       {
         "allValue": ".*",
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
+        "current": null,
         "datasource": {
           "type": "prometheus",
-          "uid": "$datasource"
+          "uid": "efw4jztwa45q8d"
         },
         "definition": "label_values(coredns_dns_requests_total{job=~\"$job\",cluster=~\"$cluster\"}, instance)",
         "hide": 0,

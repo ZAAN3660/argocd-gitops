@@ -17,7 +17,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -52,9 +52,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance:node_cpu_utilisation:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance:node_cpu_utilisation:rate5m{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "Utilisation"
         }
       ],
@@ -64,7 +64,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -99,9 +99,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance:node_load1_per_cpu:ratio{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance:node_load1_per_cpu:ratio{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "Saturation"
         }
       ],
@@ -124,7 +124,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -159,9 +159,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance:node_memory_utilisation:ratio{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance:node_memory_utilisation:ratio{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "Utilisation"
         }
       ],
@@ -171,7 +171,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -206,9 +206,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance:node_vmstat_pgmajfault:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance:node_vmstat_pgmajfault:rate5m{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "Major page Faults"
         }
       ],
@@ -231,7 +231,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -280,17 +280,17 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance:node_network_receive_bytes_physical:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance:node_network_receive_bytes_physical:rate5m{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "Receive"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance:node_network_transmit_bytes_physical:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance:node_network_transmit_bytes_physical:rate5m{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "Transmit"
         }
       ],
@@ -300,7 +300,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -349,17 +349,17 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance:node_network_receive_drop_physical:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance:node_network_receive_drop_physical:rate5m{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "Receive"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance:node_network_transmit_drop_physical:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance:node_network_transmit_drop_physical:rate5m{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "Transmit"
         }
       ],
@@ -382,7 +382,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -417,9 +417,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance_device:node_disk_io_time_seconds:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance_device:node_disk_io_time_seconds:rate5m{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "{{device}}"
         }
       ],
@@ -429,7 +429,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -464,9 +464,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "instance_device:node_disk_io_time_weighted_seconds:rate5m{job=\"node-exporter\", instance=\"$instance\", cluster=~\"$cluster\"} != 0",
+          "expr": "instance_device:node_disk_io_time_weighted_seconds:rate5m{job=\"node-exporter\", instance=~\"$instance\", cluster=~\"$cluster\"} != 0",
           "legendFormat": "{{device}}"
         }
       ],
@@ -489,7 +489,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${datasource}"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -524,9 +524,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sort_desc(1 -\n  (\n    max without (mountpoint, fstype) (node_filesystem_avail_bytes{job=\"node-exporter\", fstype!=\"\", instance=\"$instance\", cluster=~\"$cluster\"})\n    /\n    max without (mountpoint, fstype) (node_filesystem_size_bytes{job=\"node-exporter\", fstype!=\"\", instance=\"$instance\", cluster=~\"$cluster\"})\n  ) != 0\n)\n",
+          "expr": "sort_desc(1 -\n  (\n    max without (mountpoint, fstype) (node_filesystem_avail_bytes{job=\"node-exporter\", fstype!=\"\", instance=~\"$instance\", cluster=~\"$cluster\"})\n    /\n    max without (mountpoint, fstype) (node_filesystem_size_bytes{job=\"node-exporter\", fstype!=\"\", instance=~\"$instance\", cluster=~\"$cluster\"})\n  ) != 0\n)\n",
           "legendFormat": "{{device}}"
         }
       ],
@@ -554,7 +554,7 @@
         "allValue": ".*",
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "hide": 2,
         "includeAll": true,
@@ -567,7 +567,7 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "name": "instance",
         "query": "label_values(node_exporter_build_info{job=\"node-exporter\", cluster=~\"$cluster\"}, instance)",

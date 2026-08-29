@@ -29,7 +29,7 @@
   "panels": [
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -79,7 +79,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "grafana_alerting_result_total{job=~\"$job\", instance=~\"$instance\", state=\"alerting\"}",
           "instant": true,
@@ -93,7 +93,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -142,7 +142,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum(grafana_stat_totals_dashboard{job=~\"$job\", instance=~\"$instance\"})",
           "interval": "1m",
@@ -155,7 +155,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -204,7 +204,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "grafana_build_info{job=~\"$job\", instance=~\"$instance\"}",
           "instant": true,
@@ -258,7 +258,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -341,7 +341,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "expr": "sum by (status_code) (irate(grafana_http_request_duration_seconds_count{job=~\"$job\", instance=~\"$instance\"}[1m])) ",
           "interval": "1m",
@@ -354,7 +354,7 @@
     },
     {
       "datasource": {
-        "uid": "$datasource"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -437,7 +437,7 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "exemplar": true,
           "expr": "histogram_quantile(0.99, sum(irate(grafana_http_request_duration_seconds_bucket{instance=~\"$instance\", job=~\"$job\"}[$__rate_interval])) by (le)) * 1",
@@ -447,7 +447,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "exemplar": true,
           "expr": "histogram_quantile(0.50, sum(irate(grafana_http_request_duration_seconds_bucket{instance=~\"$instance\", job=~\"$job\"}[$__rate_interval])) by (le)) * 1",
@@ -457,7 +457,7 @@
         },
         {
           "datasource": {
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
           "exemplar": true,
           "expr": "sum(irate(grafana_http_request_duration_seconds_sum{instance=~\"$instance\", job=~\"$job\"}[$__rate_interval])) * 1 / sum(irate(grafana_http_request_duration_seconds_count{instance=~\"$instance\", job=~\"$job\"}[$__rate_interval]))",

@@ -17,7 +17,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -75,17 +75,17 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "count(kube_node_info{cluster=\"$cluster\", job=\"kube-state-metrics\"})",
+          "expr": "count(kube_node_info{cluster=~\"$cluster\", job=\"kube-state-metrics\"})",
           "legendFormat": "nodes"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(kubelet_running_pods{cluster=\"$cluster\", job=\"kubelet\", metrics_path=\"/metrics\"})",
+          "expr": "sum(kubelet_running_pods{cluster=~\"$cluster\", job=\"kubelet\", metrics_path=\"/metrics\"})",
           "legendFormat": "pods"
         }
       ],
@@ -95,7 +95,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -134,25 +134,25 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(kube_node_status_allocatable{cluster=\"$cluster\", job=\"kube-state-metrics\", resource=\"cpu\"})",
+          "expr": "sum(kube_node_status_allocatable{cluster=~\"$cluster\", job=\"kube-state-metrics\", resource=\"cpu\"})",
           "legendFormat": "allocatable"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests{cluster=\"$cluster\"})",
+          "expr": "sum(cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests{cluster=~\"$cluster\"})",
           "legendFormat": "requests"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"})",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=~\"$cluster\"})",
           "legendFormat": "usage"
         }
       ],
@@ -162,7 +162,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -201,25 +201,25 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(kube_node_status_allocatable{cluster=\"$cluster\", job=\"kube-state-metrics\", resource=\"memory\"})",
+          "expr": "sum(kube_node_status_allocatable{cluster=~\"$cluster\", job=\"kube-state-metrics\", resource=\"memory\"})",
           "legendFormat": "allocatable"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(cluster:namespace:pod_memory:active:kube_pod_container_resource_requests{cluster=\"$cluster\"})",
+          "expr": "sum(cluster:namespace:pod_memory:active:kube_pod_container_resource_requests{cluster=~\"$cluster\"})",
           "legendFormat": "requests"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(node_namespace_pod_container:container_memory_working_set_bytes{cluster=\"$cluster\", container!=\"\"})",
+          "expr": "sum(node_namespace_pod_container:container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\"})",
           "legendFormat": "usage"
         }
       ],
@@ -229,7 +229,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -268,9 +268,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum by (node) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\"})\n/\nsum by (node) (kube_node_status_allocatable{cluster=\"$cluster\", job=\"kube-state-metrics\", resource=\"cpu\"})\n",
+          "expr": "sum by (node) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=~\"$cluster\"})\n/\nsum by (node) (kube_node_status_allocatable{cluster=~\"$cluster\", job=\"kube-state-metrics\", resource=\"cpu\"})\n",
           "legendFormat": "{{node}}"
         }
       ],
@@ -280,7 +280,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -319,9 +319,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum by (node) (node_namespace_pod_container:container_memory_working_set_bytes{cluster=\"$cluster\", container!=\"\"})\n/\nsum by (node) (kube_node_status_allocatable{cluster=\"$cluster\", job=\"kube-state-metrics\", resource=\"memory\"})\n",
+          "expr": "sum by (node) (node_namespace_pod_container:container_memory_working_set_bytes{cluster=~\"$cluster\", container!=\"\"})\n/\nsum by (node) (kube_node_status_allocatable{cluster=~\"$cluster\", job=\"kube-state-metrics\", resource=\"memory\"})\n",
           "legendFormat": "{{node}}"
         }
       ],
@@ -339,8 +339,8 @@
       {
         "current": {
           "selected": true,
-          "text": "default",
-          "value": "default"
+          "text": "prometheus",
+          "value": "efw4jztwa45q8d"
         },
         "hide": 0,
         "label": "Data source",
@@ -352,7 +352,7 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "hide": 2,
         "label": "cluster",

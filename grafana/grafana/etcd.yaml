@@ -4,7 +4,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "gridPos": {
         "h": 7,
@@ -28,9 +28,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(etcd_server_has_leader{job=~\".*etcd.*\", job=\"$cluster\"})",
+          "expr": "sum(etcd_server_has_leader{job=~\".*etcd.*\", job=~\"$cluster\"})",
           "legendFormat": "{{cluster}} - {{namespace}}\n"
         }
       ],
@@ -40,7 +40,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -65,17 +65,17 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(grpc_server_started_total{job=~\".*etcd.*\", job=\"$cluster\",grpc_type=\"unary\"}[$__rate_interval]))",
+          "expr": "sum(rate(grpc_server_started_total{job=~\".*etcd.*\", job=~\"$cluster\",grpc_type=\"unary\"}[$__rate_interval]))",
           "legendFormat": "RPC rate"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(grpc_server_handled_total{job=~\".*etcd.*\", job=\"$cluster\",grpc_type=\"unary\",grpc_code=~\"Unknown|FailedPrecondition|ResourceExhausted|Internal|Unavailable|DataLoss|DeadlineExceeded\"}[$__rate_interval]))",
+          "expr": "sum(rate(grpc_server_handled_total{job=~\".*etcd.*\", job=~\"$cluster\",grpc_type=\"unary\",grpc_code=~\"Unknown|FailedPrecondition|ResourceExhausted|Internal|Unavailable|DataLoss|DeadlineExceeded\"}[$__rate_interval]))",
           "legendFormat": "RPC failed rate"
         }
       ],
@@ -85,7 +85,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -109,17 +109,17 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(grpc_server_started_total{job=~\".*etcd.*\",job=\"$cluster\",grpc_service=\"etcdserverpb.Watch\",grpc_type=\"bidi_stream\"}) - sum(grpc_server_handled_total{job=\"$cluster\",grpc_service=\"etcdserverpb.Watch\",grpc_type=\"bidi_stream\"})",
+          "expr": "sum(grpc_server_started_total{job=~\".*etcd.*\",job=~\"$cluster\",grpc_service=\"etcdserverpb.Watch\",grpc_type=\"bidi_stream\"}) - sum(grpc_server_handled_total{job=~\"$cluster\",grpc_service=\"etcdserverpb.Watch\",grpc_type=\"bidi_stream\"})",
           "legendFormat": "Watch streams"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(grpc_server_started_total{job=~\".*etcd.*\",job=\"$cluster\",grpc_service=\"etcdserverpb.Lease\",grpc_type=\"bidi_stream\"}) - sum(grpc_server_handled_total{job=\"$cluster\",grpc_service=\"etcdserverpb.Lease\",grpc_type=\"bidi_stream\"})",
+          "expr": "sum(grpc_server_started_total{job=~\".*etcd.*\",job=~\"$cluster\",grpc_service=\"etcdserverpb.Lease\",grpc_type=\"bidi_stream\"}) - sum(grpc_server_handled_total{job=~\"$cluster\",grpc_service=\"etcdserverpb.Lease\",grpc_type=\"bidi_stream\"})",
           "legendFormat": "Lease streams"
         }
       ],
@@ -129,7 +129,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -154,9 +154,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "etcd_mvcc_db_total_size_in_bytes{job=~\".*etcd.*\", job=\"$cluster\"}",
+          "expr": "etcd_mvcc_db_total_size_in_bytes{job=~\".*etcd.*\", job=~\"$cluster\"}",
           "legendFormat": "{{instance}} DB size"
         }
       ],
@@ -166,7 +166,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -191,17 +191,17 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~\".*etcd.*\", job=\"$cluster\"}[$__rate_interval])) by (instance, le))",
+          "expr": "histogram_quantile(0.99, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~\".*etcd.*\", job=~\"$cluster\"}[$__rate_interval])) by (instance, le))",
           "legendFormat": "{{instance}} WAL fsync"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{job=~\".*etcd.*\", job=\"$cluster\"}[$__rate_interval])) by (instance, le))",
+          "expr": "histogram_quantile(0.99, sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{job=~\".*etcd.*\", job=~\"$cluster\"}[$__rate_interval])) by (instance, le))",
           "legendFormat": "{{instance}} DB fsync"
         }
       ],
@@ -211,7 +211,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -236,9 +236,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "process_resident_memory_bytes{job=~\".*etcd.*\", job=\"$cluster\"}",
+          "expr": "process_resident_memory_bytes{job=~\".*etcd.*\", job=~\"$cluster\"}",
           "legendFormat": "{{instance}} resident memory"
         }
       ],
@@ -248,7 +248,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -273,9 +273,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "rate(etcd_network_client_grpc_received_bytes_total{job=~\".*etcd.*\", job=\"$cluster\"}[$__rate_interval])",
+          "expr": "rate(etcd_network_client_grpc_received_bytes_total{job=~\".*etcd.*\", job=~\"$cluster\"}[$__rate_interval])",
           "legendFormat": "{{instance}} client traffic in"
         }
       ],
@@ -285,7 +285,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -310,9 +310,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "rate(etcd_network_client_grpc_sent_bytes_total{job=~\".*etcd.*\", job=\"$cluster\"}[$__rate_interval])",
+          "expr": "rate(etcd_network_client_grpc_sent_bytes_total{job=~\".*etcd.*\", job=~\"$cluster\"}[$__rate_interval])",
           "legendFormat": "{{instance}} client traffic out"
         }
       ],
@@ -322,7 +322,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -347,9 +347,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(etcd_network_peer_received_bytes_total{job=~\".*etcd.*\", job=\"$cluster\"}[$__rate_interval])) by (instance)",
+          "expr": "sum(rate(etcd_network_peer_received_bytes_total{job=~\".*etcd.*\", job=~\"$cluster\"}[$__rate_interval])) by (instance)",
           "legendFormat": "{{instance}} peer traffic in"
         }
       ],
@@ -359,7 +359,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -384,9 +384,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(rate(etcd_network_peer_sent_bytes_total{job=~\".*etcd.*\", job=\"$cluster\"}[$__rate_interval])) by (instance)",
+          "expr": "sum(rate(etcd_network_peer_sent_bytes_total{job=~\".*etcd.*\", job=~\"$cluster\"}[$__rate_interval])) by (instance)",
           "legendFormat": "{{instance}} peer traffic out"
         }
       ],
@@ -396,7 +396,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -420,9 +420,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "changes(etcd_server_leader_changes_seen_total{job=~\".*etcd.*\", job=\"$cluster\"}[1d])",
+          "expr": "changes(etcd_server_leader_changes_seen_total{job=~\".*etcd.*\", job=~\"$cluster\"}[1d])",
           "legendFormat": "{{instance}} total leader elections per day"
         }
       ],
@@ -432,7 +432,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -456,9 +456,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "changes(etcd_server_leader_changes_seen_total{job=~\".*etcd.*\", job=\"$cluster\"}[1d])",
+          "expr": "changes(etcd_server_leader_changes_seen_total{job=~\".*etcd.*\", job=~\"$cluster\"}[1d])",
           "legendFormat": "{{instance}} total leader elections per day"
         }
       ],
@@ -468,7 +468,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -493,9 +493,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "histogram_quantile(0.99, sum by (instance, le) (rate(etcd_network_peer_round_trip_time_seconds_bucket{job=~\".*etcd.*\", job=\"$cluster\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (instance, le) (rate(etcd_network_peer_round_trip_time_seconds_bucket{job=~\".*etcd.*\", job=~\"$cluster\"}[$__rate_interval])))",
           "legendFormat": "{{instance}} peer round trip time"
         }
       ],
@@ -523,7 +523,7 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "label": "cluster",
         "name": "cluster",

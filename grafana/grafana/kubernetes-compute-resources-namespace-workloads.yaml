@@ -17,7 +17,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -107,25 +107,25 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n  max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\", namespace=\"$namespace\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n  max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=~\"$cluster\", namespace=~\"$namespace\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "legendFormat": "{{workload}} - {{workload_type}}"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "scalar(max(kube_resourcequota{cluster=\"$cluster\", namespace=\"$namespace\", type=\"hard\",resource=~\"requests.cpu|cpu\"}))",
+          "expr": "scalar(max(kube_resourcequota{cluster=~\"$cluster\", namespace=~\"$namespace\", type=\"hard\",resource=~\"requests.cpu|cpu\"}))",
           "legendFormat": "quota - requests"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "scalar(max(kube_resourcequota{cluster=\"$cluster\", namespace=\"$namespace\", type=\"hard\",resource=~\"limits.cpu\"}))",
+          "expr": "scalar(max(kube_resourcequota{cluster=~\"$cluster\", namespace=~\"$namespace\", type=\"hard\",resource=~\"limits.cpu\"}))",
           "legendFormat": "quota - limits"
         }
       ],
@@ -135,7 +135,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "overrides": [
@@ -194,54 +194,54 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "count(namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}) by (workload, workload_type)",
+          "expr": "count(namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}) by (workload, workload_type)",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n  max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\", namespace=\"$namespace\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n  max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=~\"$cluster\", namespace=~\"$namespace\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"cpu\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=~\"$cluster\", namespace=~\"$namespace\", resource=\"cpu\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n  max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\", namespace=\"$namespace\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n/sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"cpu\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n  max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=~\"$cluster\", namespace=~\"$namespace\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n/sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=~\"$cluster\", namespace=~\"$namespace\", resource=\"cpu\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"cpu\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=~\"$cluster\", namespace=~\"$namespace\", resource=\"cpu\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n  max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=\"$cluster\", namespace=\"$namespace\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n/sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"cpu\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n  max by (cluster, namespace, pod, container)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster=~\"$cluster\", namespace=~\"$namespace\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n/sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=~\"$cluster\", namespace=~\"$namespace\", resource=\"cpu\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         }
@@ -311,7 +311,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -402,25 +402,25 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n    max by (cluster, namespace, pod, container)(container_memory_working_set_bytes{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\", container!=\"\", image!=\"\"})\n  * on(cluster, namespace, pod)\n    group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n    max by (cluster, namespace, pod, container)(container_memory_working_set_bytes{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\", container!=\"\", image!=\"\"})\n  * on(cluster, namespace, pod)\n    group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "legendFormat": "{{workload}} - {{workload_type}}"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "scalar(max(kube_resourcequota{cluster=\"$cluster\", namespace=\"$namespace\", type=\"hard\",resource=~\"requests.memory|memory\"}))",
+          "expr": "scalar(max(kube_resourcequota{cluster=~\"$cluster\", namespace=~\"$namespace\", type=\"hard\",resource=~\"requests.memory|memory\"}))",
           "legendFormat": "quota - requests"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "scalar(max(kube_resourcequota{cluster=\"$cluster\", namespace=\"$namespace\", type=\"hard\",resource=~\"limits.memory\"}))",
+          "expr": "scalar(max(kube_resourcequota{cluster=~\"$cluster\", namespace=~\"$namespace\", type=\"hard\",resource=~\"limits.memory\"}))",
           "legendFormat": "quota - limits"
         }
       ],
@@ -430,7 +430,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -492,54 +492,54 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "count(namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}) by (workload, workload_type)",
+          "expr": "count(namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}) by (workload, workload_type)",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n    max by (cluster, namespace, pod, container)(container_memory_working_set_bytes{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\", container!=\"\", image!=\"\"})\n  * on(cluster, namespace, pod)\n    group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n    max by (cluster, namespace, pod, container)(container_memory_working_set_bytes{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\", container!=\"\", image!=\"\"})\n  * on(cluster, namespace, pod)\n    group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"memory\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=~\"$cluster\", namespace=~\"$namespace\", resource=\"memory\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n    max by (cluster, namespace, pod, container)(container_memory_working_set_bytes{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\", container!=\"\", image!=\"\"})\n  * on(cluster, namespace, pod)\n    group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n/sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"memory\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n    max by (cluster, namespace, pod, container)(container_memory_working_set_bytes{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\", container!=\"\", image!=\"\"})\n  * on(cluster, namespace, pod)\n    group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n/sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=~\"$cluster\", namespace=~\"$namespace\", resource=\"memory\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"memory\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=~\"$cluster\", namespace=~\"$namespace\", resource=\"memory\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "sum(\n    max by (cluster, namespace, pod, container)(container_memory_working_set_bytes{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\", container!=\"\", image!=\"\"})\n  * on(cluster, namespace, pod)\n    group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n/sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"memory\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
+          "expr": "sum(\n    max by (cluster, namespace, pod, container)(container_memory_working_set_bytes{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\", container!=\"\", image!=\"\"})\n  * on(cluster, namespace, pod)\n    group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n/sum(\n  max by (cluster, namespace, pod, container)(kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=~\"$cluster\", namespace=~\"$namespace\", resource=\"memory\"})\n* on(cluster, namespace, pod)\n  group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}\n) by (workload, workload_type)\n",
           "format": "table",
           "instant": true
         }
@@ -609,7 +609,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "overrides": [
@@ -668,54 +668,54 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum((8 * rate(container_network_receive_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum((8 * rate(container_network_receive_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum(rate(container_network_receive_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum(rate(container_network_receive_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum(rate(container_network_transmit_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum(rate(container_network_transmit_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum(rate(container_network_receive_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum(rate(container_network_receive_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
           "format": "table",
           "instant": true
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum(rate(container_network_transmit_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum(rate(container_network_transmit_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload_type=~\"$type\"}) by (workload))\n",
           "format": "table",
           "instant": true
         }
@@ -773,7 +773,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -812,9 +812,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum((8 * rate(container_network_receive_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum((8 * rate(container_network_receive_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
           "legendFormat": "__auto"
         }
       ],
@@ -824,7 +824,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -863,9 +863,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
           "legendFormat": "__auto"
         }
       ],
@@ -875,7 +875,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -914,9 +914,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(avg((8 * rate(container_network_receive_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(avg((8 * rate(container_network_receive_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
           "legendFormat": "__auto"
         }
       ],
@@ -926,7 +926,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -965,9 +965,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(avg((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(avg((8 * rate(container_network_transmit_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval]))\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
           "legendFormat": "__auto"
         }
       ],
@@ -977,7 +977,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -1016,9 +1016,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum(rate(container_network_receive_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum(rate(container_network_receive_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
           "legendFormat": "__auto"
         }
       ],
@@ -1028,7 +1028,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -1067,9 +1067,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum(rate(container_network_transmit_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum(rate(container_network_transmit_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
           "legendFormat": "__auto"
         }
       ],
@@ -1079,7 +1079,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -1118,9 +1118,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum(rate(container_network_receive_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum(rate(container_network_receive_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
           "legendFormat": "__auto"
         }
       ],
@@ -1130,7 +1130,7 @@
     {
       "datasource": {
         "type": "datasource",
-        "uid": "-- Mixed --"
+        "uid": "efw4jztwa45q8d"
       },
       "fieldConfig": {
         "defaults": {
@@ -1169,9 +1169,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "efw4jztwa45q8d"
           },
-          "expr": "(sum(rate(container_network_transmit_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
+          "expr": "(sum(rate(container_network_transmit_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=~\"$cluster\", namespace=~\"$namespace\"}[$__rate_interval])\n* on (cluster, namespace, pod)\ngroup_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload=~\".+\", workload_type=~\"$type\"}) by (workload))\n",
           "legendFormat": "__auto"
         }
       ],
@@ -1189,8 +1189,8 @@
       {
         "current": {
           "selected": true,
-          "text": "default",
-          "value": "default"
+          "text": "prometheus",
+          "value": "efw4jztwa45q8d"
         },
         "hide": 0,
         "label": "Data source",
@@ -1202,7 +1202,7 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "hide": 2,
         "label": "cluster",
@@ -1216,12 +1216,12 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "hide": 0,
         "label": "namespace",
         "name": "namespace",
-        "query": "label_values(kube_namespace_status_phase{job=\"kube-state-metrics\", cluster=\"$cluster\"}, namespace)",
+        "query": "label_values(kube_namespace_status_phase{job=\"kube-state-metrics\", cluster=~\"$cluster\"}, namespace)",
         "refresh": 2,
         "sort": 1,
         "type": "query"
@@ -1229,13 +1229,13 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "${datasource}"
+          "uid": "efw4jztwa45q8d"
         },
         "hide": 0,
         "includeAll": true,
         "label": "workload_type",
         "name": "type",
-        "query": "label_values(namespace_workload_pod:kube_pod_owner:relabel{cluster=\"$cluster\", namespace=\"$namespace\", workload=~\".+\"}, workload_type)",
+        "query": "label_values(namespace_workload_pod:kube_pod_owner:relabel{cluster=~\"$cluster\", namespace=~\"$namespace\", workload=~\".+\"}, workload_type)",
         "refresh": 2,
         "sort": 1,
         "type": "query"
