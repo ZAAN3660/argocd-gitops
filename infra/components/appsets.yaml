@@ -68,7 +68,7 @@ spec:
             enabled: "true"
             version: 0.122.0
             path: infra/components/opentelemetry-operator
-            namespace: opentelemetry-operator
+            namespace: opentelemetry-operator-system
             wave: 1
           - component: node-exporter        # 接管前集群里不存在（otel-agent 空抓），GitOps 新装；抓取契约见 infra/node-exporter 注释
             enabled: "true"
