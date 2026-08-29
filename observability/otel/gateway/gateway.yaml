@@ -242,6 +242,10 @@ spec:
               relabel_configs:
                 - source_labels: [__meta_kubernetes_node_name]
                   target_label: node
+                # 补 metrics_path label：rules(38 处 matcher)与面板 expr 都用 {metrics_path="/metrics"} 过滤，
+                # 缺了它 recording rules 输入为空、冒号指标全部算不出来（OTel receiver 不自动携带此 label）
+                - replacement: /metrics
+                  target_label: metrics_path
 
             - job_name: kubelet-cadvisor
               kubernetes_sd_configs:
@@ -259,6 +263,10 @@ spec:
                 # （与 kube-prometheus-stack 命名一致）。不归一 recording rules 输入为空、冒号指标永不出现
                 - replacement: kubelet
                   target_label: job
+                # 补 metrics_path label：rules(38 处 matcher)与面板 expr 都用 {metrics_path="/metrics/cadvisor"} 过滤，
+                # 缺了它 container_* 系列的面板查询与所有冒号指标全空（OTel receiver 不自动携带此 label）
+                - replacement: /metrics/cadvisor
+                  target_label: metrics_path
 
             # CoreDNS 9153 /metrics 匿名开放，无需认证。coredns 面板 17/17 全缺由此补齐。
             - job_name: coredns
