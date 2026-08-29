@@ -544,7 +544,11 @@
       {
         "name": "datasource",
         "query": "prometheus",
-        "type": "datasource"
+        "type": "datasource",
+        "current": {
+          "text": "Prometheus",
+          "value": "efw4jztwa45q8d"
+        }
       },
       {
         "allValue": ".*",

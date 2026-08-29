@@ -54,9 +54,12 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list", "watch"]
-  # kubelet job（role: node）/ apiserver job（role: endpoints）的服务发现权限
+  # kubelet job（role: node）/ apiserver job（role: endpoints）的服务发现权限。
+  # role: endpoints 除 endpoints 外还必须 list services（SD 要把 endpoint 关联回 service
+  # 才能拼出 __meta_kubernetes_service_name 等 label）——services 是 2026-08-29 实测补上的，
+  # 缺了它 reflector 持续 forbidden，apiserver 的 targets 一个都发现不了
   - apiGroups: [""]
-    resources: ["nodes", "endpoints"]
+    resources: ["nodes", "endpoints", "services"]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1

@@ -248,6 +248,10 @@ spec:
               relabel_configs:
                 - source_labels: [__meta_kubernetes_node_name]
                   target_label: node
+                # job label 归一为 kubelet：rules 的 matcher 是 {job="kubelet", metrics_path="/metrics/cadvisor"}
+                # （与 kube-prometheus-stack 命名一致）。不归一 recording rules 输入为空、冒号指标永不出现
+                - replacement: kubelet
+                  target_label: job
 
             # CoreDNS 9153 /metrics 匿名开放，无需认证。coredns 面板 17/17 全缺由此补齐。
             - job_name: coredns
